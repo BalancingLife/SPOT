@@ -4,6 +4,8 @@
   <dict>
     <key>NMFNcpKeyId</key>
     <string>6jt9ipcd44</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>내 위치를 지도에서 표시하기 위해 위치 접근 권한이 필요합니다.</string>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
     <key>CFBundleDevelopmentRegion</key>
