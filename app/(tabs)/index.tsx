@@ -1,19 +1,15 @@
-import { Text, View, StyleSheet, Image } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { NaverMapView } from "@mj-studio/react-native-naver-map";
 
 export default function Home() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <View>
-        <Text>홈 페이지입니다.</Text>
-      </View>
+    <View style={styles.container}>
+      <NaverMapView style={styles.map}></NaverMapView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  map: { flex: 1 },
+});
