@@ -1,7 +1,6 @@
 import { useRouter, Tabs } from "expo-router";
 import { type BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
-import { Pressable } from "react-native";
-import { Image } from "react-native";
+import { Pressable, Image } from "react-native";
 
 const CustomTabBarButton = ({
   children,
