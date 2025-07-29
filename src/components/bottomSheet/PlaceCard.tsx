@@ -31,7 +31,13 @@ export default function PlaceCard({
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={[TextStyles.SemiBold20, { marginRight: 3 }]}>{name}</Text>
-        <Text style={[TextStyles.Regular12, { color: Colors.gray_300 }]}>
+        <Text
+          style={[
+            TextStyles.Regular12,
+            { color: Colors.gray_300 },
+            { marginTop: 3.5 },
+          ]}
+        >
           {category}
         </Text>
       </View>
@@ -97,9 +103,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 6,
   },
-  category: {
-    color: "#000",
-  },
+
   addressContainer: {
     flexDirection: "row",
     alignItems: "center",
