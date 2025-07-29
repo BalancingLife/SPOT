@@ -7,7 +7,7 @@ import BottomSheetTabSelector from "./BottomSheetTabSelector";
 
 export default function BottomSheetContainer() {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["25%", "50%", "75%"], []);
+  const snapPoints = useMemo(() => ["6%", "50%", "75%"], []);
   const [selectedTab, setSelectedTab] = useState<"saved" | "hot">("saved");
 
   const handleSheetChanges = useCallback((index: number) => {
@@ -27,7 +27,7 @@ export default function BottomSheetContainer() {
           <Text style={styles.indicatorText}>인기 장소 13</Text>
         </View>
 
-        {/* 탭 버튼 */}
+        {/* 탭 전환 버튼 */}
         <View style={styles.tabContainer}>
           <BottomSheetTabSelector
             selectedTab={selectedTab}
@@ -47,7 +47,6 @@ export default function BottomSheetContainer() {
 const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
-    padding: 16,
   },
   indicatorContainer: {
     alignItems: "center",
@@ -56,6 +55,7 @@ const styles = StyleSheet.create({
     color: "#999999",
   },
   tabContainer: {
+    alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: 8,

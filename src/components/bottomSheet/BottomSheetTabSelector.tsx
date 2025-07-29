@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Pressable, Text, Image, StyleSheet } from "react-native";
 import { TextStyles } from "@/src/styles/TextStyles";
-import { Colors } from "@/src/styles/colors";
+import { Colors } from "@/src/styles/Colors";
 
 type TabType = "saved" | "hot";
 
