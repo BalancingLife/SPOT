@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     marginVertical: 15,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: "F5F5F5",
+    borderBottomColor: "#E6E6E666",
   },
   header: {
     flex: 1,
