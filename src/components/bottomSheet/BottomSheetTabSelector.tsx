@@ -1,5 +1,7 @@
 import React from "react";
-import { View, TouchableOpacity, Text, Image, StyleSheet } from "react-native";
+import { View, Pressable, Text, Image, StyleSheet } from "react-native";
+import { TextStyles } from "@/src/styles/TextStyles";
+import { Colors } from "@/src/styles/colors";
 
 type TabType = "saved" | "hot";
 
@@ -14,7 +16,7 @@ export default function BottomSheetTabSelector({
 }: Props) {
   return (
     <View style={styles.container}>
-      <TouchableOpacity
+      <Pressable
         style={[
           styles.tabButton,
           selectedTab === "saved" && styles.selectedTabButton,
@@ -31,15 +33,18 @@ export default function BottomSheetTabSelector({
         />
         <Text
           style={[
-            styles.tabText,
-            selectedTab === "saved" && styles.selectedTabText,
+            TextStyles.Bold16,
+            {
+              color:
+                selectedTab === "saved" ? Colors.gray_900 : Colors.gray_300,
+            },
           ]}
         >
           저장한 장소
         </Text>
-      </TouchableOpacity>
+      </Pressable>
 
-      <TouchableOpacity
+      <Pressable
         style={[
           styles.tabButton,
           selectedTab === "hot" && styles.selectedTabButton,
@@ -56,26 +61,32 @@ export default function BottomSheetTabSelector({
         />
         <Text
           style={[
-            styles.tabText,
-            selectedTab === "hot" && styles.selectedTabText,
+            TextStyles.Bold16,
+            {
+              color: selectedTab === "hot" ? Colors.gray_900 : Colors.gray_300,
+            },
           ]}
         >
           인기 장소
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    justifyContent: "center",
     flexDirection: "row",
-    backgroundColor: "#F3F3F3",
-    borderRadius: 16,
+    backgroundColor: "#EFEFEF",
+    borderRadius: 12,
     padding: 4,
-    marginVertical: 12,
+    marginHorizontal: 16,
   },
   tabButton: {
+    flex: 1,
+    justifyContent: "center",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
@@ -86,17 +97,8 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   icon: {
-    width: 16,
-    height: 16,
+    width: 24,
+    height: 24,
     marginRight: 6,
-  },
-  tabText: {
-    fontSize: 14,
-    color: "#999",
-    fontWeight: "500",
-  },
-  selectedTabText: {
-    color: "#000",
-    fontWeight: "700",
   },
 });
