@@ -1,18 +1,32 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, StyleSheet, TextInput, Image } from "react-native";
-import { NaverMapView } from "@mj-studio/react-native-naver-map";
+import {
+  NaverMapView,
+  // NaverMapMarkerOverlay,
+} from "@mj-studio/react-native-naver-map";
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
 import * as Location from "expo-location";
 import BottomSheetContainer from "../../src/components/bottomSheet/BottomSheetContainer";
+import { Colors } from "@/src/styles/Colors";
+import { TextStyles } from "@/src/styles/TextStyles";
 
 export default function Home() {
   const mapRef = useRef<NaverMapViewRef>(null);
   const [searchInputText, setSearchInputText] = useState("");
+  // const [userLocation, setUserLocation] = useState<{
+  //   latitude: number;
+  //   longitude: number;
+  // } | null>(null);
 
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
+        // const location = await Location.getCurrentPositionAsync({});
+        // setUserLocation({
+        //   latitude: location.coords.latitude,
+        //   longitude: location.coords.longitude,
+        // });
         mapRef.current?.setLocationTrackingMode("Follow");
       } else {
         console.log("위치 권한이 거부되었습니다.");
@@ -27,7 +41,19 @@ export default function Home() {
         ref={mapRef}
         isShowLocationButton={true}
         style={[styles.map, StyleSheet.absoluteFillObject]}
-      />
+      >
+        {/* 사용자 마커
+        {userLocation && (
+          <NaverMapMarkerOverlay
+            latitude={userLocation.latitude}
+            longitude={userLocation.longitude}
+            anchor={{ x: 0.5, y: 0.5 }}
+            width={40}
+            height={40}
+            image={require("@/assets/images/hot-orange.png")}
+          />
+        )} */}
+      </NaverMapView>
 
       {/* 검색창 */}
       <View style={styles.searchInput}>
@@ -43,8 +69,8 @@ export default function Home() {
           value={searchInputText}
           onChangeText={setSearchInputText}
           placeholder="지역, 상호명을 검색해보세요"
-          placeholderTextColor="#888"
-          style={styles.searchInputText}
+          placeholderTextColor={Colors.gray_300}
+          style={TextStyles.Medium16}
         />
       </View>
 
@@ -80,10 +106,5 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     marginRight: 9,
-  },
-
-  searchInputText: {
-    flex: 1,
-    fontSize: 16,
   },
 });

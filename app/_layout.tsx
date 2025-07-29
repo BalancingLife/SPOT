@@ -9,6 +9,9 @@ export default function RootLayout() {
     PretendardRegular: require("@/assets/fonts/Pretendard-Regular.ttf"),
     PretendardMedium: require("@/assets/fonts/Pretendard-Medium.ttf"),
     PretendardBold: require("@/assets/fonts/Pretendard-Bold.ttf"),
+    PretendardSemiBold: require("@/assets/fonts/Pretendard-SemiBold.ttf"),
+    PretendardLight: require("@/assets/fonts/Pretendard-Light.ttf"),
+    PretendardExtraBold: require("@/assets/fonts/Pretendard-ExtraBold.ttf"),
   });
 
   useEffect(() => {
