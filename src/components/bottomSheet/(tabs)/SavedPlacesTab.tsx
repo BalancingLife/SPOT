@@ -7,12 +7,12 @@ const dummyData = new Array(5).fill(0).map((_, i) => ({
   category: "카페 / 베이커리",
   address: `서울 주소구 주소동 ${123 + i}-1`,
   images: [
-    require("@/assets/images/spot-logo.png"),
+    require("@/assets/images/spot-icon-orange.png"),
     require("@/assets/images/react-logo.png"),
-    require("@/assets/images/spot-logo.png"),
+    require("@/assets/images/spot-icon-orange.png"),
   ],
   savedUsers: [
-    require("@/assets/images/spot-logo.png"),
+    require("@/assets/images/spot-icon-orange.png"),
     require("@/assets/images/react-logo.png"),
   ],
   savedCount: 4 + i,
