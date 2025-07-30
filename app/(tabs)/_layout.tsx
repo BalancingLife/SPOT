@@ -1,4 +1,4 @@
-import { useRouter, Tabs } from "expo-router";
+import { Tabs } from "expo-router";
 import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 import { Pressable, Image, Text } from "react-native";
 import { TextStyles } from "@/src/styles/TextStyles";
@@ -30,8 +30,6 @@ const CustomTabBarButton = ({
 };
 
 export default function TabLayout() {
-  const router = useRouter();
-
   const createTabBarIcon = (
     focused: boolean,
     iconSource: any,

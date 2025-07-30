@@ -24,7 +24,9 @@ export default function BottomSheetContainer() {
       <BottomSheetView style={styles.contentContainer}>
         {/* 장소 개수 인디케이터 */}
         <View style={styles.indicatorContainer}>
-          <Text style={styles.indicatorText}>인기 장소 13</Text>
+          <Text style={styles.indicatorText}>
+            {selectedTab === "saved" ? "저장 장소 13" : "인기 장소 15"}
+          </Text>
         </View>
 
         {/* 탭 전환 버튼 */}
