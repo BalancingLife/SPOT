@@ -37,7 +37,7 @@ export default function TabLayout() {
     iconSource: any,
     label: string
   ) => {
-    const marginTop = label === "프로필" ? 1 : 0;
+    const marginTop = label === "프로필" ? 11 : 0;
 
     return (
       <>
