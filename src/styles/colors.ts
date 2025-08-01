@@ -5,7 +5,7 @@ export const Colors = {
   primary_800: "#431200",
   primary_700: "#A92D00",
   primary_600: "#DC3B00",
-  primary_500: "#F71172",
+  primary_500: "#FF5010",
   primary_400: "#FF7543",
   primary_300: "#FF9B76",
   primary_200: "#FFAD8F",

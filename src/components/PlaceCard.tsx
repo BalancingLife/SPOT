@@ -15,8 +15,9 @@ interface PlaceCardProps {
   category: string;
   address: string;
   images: any[]; // require로 넣으니까 any로!
-  savedUsers: any[]; // 아바타도 마찬가지
-  savedCount: number;
+  savedUsers?: any[]; // 아바타도 마찬가지
+  savedCount?: number;
+  showDirectionButton?: boolean;
 }
 
 export default function PlaceCard({
@@ -26,6 +27,7 @@ export default function PlaceCard({
   images,
   savedUsers,
   savedCount,
+  showDirectionButton,
 }: PlaceCardProps) {
   return (
     <View style={styles.card}>
@@ -64,27 +66,31 @@ export default function PlaceCard({
 
       <View style={styles.bottomRow}>
         <View style={styles.savedInfo}>
-          <View style={styles.avatarGroup}>
-            {savedUsers.map((img, i) => (
-              <Image
-                key={i}
-                source={img}
-                style={[styles.avatar, { marginLeft: i === 0 ? 0 : -8 }]}
-              />
-            ))}
-          </View>
-          <Text style={[TextStyles.Regular12, { color: Colors.gray_600 }]}>
-            {savedCount}명이 저장했어요
-          </Text>
+          {savedUsers && savedUsers.length > 0 && savedCount !== undefined && (
+            <View style={styles.avatarGroup}>
+              {savedUsers.map((img, i) => (
+                <Image
+                  key={i}
+                  source={img}
+                  style={[styles.avatar, { marginLeft: i === 0 ? 0 : -8 }]}
+                />
+              ))}
+              <Text style={[TextStyles.Regular12, { color: Colors.gray_600 }]}>
+                {savedCount}명이 저장했어요
+              </Text>
+            </View>
+          )}
         </View>
 
-        <Pressable style={styles.NaverMapButton}>
-          <Image
-            source={require("@/assets/images/naver-map-icon.png")}
-            style={styles.NaverMapIcon}
-          />
-          <Text style={TextStyles.Regular10}>네이버 지도 길찾기</Text>
-        </Pressable>
+        {showDirectionButton && (
+          <Pressable style={styles.NaverMapButton}>
+            <Image
+              source={require("@/assets/images/naver-map-icon.png")}
+              style={styles.NaverMapIcon}
+            />
+            <Text style={TextStyles.Regular10}>네이버 지도 길찾기</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
