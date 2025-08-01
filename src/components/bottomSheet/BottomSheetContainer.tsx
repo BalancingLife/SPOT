@@ -52,7 +52,7 @@ export default function BottomSheetContainer() {
         </View>
 
         {/* 탭별 콘텐츠 */}
-        <View style={{ flex: 1, marginTop: 16 }}>
+        <View style={{ marginTop: 0 }}>
           {selectedTab === "saved" ? <SavedPlacesTab /> : <HotPlacesTab />}
         </View>
       </BottomSheetView>

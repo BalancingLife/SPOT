@@ -11,9 +11,9 @@ import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 
 interface PlaceCardProps {
-  name: string;
-  category: string;
-  address: string;
+  name?: string;
+  category?: string;
+  address?: string;
   images: any[]; // require로 넣으니까 any로!
   savedUsers?: any[]; // 아바타도 마찬가지
   savedCount?: number;

@@ -20,7 +20,7 @@ export default function PlaceDetailScreen() {
       {/* 상단 이미지 */}
       <View style={styles.topImageContainer}>
         <Image
-          source={require("@/assets/images/example.png")}
+          source={require("@/assets/images/example2.png")}
           style={styles.topImage}
         />
       </View>
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     color: "#aaa",
     fontSize: 13,
-    marginTop: 16,
+    marginVertical: 16,
   },
   mapImage: {
     paddingHorizontal: 16,
