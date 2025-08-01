@@ -33,7 +33,7 @@ export default function BottomSheetTabSelector({
         />
         <Text
           style={[
-            TextStyles.Bold16,
+            TextStyles.SemiBold16,
             {
               color:
                 selectedTab === "saved" ? Colors.gray_900 : Colors.gray_300,
@@ -61,7 +61,7 @@ export default function BottomSheetTabSelector({
         />
         <Text
           style={[
-            TextStyles.Bold16,
+            TextStyles.SemiBold16,
             {
               color: selectedTab === "hot" ? Colors.gray_900 : Colors.gray_300,
             },

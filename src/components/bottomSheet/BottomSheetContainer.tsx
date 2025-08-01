@@ -4,6 +4,8 @@ import React, { useRef, useState, useMemo, useCallback } from "react";
 import SavedPlacesTab from "./(tabs)/SavedPlacesTab";
 import HotPlacesTab from "./(tabs)/HotPlacesTab";
 import BottomSheetTabSelector from "./BottomSheetTabSelector";
+import { Colors } from "@/src/styles/Colors";
+import { TextStyles } from "@/src/styles/TextStyles";
 
 export default function BottomSheetContainer() {
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -24,9 +26,21 @@ export default function BottomSheetContainer() {
       <BottomSheetView style={styles.contentContainer}>
         {/* 장소 개수 인디케이터 */}
         <View style={styles.indicatorContainer}>
-          <Text style={styles.indicatorText}>
-            {selectedTab === "saved" ? "저장 장소 13" : "인기 장소 15"}
-          </Text>
+          {selectedTab === "saved" ? (
+            <Text style={TextStyles.Medium16}>
+              <Text style={{ color: Colors.gray_300 }}>저장한 장소 </Text>
+              <Text style={[TextStyles.Bold16, { color: Colors.gray_300 }]}>
+                13
+              </Text>
+            </Text>
+          ) : (
+            <Text style={TextStyles.Medium16}>
+              <Text style={{ color: Colors.gray_300 }}>인기 장소 </Text>
+              <Text style={[TextStyles.Bold16, { color: Colors.gray_300 }]}>
+                15
+              </Text>
+            </Text>
+          )}
         </View>
 
         {/* 탭 전환 버튼 */}
@@ -53,9 +67,7 @@ const styles = StyleSheet.create({
   indicatorContainer: {
     alignItems: "center",
   },
-  indicatorText: {
-    color: "#999999",
-  },
+
   tabContainer: {
     alignItems: "center",
     flexDirection: "row",
