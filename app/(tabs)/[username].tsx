@@ -79,12 +79,10 @@ export default function PlaceDetailScreen() {
 
       {/* 저장한 사람들 안내 */}
       <View style={styles.savedInfo}>
-        <Text>
-          닉네임 1, 닉네임 2 외 10명이 저장한 장소예요.{"\n"}
-          <Text style={{ fontWeight: "bold" }}>
-            여정을 만들어 함께 방문해보세요!
-          </Text>
-        </Text>
+        <Image
+          source={require("@/assets/images/example3.png")}
+          style={{ width: 343, height: 64 }}
+        ></Image>
       </View>
     </ScrollView>
   );
@@ -181,7 +179,6 @@ const styles = StyleSheet.create({
   savedInfo: {
     marginTop: 16,
     padding: 16,
-    borderTopWidth: 1,
     borderColor: "#eee",
     marginBottom: 30,
     alignItems: "center",
