@@ -1,4 +1,4 @@
-// app/place/[placeId].tsx
+// app/place/[placeId].tsx 이거 PlaceCard로 만들지 말기.
 import {
   View,
   Text,
@@ -11,9 +11,12 @@ import { useLocalSearchParams } from "expo-router";
 import PlaceCard from "@/src/components/PlaceCard";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
+import Pagination from "@/src/components/Pagination";
+import { useState } from "react";
 
 export default function PlaceDetailScreen() {
   const { placeId } = useLocalSearchParams();
+  const [currentPage, setCurrentPage] = useState(1);
 
   return (
     <ScrollView style={styles.container}>
@@ -23,6 +26,14 @@ export default function PlaceDetailScreen() {
           source={require("@/assets/images/example2.png")}
           style={styles.topImage}
         />
+        <View style={styles.paginationContainer}>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={7}
+            onPrev={() => setCurrentPage((prev) => prev - 1)}
+            onNext={() => setCurrentPage((prev) => prev + 1)}
+          />
+        </View>
       </View>
 
       {/* 장소 정보 */}
@@ -41,8 +52,13 @@ export default function PlaceDetailScreen() {
       </View>
 
       {/* 지도 안내 텍스트 */}
-      <Text style={styles.mapNotice}>
-        네이버 지도 api에서 받아올 수 있는 정보 나열 (*개발자와 상의 필요)
+      <Text
+        style={[
+          TextStyles.Medium14,
+          { color: Colors.gray_300, textAlign: "center" },
+        ]}
+      >
+        네이버 지도 api에서 받아올 수 있는{"\n"} 정보 나열 (*개발자와 상의 필요)
       </Text>
 
       {/* 지도 이미지 */}
@@ -86,6 +102,13 @@ const styles = StyleSheet.create({
   topImage: {
     width: "100%",
     height: 300,
+  },
+  paginationContainer: {
+    position: "absolute",
+    bottom: 10,
+    left: 0,
+    right: 0,
+    alignItems: "center",
   },
   infoSection: {
     paddingHorizontal: 16,
@@ -134,12 +157,6 @@ const styles = StyleSheet.create({
     height: 100,
     marginRight: 10,
     borderRadius: 8,
-  },
-  mapNotice: {
-    paddingHorizontal: 16,
-    color: "#aaa",
-    fontSize: 13,
-    marginVertical: 16,
   },
   mapImage: {
     paddingHorizontal: 16,
