@@ -6,32 +6,70 @@ import {
   StyleSheet,
   Image,
   Pressable,
+  FlatList,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Dimensions,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import PlaceCard from "@/src/components/PlaceCard";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 import Pagination from "@/src/components/Pagination";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { SCREEN_WIDTH } from "@gorhom/bottom-sheet";
 
 export default function PlaceDetailScreen() {
+  const { width: SCREEN_WIDTH } = Dimensions.get("window");
   const { placeId } = useLocalSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
+  const imageSources = [
+    require("@/assets/images/example2.png"),
+    require("@/assets/images/example.png"),
+    require("@/assets/images/SPOT.png"),
+  ];
+  const flatListRef = useRef<FlatList>(null);
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const newPage = Math.floor(offsetX / SCREEN_WIDTH) + 1;
+    setCurrentPage(newPage);
+  };
+
+  const handlePrev = () => {
+    if (currentPage > 1) {
+      flatListRef.current?.scrollToIndex({ index: currentPage - 2 });
+    }
+  };
+
+  const handleNext = () => {
+    if (currentPage < imageSources.length) {
+      flatListRef.current?.scrollToIndex({ index: currentPage });
+    }
+  };
 
   return (
     <ScrollView style={styles.container}>
       {/* 상단 이미지 */}
       <View style={styles.topImageContainer}>
-        <Image
-          source={require("@/assets/images/example2.png")}
-          style={styles.topImage}
+        <FlatList
+          ref={flatListRef}
+          data={imageSources}
+          horizontal
+          pagingEnabled
+          onScroll={handleScroll}
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(_, index) => index.toString()}
+          renderItem={({ item }) => (
+            <Image source={item} style={styles.topImage} />
+          )}
         />
         <View style={styles.paginationContainer}>
           <Pagination
             currentPage={currentPage}
-            totalPages={7}
-            onPrev={() => setCurrentPage((prev) => prev - 1)}
-            onNext={() => setCurrentPage((prev) => prev + 1)}
+            totalPages={imageSources.length}
+            onPrev={handlePrev}
+            onNext={handleNext}
           />
         </View>
       </View>
@@ -98,7 +136,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   topImage: {
-    width: "100%",
+    width: SCREEN_WIDTH,
     height: 300,
   },
   paginationContainer: {
