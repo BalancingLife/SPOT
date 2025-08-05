@@ -22,6 +22,7 @@ export default function BottomSheetContainer() {
       index={0}
       snapPoints={snapPoints}
       onChange={handleSheetChanges}
+      enableDynamicSizing={false}
     >
       <BottomSheetView style={styles.contentContainer}>
         {/* 장소 개수 인디케이터 */}
@@ -52,7 +53,7 @@ export default function BottomSheetContainer() {
         </View>
 
         {/* 탭별 콘텐츠 */}
-        <View style={{ marginTop: 0 }}>
+        <View style={{ marginTop: 0, flex: 1 }}>
           {selectedTab === "saved" ? <SavedPlacesTab /> : <HotPlacesTab />}
         </View>
       </BottomSheetView>
