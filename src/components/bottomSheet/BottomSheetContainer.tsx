@@ -1,4 +1,4 @@
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { View, StyleSheet, Text } from "react-native";
 import React, { useRef, useState, useMemo, useCallback } from "react";
 import SavedPlacesTab from "./(tabs)/SavedPlacesTab";
@@ -24,7 +24,7 @@ export default function BottomSheetContainer() {
       onChange={handleSheetChanges}
       enableDynamicSizing={false}
     >
-      <BottomSheetView style={styles.contentContainer}>
+      <BottomSheetScrollView style={styles.contentContainer}>
         {/* 장소 개수 인디케이터 */}
         <View style={styles.indicatorContainer}>
           {selectedTab === "saved" ? (
@@ -56,7 +56,7 @@ export default function BottomSheetContainer() {
         <View style={{ marginTop: 0, flex: 1 }}>
           {selectedTab === "saved" ? <SavedPlacesTab /> : <HotPlacesTab />}
         </View>
-      </BottomSheetView>
+      </BottomSheetScrollView>
     </BottomSheet>
   );
 }

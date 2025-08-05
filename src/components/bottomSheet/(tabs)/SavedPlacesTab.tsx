@@ -1,8 +1,8 @@
 import React from "react";
-import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import PlaceCard from "@/src/components/PlaceCard";
 
-const dummyData = new Array(2).fill(0).map((_, i) => ({
+const dummyData = new Array(4).fill(0).map((_, i) => ({
   name: `장소 이름${i + 1}`,
   category: "카페 / 베이커리",
   address: `서울 주소구 주소동 ${123 + i}-1`,
@@ -20,12 +20,16 @@ const dummyData = new Array(2).fill(0).map((_, i) => ({
 
 export default function SavedPlacesTab() {
   return (
-    <BottomSheetFlatList
-      data={dummyData}
-      keyExtractor={(_, index) => index.toString()}
-      renderItem={({ item }) => <PlaceCard {...item} />}
-      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 80 }}
+    <BottomSheetScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{
+        paddingHorizontal: 16,
+      }}
       showsVerticalScrollIndicator={false}
-    />
+    >
+      {dummyData.map((item, index) => (
+        <PlaceCard key={index} {...item} />
+      ))}
+    </BottomSheetScrollView>
   );
 }
