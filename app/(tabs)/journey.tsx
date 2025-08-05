@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import * as AuthSession from "expo-auth-session";
 import { Button, View } from "react-native";
+import SaveFailedModal from "@/src/components/SaveFailedModal";
 
 // 카카오 OAuth 엔드포인트
 const kakaoAuthEndpoint = "https://kauth.kakao.com/oauth/authorize";
@@ -12,6 +13,7 @@ export default function KakaoOAuthLogin() {
   const discovery = {
     authorizationEndpoint: kakaoAuthEndpoint,
   };
+  const [showModal, setShowModal] = useState(true);
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -33,6 +35,10 @@ export default function KakaoOAuthLogin() {
   return (
     <View style={{ marginTop: 100 }}>
       <Button title="카카오 로그인" onPress={() => promptAsync()} />
+      <SaveFailedModal
+        visible={showModal}
+        onClose={() => setShowModal(false)}
+      />
     </View>
   );
 }
