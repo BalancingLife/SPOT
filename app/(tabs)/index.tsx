@@ -1,5 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, TextInput, Image } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  Image,
+  Alert,
+  FlatList,
+} from "react-native";
 import {
   NaverMapView,
   // NaverMapMarkerOverlay,
@@ -10,13 +19,22 @@ import BottomSheetContainer from "../../src/components/bottomSheet/BottomSheetCo
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 
+// ✅ 네이버 오픈 API 키 (env로 분리 권장)
+const NAVER_CLIENT_ID = "kVfIrjPOZF9xtv9Evmt2";
+const NAVER_CLIENT_SECRET = "2GlVd6NxL1";
+
+type SearchResultItem = {
+  title: string;
+  roadAddress?: string;
+  address: string;
+  mapx: string;
+  mapy: string;
+};
+
 export default function Home() {
   const mapRef = useRef<NaverMapViewRef>(null);
   const [searchInputText, setSearchInputText] = useState("");
-  // const [userLocation, setUserLocation] = useState<{
-  //   latitude: number;
-  //   longitude: number;
-  // } | null>(null);
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -33,6 +51,40 @@ export default function Home() {
       }
     })();
   }, []);
+
+  // 🔁 입력값이 바뀔 때마다 debounce로 검색
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      if (searchInputText.trim()) {
+        fetchSearchResults(searchInputText);
+      } else {
+        setSearchResults([]); // 검색어 지우면 리스트 초기화
+      }
+    }, 300); // debounce 300ms
+
+    return () => clearTimeout(delay);
+  }, [searchInputText]);
+
+  const fetchSearchResults = async (query: string) => {
+    try {
+      const res = await fetch(
+        `https://openapi.naver.com/v1/search/local.json?query=${encodeURIComponent(
+          query
+        )}&display=10`,
+        {
+          headers: {
+            "X-Naver-Client-Id": NAVER_CLIENT_ID,
+            "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
+          },
+        }
+      );
+      const data = await res.json();
+      console.log("🔍 검색 결과", data);
+      setSearchResults(data.items || []);
+    } catch (e) {
+      console.error("❌ 검색 실패", e);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -66,13 +118,48 @@ export default function Home() {
           style={styles.searchIcon}
         />
         <TextInput
+          style={TextStyles.Medium16}
           value={searchInputText}
           onChangeText={setSearchInputText}
           placeholder="지역, 상호명을 검색해보세요"
           placeholderTextColor={Colors.gray_300}
-          style={TextStyles.Medium16}
         />
       </View>
+
+      {/* 📋 검색 결과 리스트 */}
+      {searchResults.length > 0 && (
+        <FlatList
+          data={searchResults}
+          keyExtractor={(_, i) => i.toString()}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => {
+            const title = item.title.replace(/<[^>]+>/g, "");
+            const roadAddress = item.roadAddress || item.address;
+            return (
+              <Pressable
+                onPress={() => {
+                  const lat = parseFloat(item.mapy);
+                  const lng = parseFloat(item.mapx);
+                  mapRef.current?.animateCameraTo({
+                    latitude: lat,
+                    longitude: lng,
+                    zoom: 16,
+                    duration: 1000,
+                    easing: "EaseIn",
+                  });
+                  setSearchResults([]);
+                  setSearchInputText(title);
+                }}
+                style={styles.resultItem}
+              >
+                <Text style={styles.resultTitle}>{title}</Text>
+                <Text style={styles.resultAddress}>{roadAddress}</Text>
+              </Pressable>
+            );
+          }}
+          style={styles.resultList}
+        />
+      )}
 
       {/* 바텀시트 */}
       <BottomSheetContainer />
@@ -100,11 +187,41 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
+    zIndex: 10,
   },
 
   searchIcon: {
     width: 24,
     height: 24,
     marginRight: 9,
+  },
+  resultList: {
+    position: "absolute",
+    top: 60 + 60 + 8, // 검색창 아래 여백
+    left: 17,
+    right: 17,
+    backgroundColor: "white",
+    maxHeight: 1000,
+    borderRadius: 8,
+    zIndex: 10,
+  },
+
+  resultItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderColor: "#eee",
+    backgroundColor: "white",
+  },
+
+  resultTitle: {
+    fontSize: 15,
+    fontWeight: "500",
+  },
+
+  resultAddress: {
+    fontSize: 12,
+    color: Colors.gray_400,
+    marginTop: 2,
   },
 });
