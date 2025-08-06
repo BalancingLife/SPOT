@@ -80,6 +80,12 @@ export const TextStyles = {
     fontSize: 14,
     lineHeight: 14 * 1.3,
   },
+  Medium12: {
+    ...base,
+    fontFamily: "PretendardMedium",
+    fontSize: 12,
+    lineHeight: 12 * 1.3,
+  },
   Regular12: {
     ...base,
     fontFamily: "PretendardRegular",

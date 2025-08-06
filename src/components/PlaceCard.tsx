@@ -11,13 +11,17 @@ import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 
 interface PlaceCardProps {
-  name?: string;
-  category?: string;
-  address?: string;
+  name: string;
+  category: string;
+  address: string;
   images: any[]; // require로 넣으니까 any로!
   savedUsers?: any[]; // 아바타도 마찬가지
   savedCount?: number;
-  showDirectionButton?: boolean;
+  showDirectionButton: boolean;
+  rating?: number;
+  reviewCount?: number;
+  showBookmark?: boolean; // 북마크 UI를 보여줄지 여부
+  isBookmarked?: boolean; // 북마크 되어 있는지 여부
 }
 
 export default function PlaceCard({
@@ -28,6 +32,10 @@ export default function PlaceCard({
   savedUsers,
   savedCount,
   showDirectionButton,
+  rating,
+  reviewCount,
+  isBookmarked,
+  showBookmark,
 }: PlaceCardProps) {
   return (
     <View style={styles.card}>
@@ -38,10 +46,42 @@ export default function PlaceCard({
             TextStyles.Regular12,
             { color: Colors.gray_300 },
             { marginTop: 3.5 },
+            { marginRight: 6 },
           ]}
         >
           {category}
         </Text>
+
+        {rating !== undefined && reviewCount !== undefined && (
+          <View style={styles.ratingContainer}>
+            <Image
+              style={styles.starImg}
+              source={require("@/assets/images/star-orange.png")}
+            />
+            <Text
+              style={[
+                TextStyles.Medium12,
+                { color: Colors.gray_900, marginRight: 3 },
+              ]}
+            >
+              {rating}
+            </Text>
+            <Text style={[TextStyles.Regular12, { color: Colors.gray_300 }]}>
+              ({reviewCount.toLocaleString()})
+            </Text>
+          </View>
+        )}
+
+        {showBookmark && (
+          <Image
+            source={
+              isBookmarked
+                ? require("@/assets/images/bookmark-orange.png")
+                : require("@/assets/images/bookmark-orange-empty.png")
+            }
+            style={styles.bookmarkIcon}
+          />
+        )}
       </View>
 
       <View style={styles.addressContainer}>
@@ -75,7 +115,13 @@ export default function PlaceCard({
                   style={[styles.avatar, { marginLeft: i === 0 ? 0 : -8 }]}
                 />
               ))}
-              <Text style={[TextStyles.Regular12, { color: Colors.gray_600 }]}>
+              <Text
+                style={[
+                  TextStyles.Regular12,
+                  { color: Colors.gray_600 },
+                  { marginLeft: 2 },
+                ]}
+              >
                 {savedCount}명이 저장했어요
               </Text>
             </View>
@@ -110,6 +156,22 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 2,
+  },
+
+  starImg: {
+    width: 14,
+    height: 14,
+  },
+  bookmarkIcon: {
+    position: "absolute",
+    right: 0,
+    width: 24,
+    height: 24,
+  },
   addressContainer: {
     flexDirection: "row",
     alignItems: "center",

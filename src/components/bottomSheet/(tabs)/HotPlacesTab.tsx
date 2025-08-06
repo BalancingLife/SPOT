@@ -6,6 +6,7 @@ const dummyData = new Array(4).fill(0).map((_, i) => ({
   name: `장소 이름${i + 1}`,
   category: "카페 / 베이커리",
   address: `서울 주소구 주소동 ${123 + i}-1`,
+
   images: [
     require("@/assets/images/example.png"),
     require("@/assets/images/react-logo.png"),
@@ -16,6 +17,10 @@ const dummyData = new Array(4).fill(0).map((_, i) => ({
     require("@/assets/images/react-logo.png"),
   ],
   savedCount: 4 + i,
+  rating: 4.5,
+  reviewCount: 199,
+  showBookmark: true,
+  isBookmarked: true,
 }));
 
 export default function HotPlacesTab() {
@@ -28,7 +33,7 @@ export default function HotPlacesTab() {
       showsVerticalScrollIndicator={false}
     >
       {dummyData.map((item, index) => (
-        <PlaceCard key={index} {...item} />
+        <PlaceCard key={index} {...item} showDirectionButton={true} />
       ))}
     </BottomSheetScrollView>
   );
