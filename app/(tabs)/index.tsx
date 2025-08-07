@@ -86,12 +86,30 @@ export default function Home() {
     }
   };
 
+  const moveToCurrentLocation = async () => {
+    try {
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+
+      mapRef.current?.animateCameraTo({
+        latitude,
+        longitude,
+        zoom: 16,
+        duration: 0,
+        easing: "EaseIn",
+      });
+    } catch (error) {
+      Alert.alert("위치 확인 실패", "현재 위치를 가져올 수 없습니다.");
+      console.error("❌ 위치 이동 실패:", error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* 지도 */}
       <NaverMapView
         ref={mapRef}
-        isShowLocationButton={true}
+        isShowLocationButton={false}
         style={[styles.map, StyleSheet.absoluteFillObject]}
       >
         {/* 사용자 마커
@@ -162,7 +180,8 @@ export default function Home() {
       )}
 
       {/* 바텀시트 */}
-      <BottomSheetContainer />
+
+      <BottomSheetContainer onPressMyLocation={moveToCurrentLocation} />
     </View>
   );
 }
