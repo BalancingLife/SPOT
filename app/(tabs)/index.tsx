@@ -15,7 +15,7 @@ import {
 } from "@mj-studio/react-native-naver-map";
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
 import * as Location from "expo-location";
-import BottomSheetContainer from "../../src/components/bottomSheet/BottomSheetContainer";
+import PlacesBottomSheetContainer from "../../src/components/bottomSheet/PlacesBottomSheetContainer";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 
@@ -181,7 +181,7 @@ export default function Home() {
 
       {/* 바텀시트 */}
 
-      <BottomSheetContainer onPressMyLocation={moveToCurrentLocation} />
+      <PlacesBottomSheetContainer onPressMyLocation={moveToCurrentLocation} />
     </View>
   );
 }

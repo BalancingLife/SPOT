@@ -6,8 +6,7 @@ import SaveFailedModal from "@/src/components/SaveFailedModal";
 // 카카오 OAuth 엔드포인트
 const kakaoAuthEndpoint = "https://kauth.kakao.com/oauth/authorize";
 const KAKAO_REST_API_KEY = "3a29040d229e76dade6b626bbdae933f";
-const REDIRECT_URI =
-  "https://ab4ac692bd1d.ngrok-free.app/api/auth/kakao/callback"; //  리디렉트 URI
+const REDIRECT_URI = "http://3.39.241.53:8080/api/auth/kakao/callback"; //  리디렉트 URI
 
 export default function KakaoOAuthLogin() {
   const discovery = {

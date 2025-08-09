@@ -9,17 +9,17 @@ import Animated, {
 
 import SavedPlacesTab from "./(tabs)/SavedPlacesTab";
 import HotPlacesTab from "./(tabs)/HotPlacesTab";
-import BottomSheetTabSelector from "./BottomSheetTabSelector";
+import PlacesBottomSheetTabSelector from "./PlacesBottomSheetTabSelector";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 
-interface BottomSheetContainerProps {
+interface PlacesBottomSheetContainerProps {
   onPressMyLocation: () => void;
 }
 
-export default function BottomSheetContainer({
+export default function PlacesBottomSheetContainer({
   onPressMyLocation,
-}: BottomSheetContainerProps) {
+}: PlacesBottomSheetContainerProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const animatedIndex = useSharedValue(0); // 동적 값 담을 저장소, 0 으로 초기화
   const snapPoints = useMemo(() => ["6.7%", "50%", "75%"], []);
@@ -75,7 +75,7 @@ export default function BottomSheetContainer({
 
           {/* 탭 선택 */}
           <View style={styles.tabContainer}>
-            <BottomSheetTabSelector
+            <PlacesBottomSheetTabSelector
               selectedTab={selectedTab}
               onSelectTab={setSelectedTab}
             />

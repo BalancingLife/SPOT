@@ -10,7 +10,7 @@ interface Props {
   onSelectTab: (tab: TabType) => void;
 }
 
-export default function BottomSheetTabSelector({
+export default function PlacesBottomSheetTabSelector({
   selectedTab,
   onSelectTab,
 }: Props) {
