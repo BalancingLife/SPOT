@@ -1,6 +1,14 @@
+import * as WebBrowser from "expo-web-browser";
 import { Image, StyleSheet, View, Text, Pressable } from "react-native";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
+
+const KAKAO_REST_API_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY!;
+const KAKAO_REDIRECT_URI = process.env.EXPO_PUBLIC_KAKAO_REDIRECT_URI!;
+
+const authUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(
+  KAKAO_REDIRECT_URI
+)}`;
 
 export default function Login() {
   return (
@@ -16,11 +24,16 @@ export default function Login() {
           />
         </View>
         <View style={styles.loginButtonContainer}>
-          <Pressable style={styles.kakaoLoginButton}>
-            <Image
-              style={styles.signUpImage}
-              source={require("@/assets/images/login-3second.png")}
-            ></Image>
+          <Pressable
+            style={styles.kakaoLoginButton}
+            onPress={() => WebBrowser.openBrowserAsync(authUrl)}
+          >
+            <View pointerEvents="none">
+              <Image
+                style={styles.signUpImage}
+                source={require("@/assets/images/login-3second.png")}
+              ></Image>
+            </View>
             <Image
               style={styles.kakaoIcon}
               source={require("@/assets/images/kakao-icon.png")}
@@ -88,8 +101,8 @@ const styles = StyleSheet.create({
   },
   signUpImage: {
     position: "absolute",
-    left: 10,
-    bottom: 48,
+    right: -20,
+    bottom: 23,
     width: 135,
     height: 50.6,
   },
