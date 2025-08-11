@@ -5,6 +5,9 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
+  withTiming,
+  withDelay,
 } from "react-native-reanimated";
 
 import SavedPlacesTab from "./(tabs)/SavedPlacesTab";
@@ -21,38 +24,79 @@ export default function PlacesBottomSheetContainer({
   onPressMyLocation,
 }: PlacesBottomSheetContainerProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const animatedIndex = useSharedValue(0); // 동적 값 담을 저장소, 0 으로 초기화
+  const animatedIndex = useSharedValue(0);
   const snapPoints = useMemo(() => ["6.7%", "50%", "75%"], []);
   const [selectedTab, setSelectedTab] = useState<"saved" | "hot">("saved");
 
-  //  버튼 위치 애니메이션 스타일
+  // 버튼 위치 애니메이션
   const animatedButtonStyle = useAnimatedStyle(() => {
-    const bottom = interpolate(
-      animatedIndex.value,
-      [0, 1, 2], // snap index 0(6.7%), 1(50%), 2(75%)
-      [70, 420, 420]
+    const bottom = interpolate(animatedIndex.value, [0, 1, 2], [70, 420, 420]);
+    return { position: "absolute", left: 16.5, bottom };
+  });
+
+  //  깜빡임/스케일 애니메이션 값
+  const pressScale = useSharedValue(1);
+  const flashOpacity = useSharedValue(0);
+  const flashScale = useSharedValue(1);
+
+  const contentAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pressScale.value }],
+  }));
+
+  const flashAnimStyle = useAnimatedStyle(() => ({
+    opacity: flashOpacity.value,
+    transform: [{ scale: flashScale.value }],
+  }));
+
+  //  깜빡임 효과 + 상위 콜백 호출
+  const handlePress = () => {
+    // 스케일: 1 → 0.92 → 1
+    pressScale.value = withSequence(
+      withTiming(0.92, { duration: 90 }),
+      withTiming(1, { duration: 90 })
     );
 
-    return {
-      position: "absolute",
-      left: 16.5,
-      bottom,
-    };
-  });
+    // 플래시: 살짝 커지면서 나타났다 빠르게 사라짐
+    flashScale.value = 1;
+    flashOpacity.value = 0;
+    flashScale.value = withSequence(
+      withTiming(1.12, { duration: 120 }),
+      withTiming(1.2, { duration: 120 })
+    );
+    flashOpacity.value = withSequence(
+      withTiming(0.22, { duration: 100 }),
+      withDelay(80, withTiming(0, { duration: 140 }))
+    );
+
+    // 실제 동작
+    onPressMyLocation?.();
+  };
 
   return (
     <View style={{ flex: 1 }}>
-      {/*  커스텀 내 위치 버튼 */}
-      <Animated.View style={animatedButtonStyle}>
-        <Pressable onPress={onPressMyLocation} style={styles.myLocationButton}>
-          <Image
-            source={require("@/assets/images/myLocation.png")}
-            style={{ width: 24, height: 24 }}
+      {/* 커스텀 내 위치 버튼 */}
+      <Animated.View style={animatedButtonStyle} pointerEvents="box-none">
+        <Pressable onPress={handlePress} style={styles.myLocationButton}>
+          {/*  플래시 레이어 (버튼 안에서 깜빡임 효과) */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFillObject,
+              styles.flashLayer,
+              flashAnimStyle,
+            ]}
           />
+          {/* 아이콘 + 스케일 애니메이션 */}
+          <Animated.View style={contentAnimStyle}>
+            <Image
+              source={require("@/assets/images/myLocation.png")}
+              style={{ width: 24, height: 24 }}
+            />
+          </Animated.View>
         </Pressable>
       </Animated.View>
 
-      {/*  바텀 시트 */}
+      {/* 바텀 시트 */}
       <BottomSheet
         ref={bottomSheetRef}
         index={0}
@@ -92,13 +136,8 @@ export default function PlacesBottomSheetContainer({
 }
 
 const styles = StyleSheet.create({
-  contentContainer: {
-    flex: 1,
-  },
-  indicatorContainer: {
-    alignItems: "center",
-    paddingVertical: 3,
-  },
+  contentContainer: { flex: 1 },
+  indicatorContainer: { alignItems: "center", paddingVertical: 3 },
   tabContainer: {
     alignItems: "center",
     flexDirection: "row",
@@ -118,5 +157,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
+    overflow: "hidden", //  플래시가 버튼 밖으로 안 나가게
+  },
+  //  플래시 기본 스타일(주황빛 살짝)
+  flashLayer: {
+    borderRadius: 100,
+    backgroundColor: "rgba(255, 127, 0, 0.25)", // SPOT 주황 느낌
   },
 });
