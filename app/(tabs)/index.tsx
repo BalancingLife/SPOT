@@ -151,8 +151,8 @@ export default function Home() {
             return (
               <Pressable
                 onPress={() => {
-                  const lat = parseFloat(item.mapy);
-                  const lng = parseFloat(item.mapx);
+                  const lat = parseFloat(item.mapy) / 1e7; //  10,000,000으로 나누어야 위도 , 경도 가됨
+                  const lng = parseFloat(item.mapx) / 1e7;
                   mapRef.current?.animateCameraTo({
                     latitude: lat,
                     longitude: lng,
