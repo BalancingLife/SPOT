@@ -3,21 +3,21 @@ import * as AuthSession from "expo-auth-session";
 import { Button, View } from "react-native";
 import SaveFailedModal from "@/src/components/SaveFailedModal";
 
-// 카카오 OAuth 엔드포인트
-const kakaoAuthEndpoint = "https://kauth.kakao.com/oauth/authorize";
-const KAKAO_REST_API_KEY = "3a29040d229e76dade6b626bbdae933f";
-const REDIRECT_URI = "http://3.39.241.53:8080/api/auth/kakao/callback"; //  리디렉트 URI
+// 환경변수 (app.config.js / .env에 설정)
+const KAKAO_AUTH_ENDPOINT = process.env.EXPO_PUBLIC_KAKAO_AUTH_ENDPOINT!;
+const KAKAO_REST_API_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY!;
+const KAKAO_REDIRECT_URI = process.env.EXPO_PUBLIC_KAKAO_REDIRECT_URI!;
 
 export default function KakaoOAuthLogin() {
   const discovery = {
-    authorizationEndpoint: kakaoAuthEndpoint,
+    authorizationEndpoint: KAKAO_AUTH_ENDPOINT,
   };
-  const [showModal, setShowModal] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
       clientId: KAKAO_REST_API_KEY,
-      redirectUri: REDIRECT_URI,
+      redirectUri: KAKAO_REDIRECT_URI,
       responseType: AuthSession.ResponseType.Code,
     },
     discovery
@@ -25,9 +25,8 @@ export default function KakaoOAuthLogin() {
 
   useEffect(() => {
     if (response?.type === "success") {
-      const { code } = response.params;
+      const { code } = response.params as { code?: string };
       console.log("🔐 인가 코드:", code);
-      // 👉 여기서 백엔드로 code 보내기
     }
   }, [response]);
 
