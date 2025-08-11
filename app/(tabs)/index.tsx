@@ -18,6 +18,7 @@ import * as Location from "expo-location";
 import PlacesBottomSheetContainer from "../../src/components/bottomSheet/PlacesBottomSheetContainer";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
+import UserLocationMarker from "@/src/components/UserLocationMarker";
 
 // ✅ 네이버 오픈 API 키 (env로 분리 권장)
 const NAVER_CLIENT_ID = "kVfIrjPOZF9xtv9Evmt2";
@@ -110,19 +111,13 @@ export default function Home() {
       <NaverMapView
         ref={mapRef}
         isShowLocationButton={false}
+        onInitialized={() => {
+          mapRef.current?.setLocationTrackingMode("None" as any);
+        }}
         style={[styles.map, StyleSheet.absoluteFillObject]}
       >
-        {/* 사용자 마커
-        {userLocation && (
-          <NaverMapMarkerOverlay
-            latitude={userLocation.latitude}
-            longitude={userLocation.longitude}
-            anchor={{ x: 0.5, y: 0.5 }}
-            width={40}
-            height={40}
-            image={require("@/assets/images/hot-orange.png")}
-          />
-        )} */}
+        {/* 커스텀 사용자 마커 */}
+        <UserLocationMarker enableRotation />
       </NaverMapView>
 
       {/* 검색창 */}
