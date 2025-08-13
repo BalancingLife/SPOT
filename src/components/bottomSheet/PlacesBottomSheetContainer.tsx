@@ -72,6 +72,11 @@ export default function PlacesBottomSheetContainer({
     onPressMyLocation?.();
   };
 
+  // 바텀시트를 75%로 스냅
+  const handlePressPlaceList = () => {
+    bottomSheetRef.current?.snapToIndex(2);
+  };
+
   return (
     <View style={{ flex: 1 }}>
       {/* 커스텀 내 위치 버튼 */}
@@ -95,6 +100,16 @@ export default function PlacesBottomSheetContainer({
           </Animated.View>
         </Pressable>
       </Animated.View>
+
+      {/* 장소 리스트 버튼 */}
+      <View pointerEvents="box-none" style={styles.placeListButtonContainer}>
+        <Pressable onPress={handlePressPlaceList}>
+          <Image
+            source={require("@/assets/images/PlaceListUpButton.png")}
+            style={{ width: 220, height: 54, resizeMode: "contain" }}
+          />
+        </Pressable>
+      </View>
 
       {/* 바텀 시트 */}
       <BottomSheet
@@ -159,7 +174,16 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     overflow: "hidden", //  플래시가 버튼 밖으로 안 나가게
   },
-  //  플래시 기본 스타일(주황빛 살짝)
+
+  placeListButtonContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 58, // 원하는 높이로 조절
+    alignItems: "center",
+    zIndex: 0,
+  },
+
   flashLayer: {
     borderRadius: 100,
     backgroundColor: "rgba(255, 127, 0, 0.25)", // SPOT 주황 느낌
