@@ -23,7 +23,7 @@ export const Colors = {
   gray_100: "#E6E6E6",
 
   // Palette
-  black: "#000000",
-  white: "#FFFFFF",
+  black: "#0D0D0D",
+  white: "#FEFEFE",
   brandingRedOrange: "#F71172", // 이미지상 Branding Red Orange (spot 브랜드 색)
 };
