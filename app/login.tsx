@@ -1,4 +1,6 @@
 import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
+import { router } from "expo-router";
 import { Image, StyleSheet, View, Text, Pressable } from "react-native";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
@@ -11,6 +13,49 @@ const authUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&clie
 )}`;
 
 export default function Login() {
+  const handleKakaoLogin = async () => {
+    try {
+      await WebBrowser.warmUpAsync();
+
+      // ✅ 앱으로 복귀할 URL을 환경에 맞게 자동 생성 (슬래시 개수 혼동 방지)
+      const returnUrl = Linking.createURL("/oauth/kakao");
+      console.log("[KAKAO] returnUrl:", returnUrl);
+      // 예: spot://oauth/kakao  또는 spot:///oauth/kakao (환경에 따라)
+
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        Linking.createURL("/oauth/kakao")
+      );
+      console.log("[KAKAO][AuthSession] raw result:", result);
+
+      if (result.type === "success" && result.url) {
+        // ✅ URL 파싱
+        const parsed = new URL(result.url);
+        const token = parsed.searchParams.get("token") ?? "";
+        const email = parsed.searchParams.get("email") ?? "";
+        const nickname = parsed.searchParams.get("nickname") ?? "";
+
+        console.log("✅ 카카오 로그인 성공");
+        console.log("🔗 복귀 URL:", result.url);
+        console.log("🛠 token:", token, "email:", email, "nickname:", nickname);
+
+        // ✅ 콜백 라우트로 직접 이동 (슬래시 1개여도 OK)
+        router.replace({
+          pathname: "/oauth/kakao",
+          params: { token, email, nickname },
+        });
+      } else if (result.type === "cancel") {
+        console.log("⚠️ 사용자가 로그인 취소");
+      } else {
+        console.log("❌ 로그인 실패 또는 중단");
+      }
+    } catch (e) {
+      console.warn("[KAKAO][AuthSession] error:", e);
+    } finally {
+      await WebBrowser.coolDownAsync();
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
@@ -24,10 +69,7 @@ export default function Login() {
           />
         </View>
         <View style={styles.loginButtonContainer}>
-          <Pressable
-            style={styles.kakaoLoginButton}
-            onPress={() => WebBrowser.openBrowserAsync(authUrl)}
-          >
+          <Pressable style={styles.kakaoLoginButton} onPress={handleKakaoLogin}>
             <View pointerEvents="none">
               <Image
                 style={styles.signUpImage}
