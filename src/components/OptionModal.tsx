@@ -98,11 +98,15 @@ const styles = StyleSheet.create({
     width: 305,
     borderRadius: 16,
     backgroundColor: "#FEFEFE",
-    paddingHorizontal: 23,
     paddingTop: 26,
     paddingBottom: 13,
   },
-  title: { ...TextStyles.SemiBold20, color: Colors.gray_900, marginBottom: 10 },
+  title: {
+    ...TextStyles.SemiBold20,
+    color: Colors.gray_900,
+    marginBottom: 10,
+    paddingHorizontal: 23,
+  },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -110,11 +114,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#E6E6E680",
+    paddingHorizontal: 23,
   },
   rowLabel: { ...TextStyles.Medium16 },
   rowCheck: { ...TextStyles.Medium16 },
 
   cancelBtn: {
+    paddingHorizontal: 23,
     paddingTop: 9,
     paddingBottom: 5,
     alignItems: "flex-end",
