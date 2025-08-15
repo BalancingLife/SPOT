@@ -3,11 +3,20 @@ import { Pressable, View, Text, StyleSheet, Image } from "react-native";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 
-export default function FilterBar() {
+export default function FilterBar({
+  onPressSort,
+  onPressSaveType,
+  onPressCategory,
+}: {
+  onPressSort: () => void;
+  onPressSaveType: () => void;
+  onPressCategory: () => void;
+}) {
   return (
     <View style={styles.container}>
       {/* 정렬기준 */}
-      <Pressable>
+
+      <Pressable onPress={onPressSort}>
         <View style={styles.filterView}>
           <Text style={styles.filterText}>정렬기준</Text>
           <Image
@@ -18,7 +27,7 @@ export default function FilterBar() {
       </Pressable>
 
       {/* 저장방식 */}
-      <Pressable>
+      <Pressable onPress={onPressSaveType}>
         <View style={styles.filterView}>
           <Text style={styles.filterText}>저장방식</Text>
           <Image
@@ -29,7 +38,7 @@ export default function FilterBar() {
       </Pressable>
 
       {/* 업종 */}
-      <Pressable>
+      <Pressable onPress={onPressCategory}>
         <View style={styles.filterView}>
           <Text style={styles.filterText}>업종</Text>
           <Image

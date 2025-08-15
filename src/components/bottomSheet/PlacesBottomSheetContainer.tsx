@@ -14,8 +14,11 @@ import SavedPlacesTab from "./(tabs)/SavedPlacesTab";
 import HotPlacesTab from "./(tabs)/HotPlacesTab";
 import PlacesBottomSheetTabSelector from "./PlacesBottomSheetTabSelector";
 import FilterBar from "./FilterBar";
+import OptionModal from "../OptionModal";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
+
+type Opened = "sort" | "save" | "category" | null;
 
 interface PlacesBottomSheetContainerProps {
   onPressMyLocation: () => void;
@@ -48,6 +51,51 @@ export default function PlacesBottomSheetContainer({
     opacity: flashOpacity.value,
     transform: [{ scale: flashScale.value }],
   }));
+
+  const [opened, setOpened] = useState<Opened>(null);
+  const [sort, setSort] = useState<string[]>(["latest"]); // distance | latest
+  const [saveType, setSaveType] = useState<string[]>(["instagram"]); // instagram | self
+  const [category, setCategory] = useState<string[]>(["all"]); // 업종도 단일로
+
+  const sortOptions = useMemo(
+    () => [
+      { label: "거리순", value: "distance" },
+      { label: "최신순", value: "latest" },
+    ],
+    []
+  );
+  const saveOptions = useMemo(
+    () => [
+      { label: "인스타그램", value: "instagram" },
+      { label: "직접 저장", value: "self" },
+    ],
+    []
+  );
+  const categoryOptions = useMemo(
+    () => [
+      { label: "음식점", value: "restaurant" },
+      { label: "술집", value: "bar" },
+      { label: "전시회", value: "exhibition" },
+      { label: "카페", value: "cafe" },
+      { label: "소품샵", value: "gift_shop" },
+      { label: "옷가게", value: "clothing_store" },
+      { label: "기타", value: "etc" },
+    ],
+    []
+  );
+
+  const applySort = (next: string[]) => {
+    setSort(next);
+    // TODO: 정렬 반영 (리스트 재정렬 or refetch)
+  };
+  const applySaveType = (next: string[]) => {
+    setSaveType(next);
+    // TODO: 저장 방식 반영
+  };
+  const applyCategory = (next: string[]) => {
+    setCategory(next);
+    // TODO: 업종 필터 반영 (단일)
+  };
 
   //  깜빡임 효과 + 상위 콜백 호출
   const handlePress = () => {
@@ -142,7 +190,11 @@ export default function PlacesBottomSheetContainer({
           </View>
 
           {/* 필터바  */}
-          <FilterBar />
+          <FilterBar
+            onPressSort={() => setOpened("sort")}
+            onPressSaveType={() => setOpened("save")}
+            onPressCategory={() => setOpened("category")}
+          />
 
           {/* 탭 콘텐츠 */}
           <View style={{ flex: 1 }}>
@@ -150,6 +202,33 @@ export default function PlacesBottomSheetContainer({
           </View>
         </BottomSheetScrollView>
       </BottomSheet>
+
+      <OptionModal
+        visible={opened === "sort"}
+        title="정렬 기준"
+        options={sortOptions}
+        selected={sort}
+        onSelect={applySort}
+        onClose={() => setOpened(null)}
+      />
+
+      <OptionModal
+        visible={opened === "save"}
+        title="저장 방식"
+        options={saveOptions}
+        selected={saveType}
+        onSelect={applySaveType}
+        onClose={() => setOpened(null)}
+      />
+
+      <OptionModal
+        visible={opened === "category"}
+        title="업종"
+        options={categoryOptions}
+        selected={category}
+        onSelect={applyCategory}
+        onClose={() => setOpened(null)}
+      />
     </View>
   );
 }
