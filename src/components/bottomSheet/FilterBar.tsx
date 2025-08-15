@@ -63,8 +63,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     paddingRight: 16,
-    marginTop: 15,
-    paddingBottom: 6,
+    marginTop: 10,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderColor: "#E6E6E680",
   },
@@ -79,6 +79,7 @@ const styles = StyleSheet.create({
     marginRight: 3,
   },
   filterImage: {
+    marginLeft: 6,
     width: 24,
     height: 24,
   },
