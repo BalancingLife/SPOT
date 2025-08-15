@@ -65,12 +65,11 @@ export default function OptionModal({
                   >
                     {item.label}
                   </Text>
-                  {isSelected && (
-                    <Image
-                      source={require("@/assets/images/check-orange.png")}
-                      style={{ width: 30, height: 28 }}
-                    />
-                  )}
+                  {/* 항상 렌더 → 안 선택 시 투명도 0로 자리만 유지 */}
+                  <Image
+                    source={require("@/assets/images/check-orange.png")}
+                    style={[styles.checkIcon, !isSelected && { opacity: 0 }]}
+                  />
                 </Pressable>
               );
             }}
@@ -111,10 +110,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 8.2,
     borderBottomWidth: 1,
     borderBottomColor: "#E6E6E680",
     paddingHorizontal: 23,
+  },
+  checkIcon: {
+    width: 28,
+    height: 28,
   },
   rowLabel: { ...TextStyles.Medium16 },
   rowCheck: { ...TextStyles.Medium16 },

@@ -54,18 +54,19 @@ export default function PlacesBottomSheetContainer({
 
   const [opened, setOpened] = useState<Opened>(null);
   const [sort, setSort] = useState<string[]>(["latest"]); // distance | latest
-  const [saveType, setSaveType] = useState<string[]>(["instagram"]); // instagram | self
-  const [category, setCategory] = useState<string[]>(["all"]); // 업종도 단일로
+  const [saveType, setSaveType] = useState<string[]>([]); // instagram | self
+  const [category, setCategory] = useState<string[]>([]); // 업종도 단일로
 
   const sortOptions = useMemo(
     () => [
-      { label: "거리순", value: "distance" },
       { label: "최신순", value: "latest" },
+      { label: "거리순", value: "distance" },
     ],
     []
   );
   const saveOptions = useMemo(
     () => [
+      { label: "전체", value: "all" },
       { label: "인스타그램", value: "instagram" },
       { label: "직접 저장", value: "self" },
     ],
@@ -73,6 +74,7 @@ export default function PlacesBottomSheetContainer({
   );
   const categoryOptions = useMemo(
     () => [
+      { label: "전체", value: "all" },
       { label: "음식점", value: "restaurant" },
       { label: "술집", value: "bar" },
       { label: "전시회", value: "exhibition" },
@@ -82,6 +84,11 @@ export default function PlacesBottomSheetContainer({
       { label: "기타", value: "etc" },
     ],
     []
+  );
+
+  const saveOptionsForModal = saveOptions.filter((o) => o.value !== "all");
+  const categoryOptionsForModal = categoryOptions.filter(
+    (o) => o.value !== "all"
   );
 
   const applySort = (next: string[]) => {
@@ -191,6 +198,21 @@ export default function PlacesBottomSheetContainer({
 
           {/* 필터바  */}
           <FilterBar
+            sortLabel={
+              sortOptions.find((o) => o.value === sort[0])?.label || "최신순"
+            }
+            saveTypeLabel={
+              saveType.length
+                ? saveOptions.find((o) => o.value === saveType[0])?.label ||
+                  "저장방식"
+                : "저장방식" // 선택 전엔 이름 그대로
+            }
+            categoryLabel={
+              category.length
+                ? categoryOptions.find((o) => o.value === category[0])?.label ||
+                  "업종"
+                : "업종" // 선택 전엔 이름 그대로
+            }
             onPressSort={() => setOpened("sort")}
             onPressSaveType={() => setOpened("save")}
             onPressCategory={() => setOpened("category")}
@@ -215,7 +237,7 @@ export default function PlacesBottomSheetContainer({
       <OptionModal
         visible={opened === "save"}
         title="저장 방식"
-        options={saveOptions}
+        options={saveOptionsForModal}
         selected={saveType}
         onSelect={applySaveType}
         onClose={() => setOpened(null)}
@@ -224,7 +246,7 @@ export default function PlacesBottomSheetContainer({
       <OptionModal
         visible={opened === "category"}
         title="업종"
-        options={categoryOptions}
+        options={categoryOptionsForModal}
         selected={category}
         onSelect={applyCategory}
         onClose={() => setOpened(null)}

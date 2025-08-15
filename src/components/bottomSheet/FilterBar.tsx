@@ -4,10 +4,16 @@ import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 
 export default function FilterBar({
+  sortLabel,
+  saveTypeLabel,
+  categoryLabel,
   onPressSort,
   onPressSaveType,
   onPressCategory,
 }: {
+  sortLabel: string;
+  saveTypeLabel: string;
+  categoryLabel: string;
   onPressSort: () => void;
   onPressSaveType: () => void;
   onPressCategory: () => void;
@@ -18,7 +24,7 @@ export default function FilterBar({
 
       <Pressable onPress={onPressSort}>
         <View style={styles.filterView}>
-          <Text style={styles.filterText}>정렬기준</Text>
+          <Text style={styles.filterText}>{sortLabel}</Text>
           <Image
             style={styles.filterImage}
             source={require("@/assets/images/arrow-down-gray.png")}
@@ -29,7 +35,7 @@ export default function FilterBar({
       {/* 저장방식 */}
       <Pressable onPress={onPressSaveType}>
         <View style={styles.filterView}>
-          <Text style={styles.filterText}>저장방식</Text>
+          <Text style={styles.filterText}>{saveTypeLabel}</Text>
           <Image
             style={styles.filterImage}
             source={require("@/assets/images/arrow-down-gray.png")}
@@ -40,7 +46,7 @@ export default function FilterBar({
       {/* 업종 */}
       <Pressable onPress={onPressCategory}>
         <View style={styles.filterView}>
-          <Text style={styles.filterText}>업종</Text>
+          <Text style={styles.filterText}>{categoryLabel}</Text>
           <Image
             style={styles.filterImage}
             source={require("@/assets/images/arrow-down-gray.png")}
