@@ -13,6 +13,7 @@ import Animated, {
 import SavedPlacesTab from "./(tabs)/SavedPlacesTab";
 import HotPlacesTab from "./(tabs)/HotPlacesTab";
 import PlacesBottomSheetTabSelector from "./PlacesBottomSheetTabSelector";
+import FilterBar from "./FilterBar";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 
@@ -140,6 +141,9 @@ export default function PlacesBottomSheetContainer({
             />
           </View>
 
+          {/* 필터바  */}
+          <FilterBar />
+
           {/* 탭 콘텐츠 */}
           <View style={{ flex: 1 }}>
             {selectedTab === "saved" ? <SavedPlacesTab /> : <HotPlacesTab />}
@@ -158,8 +162,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderColor: "#ddd",
   },
   myLocationButton: {
     width: 40,
