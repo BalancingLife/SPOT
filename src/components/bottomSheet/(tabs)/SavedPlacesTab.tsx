@@ -61,7 +61,6 @@ export default function SavedPlacesTab() {
     [categoryOptions]
   );
 
-  // ✅ FilterBar 라벨 계산
   const sortLabel =
     sortOptions.find((o) => o.value === sort[0])?.label || "최신순";
   const saveTypeLabel =
@@ -81,7 +80,7 @@ export default function SavedPlacesTab() {
       const res = await fetchMySavedPlaces({
         lat: 37.125, // TODO: 실제 값으로 바인딩
         lng: 126.1234,
-        userId: 90,
+        userId: 139,
         // 서버 스펙에 맞게 변환: sort, saveType, category는 선택 시에만 전달
         sort: sort[0] === "recent" ? "latest" : "distance", // 예: 서버가 latest/distance라면 이런 매핑
         ...(saveType.length ? { saveType: saveType[0] } : {}),
@@ -105,7 +104,6 @@ export default function SavedPlacesTab() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* ✅ 탭 로컬 FilterBar (공유 아님) */}
       <FilterBar
         sortLabel={sortLabel}
         saveTypeLabel={saveTypeLabel}
@@ -142,7 +140,7 @@ export default function SavedPlacesTab() {
         {/* 목록 */}
         {items.length === 0 && !loading ? (
           <Text style={[TextStyles.Regular12, { color: Colors.gray_300 }]}>
-            저장한 장소가 없어요.
+            저장된 장소가 없어요.
           </Text>
         ) : null}
 
