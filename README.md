@@ -39,18 +39,19 @@ EXPO_PUBLIC_API_BASE_URL=http://3.39.241.53:8080
 ```
 ## 실행하기
 ### iOS 네이티브 프로젝트 생성 (첫 빌드시)
-npx expo prebuild -p ios
+`npx expo prebuild -p ios`
 
 ## CocoaPods 설치 (첫 빌드시)
-npx pod-install
+`npx pod-install`
 
 ## 시뮬레이터 초기 빌드(빌드 시)
-npx expo run:ios
+`npx expo run:ios`
 
 (그 다음부터)
 ### 한번 빌드해놨다면 그 후로부터
-npx expo start
+`npx expo start`
 시뮬레이터가 켜졌다면
 i를 눌러 ios환경 띄우기
 
 취소하고 싶다면 control + C
+
