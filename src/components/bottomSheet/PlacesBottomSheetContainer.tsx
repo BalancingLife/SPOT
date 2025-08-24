@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 58, // 원하는 높이로 조절
+    bottom: 58,
     alignItems: "center",
     zIndex: 0,
   },
