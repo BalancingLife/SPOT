@@ -1,104 +1,43 @@
-import React, { useEffect, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  Image,
-  Alert,
-  FlatList,
-} from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, Text, Pressable, StyleSheet, Image, Alert } from "react-native";
 import { router } from "expo-router";
 import {
   NaverMapView,
   // NaverMapMarkerOverlay,
 } from "@mj-studio/react-native-naver-map";
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
-import * as Location from "expo-location";
 import PlacesBottomSheetContainer from "../../src/components/bottomSheet/PlacesBottomSheetContainer";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 import UserLocationMarker from "@/src/components/UserLocationMarker";
-
-// ✅ 네이버 오픈 API 키 (env로 분리 권장)
-const NAVER_CLIENT_ID = "kVfIrjPOZF9xtv9Evmt2";
-const NAVER_CLIENT_SECRET = "2GlVd6NxL1";
-
-type SearchResultItem = {
-  title: string;
-  roadAddress?: string;
-  address: string;
-  mapx: string;
-  mapy: string;
-};
+import { useLocationStore } from "@/src/stores/useLocationStore";
 
 export default function Home() {
   const mapRef = useRef<NaverMapViewRef>(null);
-  const [searchInputText, setSearchInputText] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
+
+  const { refreshOnce, coords } = useLocationStore();
 
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === "granted") {
-        // const location = await Location.getCurrentPositionAsync({});
-        // setUserLocation({
-        //   latitude: location.coords.latitude,
-        //   longitude: location.coords.longitude,
-        // });
-        mapRef.current?.setLocationTrackingMode("Follow");
-      } else {
-        console.log("위치 권한이 거부되었습니다.");
-      }
+      await refreshOnce(); // ✅ 권한요청 + 현재 좌표 1회 갱신
+      mapRef.current?.setLocationTrackingMode("Follow");
     })();
-  }, []);
-
-  // 🔁 입력값이 바뀔 때마다 debounce로 검색
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      if (searchInputText.trim()) {
-        fetchSearchResults(searchInputText);
-      } else {
-        setSearchResults([]); // 검색어 지우면 리스트 초기화
-      }
-    }, 300); // debounce 300ms
-
-    return () => clearTimeout(delay);
-  }, [searchInputText]);
-
-  const fetchSearchResults = async (query: string) => {
-    try {
-      const res = await fetch(
-        `https://openapi.naver.com/v1/search/local.json?query=${encodeURIComponent(
-          query
-        )}&display=10`,
-        {
-          headers: {
-            "X-Naver-Client-Id": NAVER_CLIENT_ID,
-            "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
-          },
-        }
-      );
-      const data = await res.json();
-      console.log("🔍 검색 결과", data);
-      setSearchResults(data.items || []);
-    } catch (e) {
-      console.error("❌ 검색 실패", e);
-    }
-  };
+  }, [refreshOnce]);
 
   const moveToCurrentLocation = async () => {
     try {
-      const location = await Location.getCurrentPositionAsync({});
-      const { latitude, longitude } = location.coords;
-
-      mapRef.current?.animateCameraTo({
-        latitude,
-        longitude,
-        zoom: 16,
-        duration: 0,
-        easing: "EaseIn",
-      });
+      await refreshOnce(); // ✅ 최신 좌표 갱신
+      if (coords.lat && coords.lng) {
+        mapRef.current?.animateCameraTo({
+          latitude: coords.lat,
+          longitude: coords.lng,
+          zoom: 16,
+          duration: 0,
+          easing: "EaseIn",
+        });
+      } else {
+        throw new Error("coords is null");
+      }
     } catch (error) {
       Alert.alert("위치 확인 실패", "현재 위치를 가져올 수 없습니다.");
       console.error("❌ 위치 이동 실패:", error);
@@ -133,41 +72,6 @@ export default function Home() {
           지역, 상호명을 검색해보세요
         </Text>
       </Pressable>
-
-      {/* 📋 검색 결과 리스트 */}
-      {searchResults.length > 0 && (
-        <FlatList
-          data={searchResults}
-          keyExtractor={(_, i) => i.toString()}
-          keyboardShouldPersistTaps="handled"
-          renderItem={({ item }) => {
-            const title = item.title.replace(/<[^>]+>/g, "");
-            const roadAddress = item.roadAddress || item.address;
-            return (
-              <Pressable
-                onPress={() => {
-                  const lat = parseFloat(item.mapy) / 1e7; //  10,000,000으로 나누어야 위도 , 경도 가됨
-                  const lng = parseFloat(item.mapx) / 1e7;
-                  mapRef.current?.animateCameraTo({
-                    latitude: lat,
-                    longitude: lng,
-                    zoom: 16,
-                    duration: 1000,
-                    easing: "EaseIn",
-                  });
-                  setSearchResults([]);
-                  setSearchInputText(title);
-                }}
-                style={styles.resultItem}
-              >
-                <Text style={styles.resultTitle}>{title}</Text>
-                <Text style={styles.resultAddress}>{roadAddress}</Text>
-              </Pressable>
-            );
-          }}
-          style={styles.resultList}
-        />
-      )}
 
       {/* 바텀시트 */}
 

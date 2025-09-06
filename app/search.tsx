@@ -1,6 +1,5 @@
 // app/search/index.tsx
-import React, { useState } from "react";
-
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   TextInput,
@@ -13,9 +12,108 @@ import {
 import { router } from "expo-router";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
+import { useLocationStore } from "@/src/stores/useLocationStore";
+import client from "@/src/lib/api/client";
+
+type SearchPayload = {
+  keyword: string;
+  lat: number | null;
+  lng: number | null;
+};
+
+type SearchResult = {
+  id: string;
+  title: string;
+  address: string;
+  lat: number;
+  lng: number;
+};
+type SearchResponse = { items: SearchResult[] };
 
 export default function SearchPage() {
   const [searchInputText, setSearchInputText] = useState("");
+  const { coords, refreshOnce } = useLocationStore();
+
+  // 컴포넌트 진입 시 좌표가 없으면 한 번 갱신 시도(선택)
+  useEffect(() => {
+    if (coords.lat === null || coords.lng === null) {
+      refreshOnce().catch(() => {});
+    }
+  }, [coords.lat, coords.lng, refreshOnce]);
+
+  // ---- 디바운싱 + 최신요청만 처리 ----
+  const debounceMs = 400;
+  const timerRef = useRef<number | null>(null);
+  const reqSeqRef = useRef(0); // 증가하는 요청 id
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    // trim + 최소 길이 조건(원하면 조정)
+    const keyword = searchInputText.trim();
+    if (!keyword || keyword.length < 1) {
+      // 키워드 없으면 진행 안 함 (필요 시 검색 초기화 로직 추가)
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
+      return;
+    }
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    timerRef.current = setTimeout(async () => {
+      // 이전 fetch 중단
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      const seq = ++reqSeqRef.current;
+      try {
+        const params: SearchPayload = {
+          keyword,
+          lat: coords.lat,
+          lng: coords.lng,
+        };
+
+        const res = await client.get<SearchResponse>("/search", {
+          params,
+          signal: controller.signal,
+        });
+
+        if (seq !== reqSeqRef.current) return;
+
+        console.log("검색 결과:", res.data);
+        // TODO: setSearchResults(res.data.items)
+      } catch (err: any) {
+        if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") {
+          return;
+        }
+        console.warn(
+          "검색 요청 에러:",
+          err?.response?.status,
+          err?.response?.data ?? err.message
+        );
+      } finally {
+        if (abortRef.current === controller) {
+          abortRef.current = null;
+        }
+      }
+    }, debounceMs);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [searchInputText, coords.lat, coords.lng]);
+
+  useEffect(() => {
+    return () => {
+      // 언마운트 시 진행 중 요청 취소
+      if (abortRef.current) abortRef.current.abort();
+    };
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -34,6 +132,7 @@ export default function SearchPage() {
             autoFocus
             placeholder="지역, 상호명을 검색해보세요"
             value={searchInputText}
+            onChangeText={setSearchInputText}
             placeholderTextColor={Colors.gray_300}
             style={TextStyles.Medium16}
             returnKeyType="search"
