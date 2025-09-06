@@ -4,11 +4,11 @@ import {
   Text,
   Pressable,
   StyleSheet,
-  TextInput,
   Image,
   Alert,
   FlatList,
 } from "react-native";
+import { router } from "expo-router";
 import {
   NaverMapView,
   // NaverMapMarkerOverlay,
@@ -121,23 +121,18 @@ export default function Home() {
       </NaverMapView>
 
       {/* 검색창 */}
-      <View style={styles.searchInput}>
+      <Pressable
+        style={styles.searchInput}
+        onPress={() => router.push("/search")}
+      >
         <Image
-          source={
-            searchInputText
-              ? require("@/assets/images/search-input-icon-black.png")
-              : require("@/assets/images/search-input-icon-gray.png")
-          }
+          source={require("@/assets/images/search-input-icon-gray.png")}
           style={styles.searchIcon}
         />
-        <TextInput
-          style={TextStyles.Medium16}
-          value={searchInputText}
-          onChangeText={setSearchInputText}
-          placeholder="지역, 상호명을 검색해보세요"
-          placeholderTextColor={Colors.gray_300}
-        />
-      </View>
+        <Text style={[TextStyles.Medium16, { color: Colors.gray_300 }]}>
+          지역, 상호명을 검색해보세요
+        </Text>
+      </Pressable>
 
       {/* 📋 검색 결과 리스트 */}
       {searchResults.length > 0 && (
