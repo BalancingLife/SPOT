@@ -134,10 +134,16 @@ export default function SearchPage() {
             value={searchInputText}
             onChangeText={setSearchInputText}
             placeholderTextColor={Colors.gray_300}
-            style={TextStyles.Medium16}
+            style={styles.inputText}
             returnKeyType="search"
             // onSubmitEditing={(e) => { /* 추후: pendingQuery 세팅 후 router.back() */ }}
           />
+          <Pressable onPress={() => setSearchInputText("")}>
+            <Image
+              source={require("@/assets/images/x-gray.png")}
+              style={styles.xIcon}
+            />
+          </Pressable>
         </View>
         <Pressable onPress={() => router.back()}>
           <Text style={styles.backBtn}>취소</Text>
@@ -181,6 +187,14 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     marginRight: 9,
+  },
+  inputText: {
+    ...TextStyles.Medium16,
+    flex: 1,
+  },
+  xIcon: {
+    width: 24,
+    height: 24,
   },
   backBtn: {
     ...TextStyles.Medium16,
