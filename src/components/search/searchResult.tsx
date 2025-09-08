@@ -1,4 +1,3 @@
-// components/searchResult.tsx
 import React from "react";
 import {
   View,
@@ -18,9 +17,9 @@ type Props = {
 };
 
 function formatDistance(meters: number) {
-  // 요청: 1000m 넘어갈 때만 km
-  if (meters >= 1000) return `${(meters / 1000).toFixed(1)}km`;
-  return `${Math.round(meters)}m`;
+  return meters >= 1000
+    ? `${(meters / 1000).toFixed(1)}km`
+    : `${Math.round(meters)}m`;
 }
 
 export default function SearchResult({ data, onPressItem }: Props) {
@@ -31,6 +30,7 @@ export default function SearchResult({ data, onPressItem }: Props) {
       ItemSeparatorComponent={() => <View style={styles.separator} />}
       renderItem={({ item }) => (
         <Pressable onPress={() => onPressItem(item)} style={styles.row}>
+          {/* 1) 썸네일 */}
           <Image
             source={
               item.photoUrl
@@ -40,13 +40,25 @@ export default function SearchResult({ data, onPressItem }: Props) {
             style={styles.thumb}
           />
 
-          <View style={styles.textWrap}>
-            <Text style={TextStyles.Bold16} numberOfLines={1}>
-              {item.name}
-            </Text>
+          {/* 2) 가운데 텍스트 영역 */}
+          <View style={styles.centerCol}>
+            <View style={styles.titleRow}>
+              <Text style={TextStyles.SemiBold16} numberOfLines={1}>
+                {item.name}
+              </Text>
+              <Text
+                style={[TextStyles.Regular10, { color: Colors.gray_300 }]}
+                numberOfLines={1}
+              >
+                {item.category}
+              </Text>
+            </View>
 
-            <View style={styles.addressView}>
-              <Image source={require("@/assets/images/marker-gray.png")} />
+            <View style={styles.addrRow}>
+              <Image
+                source={require("@/assets/images/marker-gray.png")}
+                style={styles.markerIcon}
+              />
               <Text
                 style={[TextStyles.Regular12, { color: Colors.gray_800 }]}
                 numberOfLines={1}
@@ -54,15 +66,13 @@ export default function SearchResult({ data, onPressItem }: Props) {
                 {item.address}
               </Text>
             </View>
+          </View>
 
-            <View style={styles.metaRow}>
-              <Text style={[TextStyles.Regular10, styles.badge]}>
-                {item.category}
-              </Text>
-              <Text style={[TextStyles.Bold12, { color: Colors.gray_300 }]}>
-                {formatDistance(item.distance)}
-              </Text>
-            </View>
+          {/* 3) 오른쪽 거리 */}
+          <View style={styles.rightCol}>
+            <Text style={[TextStyles.Bold12, { color: Colors.gray_300 }]}>
+              {formatDistance(item.distance)}
+            </Text>
           </View>
         </Pressable>
       )}
@@ -80,34 +90,37 @@ export default function SearchResult({ data, onPressItem }: Props) {
   );
 }
 
+const THUMB = 72;
+const GAP = 12;
+
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
-    paddingVertical: 12,
-    gap: 12,
     alignItems: "center",
+    paddingVertical: 12,
+    gap: GAP,
   },
   separator: {
     height: 1,
     backgroundColor: Colors.gray_100,
+    marginLeft: THUMB + GAP, // 썸네일만큼 들여쓰기(스샷 느낌)
   },
   thumb: {
-    width: 72,
-    height: 72,
+    width: THUMB,
+    height: THUMB,
     borderRadius: 12,
     backgroundColor: Colors.gray_100,
   },
-  textWrap: {
+
+  // 가운데 컬럼
+  centerCol: {
     flex: 1,
-    gap: 4,
+    gap: 6,
   },
-  addressView: {
+  titleRow: {
     flexDirection: "row",
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    alignItems: "baseline", // 제목과 뱃지 베이스라인 맞춤
+    gap: 6,
   },
   badge: {
     color: Colors.gray_700,
@@ -115,5 +128,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
+  },
+  addrRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  markerIcon: {
+    width: 12,
+    height: 16,
+  },
+
+  // 오른쪽 거리
+  rightCol: {
+    minWidth: 64,
+    alignItems: "flex-end",
+    alignSelf: "center", // 상단 정렬(제목 라인과 비슷하게 보이게)
   },
 });

@@ -62,6 +62,7 @@ export default function SearchPage() {
         abortRef.current.abort();
         abortRef.current = null;
       }
+      setResults(null);
       return;
     }
 
@@ -233,6 +234,6 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 5,
   },
 });

@@ -19,9 +19,14 @@ type RecentItem = {
 type Props = {
   items: RecentItem[];
   onTapKeyword: (keyword: string) => void;
+  onRemoveKeyword?: (id: string) => void; // ← 삭제 콜백 추가
 };
 
-export default function RecentSearch({ items, onTapKeyword }: Props) {
+export default function RecentSearch({
+  items,
+  onTapKeyword,
+  onRemoveKeyword,
+}: Props) {
   if (items.length === 0) {
     return (
       <View style={styles.emptyWrap}>
@@ -32,23 +37,39 @@ export default function RecentSearch({ items, onTapKeyword }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>최근 검색</Text>
+      <Text style={styles.title}>최근 검색어</Text>
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <Pressable
-            onPress={() => onTapKeyword(item.keyword)}
-            style={styles.row}
-          >
-            <Image
-              source={require("@/assets/images/x-gray.png")}
-              style={styles.icon}
-            />
-            <Text style={TextStyles.Regular12}>{item.keyword}</Text>
-          </Pressable>
+          <View style={styles.row}>
+            {/* 키워드 클릭 */}
+            <Pressable
+              onPress={() => onTapKeyword(item.keyword)}
+              style={styles.keywordWrap}
+            >
+              <Image
+                source={require("@/assets/images/marker-gray.png")}
+                style={styles.icon}
+              />
+              <Text style={TextStyles.Medium16}>{item.keyword}</Text>
+            </Pressable>
+
+            {/* 삭제 버튼 */}
+            {onRemoveKeyword && (
+              <Pressable
+                onPress={() => onRemoveKeyword(item.id)}
+                hitSlop={8}
+                style={styles.removeBtn}
+              >
+                <Image
+                  source={require("@/assets/images/x-gray.png")}
+                  style={styles.removeIcon}
+                />
+              </Pressable>
+            )}
+          </View>
         )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
     </View>
   );
@@ -59,24 +80,35 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   title: {
-    ...TextStyles.Medium16,
-    color: Colors.gray_800,
+    ...TextStyles.SemiBold16,
+    color: Colors.gray_900,
     marginBottom: 8,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between", // 양쪽 배치
     paddingVertical: 10,
   },
+  keywordWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
   icon: {
-    width: 18,
-    height: 18,
+    width: 24,
+    height: 24,
     marginRight: 8,
     tintColor: Colors.gray_400,
   },
-  separator: {
-    height: 1,
-    backgroundColor: Colors.gray_200,
+  removeBtn: {
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+  },
+  removeIcon: {
+    width: 20,
+    height: 20,
+    tintColor: Colors.gray_400,
   },
   emptyWrap: {
     alignItems: "center",
