@@ -14,6 +14,8 @@ import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { useLocationStore } from "@/src/stores/useLocationStore";
 import client from "@/src/lib/api/client";
+import RecentSearch from "@/src/components/search/recentSearch";
+import SearchResult from "@/src/components/search/searchResult";
 
 type SearchPayload = {
   keyword: string;
@@ -21,18 +23,22 @@ type SearchPayload = {
   lng: number | null;
 };
 
-type SearchResult = {
-  id: string;
-  title: string;
+export type SearchResultItem = {
+  name: string;
   address: string;
-  lat: number;
-  lng: number;
+  gid: string;
+  photoUrl: string | null;
+  category: string;
+  distance: number; // m
 };
-type SearchResponse = { items: SearchResult[] };
 
 export default function SearchPage() {
   const [searchInputText, setSearchInputText] = useState("");
   const { coords, refreshOnce } = useLocationStore();
+  const [results, setResults] = useState<SearchResultItem[] | null>(null);
+
+  const showRecent = !searchInputText || results === null;
+  const showResults = Array.isArray(results) && results.length > 0;
 
   // 컴포넌트 진입 시 좌표가 없으면 한 번 갱신 시도(선택)
   useEffect(() => {
@@ -78,15 +84,14 @@ export default function SearchPage() {
           lng: coords.lng,
         };
 
-        const res = await client.get<SearchResponse>("/search", {
+        const res = await client.get<SearchResultItem[]>("/search", {
           params,
           signal: controller.signal,
         });
 
         if (seq !== reqSeqRef.current) return;
-
+        setResults(res.data ?? []);
         console.log("검색 결과:", res.data);
-        // TODO: setSearchResults(res.data.items)
       } catch (err: any) {
         if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") {
           return;
@@ -152,9 +157,32 @@ export default function SearchPage() {
         </Pressable>
       </View>
 
-      {/* 임시 바디 */}
+      {/* 바디 */}
       <View style={styles.body}>
-        <Text style={TextStyles.Medium16}>🔍 검색 페이지입니다</Text>
+        {showRecent && (
+          <RecentSearch
+            items={[
+              { id: "1", keyword: "커피" },
+              { id: "2", keyword: "헬스장" },
+              { id: "3", keyword: "CU" },
+            ]}
+            onTapKeyword={(k) => setSearchInputText(k)}
+          />
+        )}
+
+        {!showRecent && !showResults && (
+          <Text style={TextStyles.Medium16}>검색 결과가 없어요.</Text>
+        )}
+
+        {showResults && (
+          <SearchResult
+            data={results!}
+            onPressItem={(place) => {
+              console.log("선택:", place);
+              router.back();
+            }}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -204,7 +232,7 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
 });
