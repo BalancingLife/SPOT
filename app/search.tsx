@@ -138,12 +138,14 @@ export default function SearchPage() {
             returnKeyType="search"
             // onSubmitEditing={(e) => { /* 추후: pendingQuery 세팅 후 router.back() */ }}
           />
-          <Pressable onPress={() => setSearchInputText("")}>
-            <Image
-              source={require("@/assets/images/x-gray.png")}
-              style={styles.xIcon}
-            />
-          </Pressable>
+          {searchInputText ? (
+            <Pressable onPress={() => setSearchInputText("")}>
+              <Image
+                source={require("@/assets/images/x-gray.png")}
+                style={styles.xIcon}
+              />
+            </Pressable>
+          ) : null}
         </View>
         <Pressable onPress={() => router.back()}>
           <Text style={styles.backBtn}>취소</Text>
