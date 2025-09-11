@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuthStore } from "@/src/stores/useAuthStore";
 
 /**
  * 공용 axios 인스턴스
@@ -9,6 +10,21 @@ import axios from "axios";
 const client = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_BASE_URL,
   timeout: 10_000,
+});
+
+client.interceptors.request.use((config) => {
+  // Zustand에서 직접 읽기 (getState는 훅이 아님)
+  const token = useAuthStore.getState().token;
+  console.log("🔑 현재 토큰:", token);
+
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  console.log("🚀 API 요청:", config.url);
+  console.log("👉 headers:", config.headers);
+  return config;
 });
 
 // ✅ 나중에 인증 켜지면 이 부분 주석 해제해서 토큰 자동 주입

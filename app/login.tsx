@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { Image, StyleSheet, View, Text, Pressable } from "react-native";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
+import { useAuthStore } from "@/src/stores/useAuthStore";
 
 const KAKAO_REST_API_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY!;
 const KAKAO_REDIRECT_URI = process.env.EXPO_PUBLIC_KAKAO_REDIRECT_URI!;
@@ -34,6 +35,8 @@ export default function Login() {
         const token = parsed.searchParams.get("token") ?? "";
         const email = parsed.searchParams.get("email") ?? "";
         const nickname = parsed.searchParams.get("nickname") ?? "";
+
+        await useAuthStore.getState().setAuth({ token, email, nickname });
 
         console.log("✅ 카카오 로그인 성공");
         console.log("🔗 복귀 URL:", result.url);

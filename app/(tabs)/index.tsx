@@ -11,11 +11,17 @@ import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 import UserLocationMarker from "@/src/components/UserLocationMarker";
 import { useLocationStore } from "@/src/stores/useLocationStore";
+import { useAuthStore } from "@/src/stores/useAuthStore";
 
 export default function Home() {
   const mapRef = useRef<NaverMapViewRef>(null);
+  const hydrate = useAuthStore((s) => s.hydrate);
 
   const { refreshOnce, coords } = useLocationStore();
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
 
   useEffect(() => {
     (async () => {

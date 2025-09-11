@@ -144,6 +144,8 @@ export default function SearchPage() {
             returnKeyType="search"
             // onSubmitEditing={(e) => { /* 추후: pendingQuery 세팅 후 router.back() */ }}
           />
+
+          {/* 검색어 지우기 버튼 */}
           {searchInputText ? (
             <Pressable onPress={() => setSearchInputText("")}>
               <Image
@@ -153,6 +155,8 @@ export default function SearchPage() {
             </Pressable>
           ) : null}
         </View>
+
+        {/* 취소 버튼 */}
         <Pressable onPress={() => router.back()}>
           <Text style={styles.backBtn}>취소</Text>
         </Pressable>

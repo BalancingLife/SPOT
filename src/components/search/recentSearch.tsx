@@ -1,5 +1,5 @@
 // src/components/search/RecentSearch.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
+import client from "@/src/lib/api/client";
 
 type RecentItem = {
   id: string;
@@ -27,12 +28,29 @@ export default function RecentSearch({
   onTapKeyword,
   onRemoveKeyword,
 }: Props) {
+  useEffect(() => {
+    fetchRecentSearch();
+  }, []);
+
   if (items.length === 0) {
     return (
       <View style={styles.emptyWrap}>
         <Text style={TextStyles.Medium16}>최근 검색어가 없습니다.</Text>
       </View>
     );
+  }
+
+  async function fetchRecentSearch() {
+    try {
+      const res = await client.get("/recent");
+      console.log("status:", res.status);
+      console.log("headers:", res.headers);
+      console.log("data:", res.data);
+      return res.data;
+    } catch (err) {
+      console.log("최근 검색어 불러오기 실패", err);
+      throw err;
+    }
   }
 
   return (
