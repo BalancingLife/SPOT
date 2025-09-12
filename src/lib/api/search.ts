@@ -58,3 +58,52 @@ export async function fetchSearchDetails(params: {
 
   return items;
 }
+
+export async function fetchPlaceDetail(params: {
+  gid: string;
+  lat: number;
+  lng: number;
+}): Promise<Place> {
+  const { gid, lat, lng } = params;
+
+  const controller = new AbortController();
+
+  try {
+    const res = await client.get("/search/detail", {
+      params: { gid, lat, lng },
+      signal: controller.signal,
+    });
+
+    const it = res.data;
+
+    const placeLat = Number(it.latitude);
+    const placeLng = Number(it.longitude);
+
+    const place: Place = {
+      id: String(it.placeId ?? it.gId ?? gid),
+      name: it.name ?? "",
+      address: it.address ?? "",
+      lat: placeLat,
+      lng: placeLng,
+
+      photo: it.photo ?? it.photoUrl ?? null,
+      ratingAvg: typeof it.ratingAvg === "number" ? it.ratingAvg : null,
+      ratingCount: typeof it.ratingCount === "number" ? it.ratingCount : null,
+      myRating: typeof it.myRating === "number" ? it.myRating : null,
+      savers: Array.isArray(it.savers) ? it.savers : [],
+
+      distanceM:
+        isFinite(placeLat) && isFinite(placeLng)
+          ? haversine(lat, lng, placeLat, placeLng)
+          : undefined,
+      thumbnails: it.photo ? [it.photo] : it.photos ? it.photos : [],
+    };
+
+    return place;
+  } catch (e: any) {
+    if (e?.name === "CanceledError" || e?.code === "ERR_CANCELED") {
+      throw e;
+    }
+    throw e;
+  }
+}

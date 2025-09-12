@@ -42,6 +42,7 @@ export default function SearchPage() {
   const showResults = Array.isArray(results) && results.length > 0;
 
   const submit = useSearchStore((s) => s.submit);
+  const requestDetail = useSearchStore((s) => s.requestDetail);
 
   // 컴포넌트 진입 시 좌표가 없으면 한 번 갱신 시도(선택)
   useEffect(() => {
@@ -198,8 +199,11 @@ export default function SearchPage() {
           <SearchResult
             data={results!}
             onPressItem={(place) => {
-              console.log("선택:", place);
-              router.back();
+              // ✅ 상세 조회 요청 신호 남기기 (스토어에 pendingDetailGid 저장)
+              requestDetail(place.gid);
+
+              // ✅ 홈으로 이동 → index.tsx useEffect에서 /search/detail 호출
+              router.replace("/");
             }}
           />
         )}

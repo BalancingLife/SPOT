@@ -13,7 +13,7 @@ import UserLocationMarker from "@/src/components/UserLocationMarker";
 import { useLocationStore } from "@/src/stores/useLocationStore";
 import { useAuthStore } from "@/src/stores/useAuthStore";
 import { useSearchStore } from "@/src/stores/useSearchStore";
-import { fetchSearchDetails } from "@/src/lib/api/search";
+import { fetchSearchDetails, fetchPlaceDetail } from "@/src/lib/api/search"; // ← 상세 함수 import
 import SearchDetailsBottomSheet from "@/src/components/bottomSheet/SearchDetailsBottomSheet";
 import SearchDetailBottomSheet from "@/src/components/bottomSheet/SearchDetailBottomSheet";
 export default function Home() {
@@ -31,6 +31,10 @@ export default function Home() {
   const setResult = useSearchStore((s) => s.setResult);
   const setError = useSearchStore((s) => s.setError);
   const reset = useSearchStore((s) => s.reset);
+
+  const pendingDetailGid = useSearchStore((s) => s.pendingDetailGid);
+  const clearPendingDetail = useSearchStore((s) => s.clearPendingDetail);
+  const focus = useSearchStore((s) => s.focus);
 
   useEffect(() => {
     hydrate();
@@ -62,6 +66,62 @@ export default function Home() {
       console.error("❌ 위치 이동 실패:", error);
     }
   };
+
+  // ✅ 상세 트리거: pendingDetailGid + 좌표 준비되면 /search/detail 호출
+  useEffect(() => {
+    if (!pendingDetailGid) return;
+    if (coords.lat == null || coords.lng == null) return;
+
+    let alive = true;
+
+    console.log("🔔 상세 요청 트리거 감지:", {
+      pendingDetailGid,
+      lat: coords.lat,
+      lng: coords.lng,
+    });
+
+    (async () => {
+      try {
+        console.log("🚀 /search/detail API 호출 시작");
+        const place = await fetchPlaceDetail({
+          gid: pendingDetailGid,
+          lat: coords.lat!,
+          lng: coords.lng!,
+        });
+        if (!alive) return;
+
+        console.log("✅ /search/detail 성공:", place);
+
+        // 상세 포커스 세팅 → 단일 상세 바텀시트가 표시됨
+        focus(place);
+
+        // 지도 카메라도 상세로 이동(선택)
+        if (isFinite(place.lat) && isFinite(place.lng)) {
+          console.log("📍 지도 카메라 이동:", {
+            latitude: place.lat,
+            longitude: place.lng,
+          });
+          mapRef.current?.animateCameraTo({
+            latitude: place.lat,
+            longitude: place.lng,
+            zoom: 16,
+            duration: 0,
+            easing: "EaseIn",
+          });
+        }
+      } catch (e: any) {
+        console.error("❌ /search/detail 실패:", e?.message ?? e);
+      } finally {
+        console.log("🧹 clearPendingDetail 호출");
+        clearPendingDetail();
+      }
+    })();
+
+    return () => {
+      console.log("🛑 상세 effect cleanup 실행");
+      alive = false;
+    };
+  }, [pendingDetailGid, coords.lat, coords.lng, focus, clearPendingDetail]);
 
   // ✅ 검색 트리거: query가 바뀌고 좌표가 준비되면 /search/details 호출
   useEffect(() => {

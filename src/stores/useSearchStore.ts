@@ -37,6 +37,10 @@ type State = {
   // 상세 모드: 결과 리스트 중 하나를 눌렀을 때
   focused: Place | null;
 
+  // ✅ 상세 API 호출 트리거(홈에서 감지)
+  pendingDetailGid: string | null;
+
+  // 액션들
   submit: (keyword: string) => void; // 검색 시작 신호
   setLoading: () => void;
   setResult: (items: Place[]) => void;
@@ -45,6 +49,10 @@ type State = {
 
   focus: (place: Place) => void;
   unfocus: () => void;
+
+  // ✅ 상세 요청 신호 관리
+  requestDetail: (gid: string) => void;
+  clearPendingDetail: () => void;
 };
 
 export const useSearchStore = create<State>((set) => ({
@@ -53,6 +61,9 @@ export const useSearchStore = create<State>((set) => ({
   items: [],
   error: null,
   focused: null,
+
+  // ✅ 상세 요청 초기값
+  pendingDetailGid: null,
 
   submit: (keyword) =>
     set({
@@ -67,8 +78,19 @@ export const useSearchStore = create<State>((set) => ({
     set({ items, phase: items.length ? "success" : "empty", error: null }),
   setError: (msg) => set({ phase: "error", error: msg }),
   reset: () =>
-    set({ query: null, phase: "idle", items: [], error: null, focused: null }),
+    set({
+      query: null,
+      phase: "idle",
+      items: [],
+      error: null,
+      focused: null,
+      pendingDetailGid: null,
+    }),
 
   focus: (place) => set({ focused: place }),
   unfocus: () => set({ focused: null }),
+
+  // ✅ 상세 요청 신호
+  requestDetail: (gid) => set({ pendingDetailGid: gid }),
+  clearPendingDetail: () => set({ pendingDetailGid: null }),
 }));
