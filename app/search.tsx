@@ -1,5 +1,5 @@
 // app/search/index.tsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   TextInput,
@@ -16,6 +16,7 @@ import { useLocationStore } from "@/src/stores/useLocationStore";
 import client from "@/src/lib/api/client";
 import RecentSearch from "@/src/components/search/recentSearch";
 import SearchResult from "@/src/components/search/searchResult";
+import { useSearchStore } from "@/src/stores/useSearchStore";
 
 type SearchPayload = {
   keyword: string;
@@ -39,6 +40,8 @@ export default function SearchPage() {
 
   const showRecent = !searchInputText || results === null;
   const showResults = Array.isArray(results) && results.length > 0;
+
+  const submit = useSearchStore((s) => s.submit);
 
   // 컴포넌트 진입 시 좌표가 없으면 한 번 갱신 시도(선택)
   useEffect(() => {
@@ -121,19 +124,31 @@ export default function SearchPage() {
     };
   }, []);
 
+  const submitAndGo = useCallback(
+    (keywordRaw?: string) => {
+      const keyword = (keywordRaw ?? searchInputText).trim();
+      if (!keyword) return;
+      submit(keyword);
+      router.replace("/"); // 홈으로 복귀 → 홈에서 API 호출/시트 렌더
+    },
+    [searchInputText, submit]
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       {/* 상단 바: 뒤로가기 + TextInput */}
       <View style={styles.header}>
         <View style={styles.inputWrap}>
-          <Image
-            source={
-              searchInputText
-                ? require("@/assets/images/search-input-icon-black.png")
-                : require("@/assets/images/search-input-icon-gray.png")
-            }
-            style={styles.searchIcon}
-          />
+          <Pressable onPress={() => submitAndGo()}>
+            <Image
+              source={
+                searchInputText
+                  ? require("@/assets/images/search-input-icon-black.png")
+                  : require("@/assets/images/search-input-icon-gray.png")
+              }
+              style={styles.searchIcon}
+            />
+          </Pressable>
           <TextInput
             autoFocus
             placeholder="지역, 상호명을 검색해보세요"
@@ -142,7 +157,7 @@ export default function SearchPage() {
             placeholderTextColor={Colors.gray_300}
             style={styles.inputText}
             returnKeyType="search"
-            // onSubmitEditing={(e) => { /* 추후: pendingQuery 세팅 후 router.back() */ }}
+            onSubmitEditing={() => submitAndGo()} // 엔터 제출
           />
 
           {/* 검색어 지우기 버튼 */}
