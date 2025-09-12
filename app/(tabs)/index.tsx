@@ -12,12 +12,25 @@ import { TextStyles } from "@/src/styles/TextStyles";
 import UserLocationMarker from "@/src/components/UserLocationMarker";
 import { useLocationStore } from "@/src/stores/useLocationStore";
 import { useAuthStore } from "@/src/stores/useAuthStore";
-
+import { useSearchStore } from "@/src/stores/useSearchStore";
+import { fetchSearchDetails } from "@/src/lib/api/search";
+import SearchDetailsBottomSheet from "@/src/components/bottomSheet/SearchDetailsBottomSheet";
+import SearchDetailBottomSheet from "@/src/components/bottomSheet/SearchDetailBottomSheet";
 export default function Home() {
   const mapRef = useRef<NaverMapViewRef>(null);
   const hydrate = useAuthStore((s) => s.hydrate);
-
   const { refreshOnce, coords } = useLocationStore();
+
+  // 🔎 검색 상태
+  const query = useSearchStore((s) => s.query);
+  const phase = useSearchStore((s) => s.phase);
+  const items = useSearchStore((s) => s.items);
+  const focused = useSearchStore((s) => s.focused);
+
+  const setLoading = useSearchStore((s) => s.setLoading);
+  const setResult = useSearchStore((s) => s.setResult);
+  const setError = useSearchStore((s) => s.setError);
+  const reset = useSearchStore((s) => s.reset);
 
   useEffect(() => {
     hydrate();
@@ -50,6 +63,73 @@ export default function Home() {
     }
   };
 
+  // ✅ 검색 트리거: query가 바뀌고 좌표가 준비되면 /search/details 호출
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!query) return; // 검색 안했으면 패스
+      if (coords.lat == null || coords.lng == null) return;
+
+      try {
+        setLoading(); // 로딩 전환
+        const list = await fetchSearchDetails({
+          keyword: query,
+          lat: coords.lat,
+          lng: coords.lng,
+        });
+        if (!alive) return;
+        setResult(list);
+
+        // 결과가 있으면 첫 번째 결과 근처로 카메라 소폭 이동(선택)
+        if (list.length > 0) {
+          const p = list[0];
+          if (isFinite(p.lat) && isFinite(p.lng)) {
+            mapRef.current?.animateCameraTo({
+              latitude: p.lat,
+              longitude: p.lng,
+              zoom: 15,
+              duration: 0,
+              easing: "EaseIn",
+            });
+          }
+        }
+      } catch (e: any) {
+        if (!alive) return;
+        const msg =
+          e?.response?.data?.message ||
+          e?.message ||
+          "검색 중 문제가 발생했습니다.";
+        setError(msg);
+        console.warn("❌ /search/details 실패:", msg);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [query, coords.lat, coords.lng, setLoading, setResult, setError]);
+
+  // ✅ 리스트 아이템 탭 시 지도 이동 핸들러(시트 → 홈으로 바운스)
+  const handlePressSearchItem = (placeId: string) => {
+    const target = items.find((p) => p.id === placeId);
+    if (target && isFinite(target.lat) && isFinite(target.lng)) {
+      mapRef.current?.animateCameraTo({
+        latitude: target.lat,
+        longitude: target.lng,
+        zoom: 16,
+        duration: 0,
+        easing: "EaseIn",
+      });
+    }
+  };
+
+  // ✅ 바텀 시트 표시 규칙:
+  // - idle: 기존 PlacesBottomSheetContainer
+  // - loading/success/empty/error: SearchDetailsBottomSheet
+  // - focused 가 있으면 SearchDetailBottomSheet(단일 상세)
+  const showPlacesSheet = phase === "idle";
+  const showSearchListSheet = phase !== "idle" && !focused;
+  const showSearchDetailSheet = !!focused;
+
   return (
     <View style={styles.container}>
       {/* 지도 */}
@@ -64,7 +144,6 @@ export default function Home() {
         {/* 커스텀 사용자 마커 */}
         <UserLocationMarker enableRotation />
       </NaverMapView>
-
       {/* 검색창 */}
       <Pressable
         style={styles.searchInput}
@@ -78,10 +157,24 @@ export default function Home() {
           지역, 상호명을 검색해보세요
         </Text>
       </Pressable>
-
-      {/* 바텀시트 */}
-
-      <PlacesBottomSheetContainer onPressMyLocation={moveToCurrentLocation} />
+      {/* 바텀시트 - 교대 렌더 */}
+      {showPlacesSheet && (
+        <PlacesBottomSheetContainer onPressMyLocation={moveToCurrentLocation} />
+      )}
+      {showSearchListSheet && (
+        <SearchDetailsBottomSheet
+          onClose={() => reset()} // 검색 모드 종료 → Places 시트 복귀
+          onPressItem={handlePressSearchItem} // 지도 이동
+        />
+      )}
+      {showSearchDetailSheet && (
+        <SearchDetailBottomSheet
+          onClose={() => {
+            // 단일 상세 닫기 → 리스트로 복귀
+            // (SearchDetailBottomSheet 내부에서 unfocus 호출하도록 되어 있으면 생략 가능)
+          }}
+        />
+      )}
     </View>
   );
 }

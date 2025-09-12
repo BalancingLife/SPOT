@@ -24,6 +24,7 @@ client.interceptors.request.use((config) => {
 
   console.log("🚀 API 요청:", config.url);
   console.log("👉 headers:", config.headers);
+  console.log("params:", config.params);
   return config;
 });
 
