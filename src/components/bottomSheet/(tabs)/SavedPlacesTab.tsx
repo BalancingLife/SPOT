@@ -114,34 +114,21 @@ export default function SavedPlacesTab() {
       />
 
       <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
-        {/* 에러 표시 */}
-        {error ? (
-          <View style={{ marginBottom: 12 }}>
-            <Text style={[TextStyles.Regular12, { color: Colors.gray_300 }]}>
-              {error}
-            </Text>
-            <Pressable
-              onPress={load}
-              style={{
-                alignSelf: "flex-start",
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderWidth: 1,
-                borderColor: Colors.gray_100,
-                borderRadius: 6,
-                marginTop: 6,
-              }}
-            >
-              <Text style={TextStyles.Regular12}>다시 불러오기</Text>
-            </Pressable>
-          </View>
-        ) : null}
-
         {/* 목록 */}
         {items.length === 0 && !loading ? (
-          <Text style={[TextStyles.Regular12, { color: Colors.gray_300 }]}>
-            저장된 장소가 없어요.
-          </Text>
+          <View style={{ flex: 1, alignItems: "center", paddingTop: 150 }}>
+            <Text
+              style={[
+                TextStyles.SemiBold16,
+                { color: Colors.gray_300, fontSize: 20 },
+              ]}
+            >
+              저장된 장소가 없어요.
+            </Text>
+            <Text style={[TextStyles.Regular12, { color: Colors.gray_300 }]}>
+              첫 장소를 저장하고, 여정을 시작해 보세요!
+            </Text>
+          </View>
         ) : null}
 
         {items.map((item) => {

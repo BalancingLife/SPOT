@@ -221,12 +221,14 @@ export default function Home() {
       {showPlacesSheet && (
         <PlacesBottomSheetContainer onPressMyLocation={moveToCurrentLocation} />
       )}
+
       {showSearchListSheet && (
         <SearchDetailsBottomSheet
           onClose={() => reset()} // 검색 모드 종료 → Places 시트 복귀
           onPressItem={handlePressSearchItem} // 지도 이동
         />
       )}
+
       {showSearchDetailSheet && (
         <SearchDetailBottomSheet
           onClose={() => {
