@@ -204,6 +204,7 @@ export default function Home() {
         {/* 커스텀 사용자 마커 */}
         <UserLocationMarker enableRotation />
       </NaverMapView>
+
       {/* 검색창 */}
       <Pressable
         style={styles.searchInput}
@@ -217,11 +218,15 @@ export default function Home() {
           지역, 상호명을 검색해보세요
         </Text>
       </Pressable>
+
       {/* 바텀시트 - 교대 렌더 */}
+
+      {/* 기본 default 바텀시트 */}
       {showPlacesSheet && (
         <PlacesBottomSheetContainer onPressMyLocation={moveToCurrentLocation} />
       )}
 
+      {/* 검색 페이지에서 돋보기 클릭 or 엔터 눌렀을 시 */}
       {showSearchListSheet && (
         <SearchDetailsBottomSheet
           onClose={() => reset()} // 검색 모드 종료 → Places 시트 복귀
@@ -229,6 +234,7 @@ export default function Home() {
         />
       )}
 
+      {/* 검색 페이지에서 장소 하나 선택했을 시 */}
       {showSearchDetailSheet && (
         <SearchDetailBottomSheet
           onClose={() => {

@@ -142,7 +142,7 @@ export default function PlacesBottomSheetContainer({
 
           {/* 탭 콘텐츠 */}
           <View style={{ flex: 1 }}>
-            {selectedTab === "saved" ? <SavedPlacesTab /> : <HotPlacesTab />}
+            {selectedTab === "saved" ? <SavedPlacesTab /> : <HotPlace sTab />}
           </View>
         </BottomSheetScrollView>
       </BottomSheet>

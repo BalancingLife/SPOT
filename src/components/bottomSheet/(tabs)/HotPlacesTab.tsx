@@ -87,6 +87,7 @@ export default function HotPlacesTab() {
 
   return (
     <View style={{ flex: 1 }}>
+      {/* 필터 바 */}
       <FilterBar
         sortLabel={sortLabel}
         saveTypeLabel={saveTypeLabel}
