@@ -96,19 +96,19 @@ export default function Home() {
         focus(place);
 
         // 지도 카메라도 상세로 이동(선택)
-        if (isFinite(place.lat) && isFinite(place.lng)) {
-          console.log("📍 지도 카메라 이동:", {
-            latitude: place.lat,
-            longitude: place.lng,
-          });
-          mapRef.current?.animateCameraTo({
-            latitude: place.lat,
-            longitude: place.lng,
-            zoom: 16,
-            duration: 0,
-            easing: "EaseIn",
-          });
-        }
+        // if (isFinite(place.lat) && isFinite(place.lng)) {
+        //   console.log("📍 지도 카메라 이동:", {
+        //     latitude: place.lat,
+        //     longitude: place.lng,
+        //   });
+        //   mapRef.current?.animateCameraTo({
+        //     latitude: place.lat,
+        //     longitude: place.lng,
+        //     zoom: 16,
+        //     duration: 0,
+        //     easing: "EaseIn",
+        //   });
+        // }
       } catch (e: any) {
         console.error("❌ /search/detail 실패:", e?.message ?? e);
       } finally {
