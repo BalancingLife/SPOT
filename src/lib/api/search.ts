@@ -59,6 +59,8 @@ export async function fetchSearchDetails(params: {
   return items;
 }
 
+let inflightDetail: AbortController | null = null;
+
 export async function fetchPlaceDetail(params: {
   gid: string;
   lat: number;
@@ -66,44 +68,40 @@ export async function fetchPlaceDetail(params: {
 }): Promise<Place> {
   const { gid, lat, lng } = params;
 
-  const controller = new AbortController();
+  // 이전 요청 있으면 취소
+  // if (inflightDetail) inflightDetail.abort();
+  inflightDetail = new AbortController();
 
-  try {
-    const res = await client.get("/search/detail", {
-      params: { gid, lat, lng },
-      signal: controller.signal,
-    });
+  console.log("🚀 /search/detail API 요청:", { gid, lat, lng });
 
-    const it = res.data;
+  const res = await client.get("/serach/detail", {
+    params: { gid, lat, lng },
+    signal: inflightDetail.signal,
+  });
 
-    const placeLat = Number(it.latitude);
-    const placeLng = Number(it.longitude);
+  console.log("✅ /search/detail res.data:", res.data);
 
-    const place: Place = {
-      id: String(it.placeId ?? it.gId ?? gid),
-      name: it.name ?? "",
-      address: it.address ?? "",
-      lat: placeLat,
-      lng: placeLng,
+  const it = res.data;
+  const placeLat = Number(it.latitude);
+  const placeLng = Number(it.longitude);
 
-      photo: it.photo ?? it.photoUrl ?? null,
-      ratingAvg: typeof it.ratingAvg === "number" ? it.ratingAvg : null,
-      ratingCount: typeof it.ratingCount === "number" ? it.ratingCount : null,
-      myRating: typeof it.myRating === "number" ? it.myRating : null,
-      savers: Array.isArray(it.savers) ? it.savers : [],
+  const place: Place = {
+    id: String(it.placeId ?? it.gId ?? gid),
+    name: it.name ?? "",
+    address: it.address ?? "",
+    lat: placeLat,
+    lng: placeLng,
+    photo: it.photo ?? it.photoUrl ?? null,
+    ratingAvg: typeof it.ratingAvg === "number" ? it.ratingAvg : null,
+    ratingCount: typeof it.ratingCount === "number" ? it.ratingCount : null,
+    myRating: typeof it.myRating === "number" ? it.myRating : null,
+    savers: Array.isArray(it.savers) ? it.savers : [],
+    distanceM:
+      isFinite(placeLat) && isFinite(placeLng)
+        ? haversine(lat, lng, placeLat, placeLng)
+        : undefined,
+    thumbnails: it.photo ? [it.photo] : it.photos ? it.photos : [],
+  };
 
-      distanceM:
-        isFinite(placeLat) && isFinite(placeLng)
-          ? haversine(lat, lng, placeLat, placeLng)
-          : undefined,
-      thumbnails: it.photo ? [it.photo] : it.photos ? it.photos : [],
-    };
-
-    return place;
-  } catch (e: any) {
-    if (e?.name === "CanceledError" || e?.code === "ERR_CANCELED") {
-      throw e;
-    }
-    throw e;
-  }
+  return place;
 }

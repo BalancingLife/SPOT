@@ -17,6 +17,7 @@ import client from "@/src/lib/api/client";
 import RecentSearch from "@/src/components/search/recentSearch";
 import SearchResult from "@/src/components/search/searchResult";
 import { useSearchStore } from "@/src/stores/useSearchStore";
+import { useRecentSearchStore } from "@/src/stores/useRecentSearchStore";
 
 type SearchPayload = {
   keyword: string;
@@ -33,6 +34,11 @@ export type SearchResultItem = {
   distance: number; // m
 };
 
+export type RecentItem = {
+  id: string;
+  keyword: string;
+};
+
 export default function SearchPage() {
   const [searchInputText, setSearchInputText] = useState("");
   const { coords, refreshOnce } = useLocationStore();
@@ -43,6 +49,17 @@ export default function SearchPage() {
 
   const submit = useSearchStore((s) => s.submit);
   const requestDetail = useSearchStore((s) => s.requestDetail);
+
+  const recent = useRecentSearchStore((s) => s.items);
+  const recentLoading = useRecentSearchStore((s) => s.loading);
+  const fetchRecent = useRecentSearchStore((s) => s.fetch);
+  const addRecent = useRecentSearchStore((s) => s.add);
+  const removeRecent = useRecentSearchStore((s) => s.remove);
+
+  // 마운트 시 한 번 로드
+  useEffect(() => {
+    fetchRecent();
+  }, [fetchRecent]);
 
   // 컴포넌트 진입 시 좌표가 없으면 한 번 갱신 시도(선택)
   useEffect(() => {
@@ -182,12 +199,10 @@ export default function SearchPage() {
       <View style={styles.body}>
         {showRecent && (
           <RecentSearch
-            items={[
-              { id: "1", keyword: "커피" },
-              { id: "2", keyword: "헬스장" },
-              { id: "3", keyword: "CU" },
-            ]}
+            items={recent}
+            loading={recentLoading}
             onTapKeyword={(k) => setSearchInputText(k)}
+            onRemoveKeyword={(id) => removeRecent(id)}
           />
         )}
 

@@ -1,5 +1,5 @@
 // src/components/search/RecentSearch.tsx
-import React, { useEffect } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -7,50 +7,40 @@ import {
   Pressable,
   StyleSheet,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
-import client from "@/src/lib/api/client";
 
-type RecentItem = {
-  id: string;
-  keyword: string;
-};
+type RecentItem = { id: string; keyword: string };
 
 type Props = {
   items: RecentItem[];
+  loading?: boolean;
   onTapKeyword: (keyword: string) => void;
-  onRemoveKeyword?: (id: string) => void; // ← 삭제 콜백 추가
+  onRemoveKeyword?: (id: string) => void;
 };
 
 export default function RecentSearch({
   items,
+  loading = false,
   onTapKeyword,
   onRemoveKeyword,
 }: Props) {
-  useEffect(() => {
-    fetchRecentSearch();
-  }, []);
+  if (loading) {
+    return (
+      <View style={styles.loadingWrap}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
 
-  if (items.length === 0) {
+  if (!items || items.length === 0) {
     return (
       <View style={styles.emptyWrap}>
         <Text style={TextStyles.Medium16}>최근 검색어가 없습니다.</Text>
       </View>
     );
-  }
-
-  async function fetchRecentSearch() {
-    try {
-      const res = await client.get("/recent");
-      console.log("status:", res.status);
-      console.log("headers:", res.headers);
-      console.log("data:", res.data);
-      return res.data;
-    } catch (err) {
-      console.log("최근 검색어 불러오기 실패", err);
-      throw err;
-    }
   }
 
   return (
@@ -61,7 +51,6 @@ export default function RecentSearch({
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.row}>
-            {/* 키워드 클릭 */}
             <Pressable
               onPress={() => onTapKeyword(item.keyword)}
               style={styles.keywordWrap}
@@ -73,10 +62,9 @@ export default function RecentSearch({
               <Text style={TextStyles.Medium16}>{item.keyword}</Text>
             </Pressable>
 
-            {/* 삭제 버튼 */}
             {onRemoveKeyword && (
               <Pressable
-                onPress={() => onRemoveKeyword(item.id)}
+                onPress={() => onRemoveKeyword(item.keyword)}
                 hitSlop={8}
                 style={styles.removeBtn}
               >
@@ -94,9 +82,7 @@ export default function RecentSearch({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 8,
-  },
+  container: { marginTop: 8 },
   title: {
     ...TextStyles.SemiBold16,
     color: Colors.gray_900,
@@ -105,31 +91,13 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // 양쪽 배치
+    justifyContent: "space-between",
     paddingVertical: 10,
   },
-  keywordWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  icon: {
-    width: 24,
-    height: 24,
-    marginRight: 8,
-    tintColor: Colors.gray_400,
-  },
-  removeBtn: {
-    paddingHorizontal: 4,
-    paddingVertical: 4,
-  },
-  removeIcon: {
-    width: 20,
-    height: 20,
-    tintColor: Colors.gray_400,
-  },
-  emptyWrap: {
-    alignItems: "center",
-    paddingVertical: 20,
-  },
+  keywordWrap: { flexDirection: "row", alignItems: "center", flex: 1 },
+  icon: { width: 24, height: 24, marginRight: 8, tintColor: Colors.gray_400 },
+  removeBtn: { paddingHorizontal: 4, paddingVertical: 4 },
+  removeIcon: { width: 20, height: 20, tintColor: Colors.gray_400 },
+  emptyWrap: { alignItems: "center", paddingVertical: 20 },
+  loadingWrap: { alignItems: "center", paddingVertical: 20 },
 });
