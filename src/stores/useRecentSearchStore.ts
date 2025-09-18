@@ -76,7 +76,7 @@ export const useRecentSearchStore = create<State & Actions>((set, get) => ({
     }
   },
 
-  // ✅ keyword 기반 삭제 API 사용
+  //  keyword 기반 삭제 API 사용
   remove: async (keyword: string, idHint?: string) => {
     const backup = get().items;
 
