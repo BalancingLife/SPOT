@@ -58,7 +58,6 @@ export default function HotPlacesTab() {
       { label: "카페", value: "cafe" },
       { label: "소품샵", value: "gift_shop" },
       { label: "옷가게", value: "clothing_store" },
-      { label: "기타", value: "etc" },
     ],
     []
   );

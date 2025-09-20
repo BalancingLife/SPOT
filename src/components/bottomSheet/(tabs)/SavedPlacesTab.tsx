@@ -47,7 +47,6 @@ export default function SavedPlacesTab() {
       { label: "카페", value: "cafe" },
       { label: "소품샵", value: "gift_shop" },
       { label: "옷가게", value: "clothing_store" },
-      { label: "기타", value: "etc" },
     ],
     []
   );
@@ -123,7 +122,7 @@ export default function SavedPlacesTab() {
                 { color: Colors.gray_300, fontSize: 20 },
               ]}
             >
-              저장된 장소가 없어요.
+              저장된 장소가 없어요
             </Text>
             <Text style={[TextStyles.Regular12, { color: Colors.gray_300 }]}>
               첫 장소를 저장하고, 여정을 시작해 보세요!
