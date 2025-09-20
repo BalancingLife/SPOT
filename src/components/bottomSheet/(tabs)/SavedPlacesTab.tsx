@@ -46,6 +46,7 @@ export default function SavedPlacesTab() {
       { label: "전시회", value: "exhibition" },
       { label: "카페", value: "cafe" },
       { label: "소품샵", value: "gift_shop" },
+      { label: "체험", value: "experience" },
       { label: "옷가게", value: "clothing_store" },
     ],
     []
