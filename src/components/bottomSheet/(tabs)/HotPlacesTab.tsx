@@ -26,7 +26,6 @@ const dummyData = new Array(4).fill(0).map((_, i) => ({
 }));
 
 export default function HotPlacesTab() {
-  // ✅ 이 탭만의 필터 상태(저장된 장소 탭과 분리)
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
     null
   );
@@ -71,14 +70,10 @@ export default function HotPlacesTab() {
   );
 
   const sortLabel =
-    sortOptions.find((o) => o.value === sort[0])?.label || "최신순";
-  const saveTypeLabel =
-    saveType.length > 0
-      ? saveOptions.find((o) => o.value === saveType[0])?.label || "저장방식"
-      : "저장방식";
+    sortOptions.find((o) => o.value === sort[0])?.label ?? "최신순";
   const categoryLabel =
     category.length > 0
-      ? categoryOptions.find((o) => o.value === category[0])?.label || "업종"
+      ? categoryOptions.find((o) => o.value === category[0])?.label ?? "업종"
       : "업종";
 
   // ⚠️ 지금은 더미 데이터라 필터 적용 로직은 생략.
@@ -89,11 +84,10 @@ export default function HotPlacesTab() {
       {/* 필터 바 */}
       <FilterBar
         sortLabel={sortLabel}
-        saveTypeLabel={saveTypeLabel}
         categoryLabel={categoryLabel}
         onPressSort={() => setOpened("sort")}
-        onPressSaveType={() => setOpened("save")}
         onPressCategory={() => setOpened("category")}
+        showSaveType={false}
       />
 
       <BottomSheetScrollView
@@ -113,14 +107,6 @@ export default function HotPlacesTab() {
         options={sortOptions}
         selected={sort}
         onSelect={(next) => setSort(next)}
-        onClose={() => setOpened(null)}
-      />
-      <OptionModal
-        visible={opened === "save"}
-        title="저장 방식"
-        options={saveOptionsForModal}
-        selected={saveType}
-        onSelect={(next) => setSaveType(next)}
         onClose={() => setOpened(null)}
       />
       <OptionModal

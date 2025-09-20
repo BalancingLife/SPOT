@@ -2,57 +2,57 @@ import { Pressable, View, Text, StyleSheet, Image } from "react-native";
 
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
+import type { FilterBarProps } from "@/src/types";
 
 export default function FilterBar({
-  sortLabel,
-  saveTypeLabel,
-  categoryLabel,
+  sortLabel = "정렬",
+  saveTypeLabel = "저장방식",
+  categoryLabel = "업종",
   onPressSort,
   onPressSaveType,
   onPressCategory,
-}: {
-  sortLabel: string;
-  saveTypeLabel: string;
-  categoryLabel: string;
-  onPressSort: () => void;
-  onPressSaveType: () => void;
-  onPressCategory: () => void;
-}) {
+  showSort = true,
+  showSaveType = true,
+  showCategory = true,
+}: FilterBarProps) {
   return (
     <View style={styles.container}>
       {/* 정렬기준 */}
+      {showSort && (
+        <Pressable onPress={onPressSort}>
+          <View style={styles.filterView}>
+            <Text style={styles.filterText}>{sortLabel}</Text>
+            <Image
+              style={styles.filterImage}
+              source={require("@/assets/images/arrow-down-gray.png")}
+            />
+          </View>
+        </Pressable>
+      )}
 
-      <Pressable onPress={onPressSort}>
-        <View style={styles.filterView}>
-          <Text style={styles.filterText}>{sortLabel}</Text>
-          <Image
-            style={styles.filterImage}
-            source={require("@/assets/images/arrow-down-gray.png")}
-          />
-        </View>
-      </Pressable>
+      {showSaveType && (
+        <Pressable onPress={onPressSaveType}>
+          <View style={styles.filterView}>
+            <Text style={styles.filterText}>{saveTypeLabel}</Text>
+            <Image
+              style={styles.filterImage}
+              source={require("@/assets/images/arrow-down-gray.png")}
+            />
+          </View>
+        </Pressable>
+      )}
 
-      {/* 저장방식 */}
-      <Pressable onPress={onPressSaveType}>
-        <View style={styles.filterView}>
-          <Text style={styles.filterText}>{saveTypeLabel}</Text>
-          <Image
-            style={styles.filterImage}
-            source={require("@/assets/images/arrow-down-gray.png")}
-          />
-        </View>
-      </Pressable>
-
-      {/* 업종 */}
-      <Pressable onPress={onPressCategory}>
-        <View style={styles.filterView}>
-          <Text style={styles.filterText}>{categoryLabel}</Text>
-          <Image
-            style={styles.filterImage}
-            source={require("@/assets/images/arrow-down-gray.png")}
-          />
-        </View>
-      </Pressable>
+      {showCategory && (
+        <Pressable onPress={onPressCategory}>
+          <View style={styles.filterView}>
+            <Text style={styles.filterText}>{categoryLabel}</Text>
+            <Image
+              style={styles.filterImage}
+              source={require("@/assets/images/arrow-down-gray.png")}
+            />
+          </View>
+        </Pressable>
+      )}
     </View>
   );
 }
