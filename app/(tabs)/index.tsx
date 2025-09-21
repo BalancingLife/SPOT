@@ -1,10 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, Pressable, StyleSheet, Image, Alert } from "react-native";
 import { router } from "expo-router";
-import {
-  NaverMapView,
-  // NaverMapMarkerOverlay,
-} from "@mj-studio/react-native-naver-map";
+import { NaverMapView } from "@mj-studio/react-native-naver-map";
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
 import PlacesBottomSheetContainer from "../../src/components/bottomSheet/PlacesBottomSheetContainer";
 import { Colors } from "@/src/styles/Colors";
