@@ -18,7 +18,6 @@ export default function Home() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const { refreshOnce, coords } = useLocationStore();
 
-  // 🔎 검색 상태
   const query = useSearchStore((s) => s.query);
   const phase = useSearchStore((s) => s.phase);
   const items = useSearchStore((s) => s.items);
