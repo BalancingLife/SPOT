@@ -1,14 +1,16 @@
 // src/components/bottomSheet/SearchDetailBottomSheet.tsx
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Image,
   Pressable,
-  ScrollView,
   Linking,
+  ScrollView,
 } from "react-native";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+
 import { useSearchStore } from "@/src/stores/useSearchStore";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
@@ -22,10 +24,10 @@ function formatDistance(m?: number) {
 }
 
 export default function SearchDetailBottomSheet({ onClose }: Props) {
+  const sheetRef = useRef<BottomSheet>(null);
   const focused = useSearchStore((s) => s.focused);
   const unfocus = useSearchStore((s) => s.unfocus);
 
-  // ✅ 훅은 항상 같은 순서로 호출
   const images = useMemo(() => {
     if (!focused) return [];
     const arr =
@@ -68,26 +70,23 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
     onClose?.();
   };
 
-  // ✅ UI에서만 조건부 렌더 처리 (훅은 위에서 이미 호출됨)
   if (!focused) return null;
 
   const { name, address, ratingAvg, ratingCount, isBookmarked } = focused;
 
   return (
-    <View style={styles.sheet}>
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <Text style={TextStyles.SemiBold16}>장소 상세</Text>
-        <Pressable onPress={handleClose} hitSlop={10}>
-          <Image
-            source={require("@/assets/images/x-gray.png")}
-            style={{ width: 20, height: 20 }}
-          />
-        </Pressable>
-      </View>
-
-      {/* 바디 */}
-      <ScrollView
+    <BottomSheet
+      ref={sheetRef}
+      enableDynamicSizing // ✅ 내용물 높이에 맞춰서 자동 조절
+      index={0} // 첫 오픈시 내용물 높이로 열림
+      enablePanDownToClose
+      enableOverDrag={false} // 위로 더 못 당기게
+      onClose={handleClose}
+      backgroundStyle={styles.sheetBackground}
+      handleIndicatorStyle={{ backgroundColor: Colors.gray_300 }}
+    >
+      {/* 본문 */}
+      <BottomSheetScrollView
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
       >
@@ -159,7 +158,7 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
           </View>
         )}
 
-        {/* 이미지 가로 스크롤 */}
+        {/* 이미지 */}
         {images.length > 0 && (
           <ScrollView
             horizontal
@@ -172,7 +171,7 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
           </ScrollView>
         )}
 
-        {/* 저장한 사람들 아바타 */}
+        {/* 저장한 사람들 */}
         {savedUsers.length > 0 && (
           <View style={[styles.row, { marginTop: 14 }]}>
             <View style={styles.avatarGroup}>
@@ -195,7 +194,7 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
           </View>
         )}
 
-        {/* 버튼들 */}
+        {/* 버튼 */}
         <View style={[styles.rowBetween, { marginTop: 16 }]}>
           <Pressable style={styles.navBtn} onPress={openNaverDirection}>
             <Image
@@ -204,31 +203,17 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
             />
             <Text style={TextStyles.Regular12}>네이버 지도 길찾기</Text>
           </Pressable>
-
-          <Pressable style={styles.secondaryBtn} onPress={handleClose}>
-            <Text style={TextStyles.Medium12}>닫기</Text>
-          </Pressable>
         </View>
-      </ScrollView>
-    </View>
+      </BottomSheetScrollView>
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  sheet: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    maxHeight: "75%",
+  sheetBackground: {
     backgroundColor: Colors.white,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    elevation: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
   },
   header: {
     height: 48,
