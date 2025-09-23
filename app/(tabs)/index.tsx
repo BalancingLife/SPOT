@@ -78,7 +78,7 @@ export default function Home() {
 
     (async () => {
       try {
-        console.log("🚀 /search/detail API 호출 시작");
+        console.log("🚀 /serach/detail API 호출 시작");
         const place = await fetchPlaceDetail({
           gid: pendingDetailGid,
           lat: coords.lat!,
@@ -86,7 +86,7 @@ export default function Home() {
         });
         if (!alive) return;
 
-        console.log("✅ /search/detail 성공:", place);
+        console.log("✅ /serach/detail 성공:", place);
 
         // 상세 포커스 세팅 → 단일 상세 바텀시트가 표시됨
         focus(place);
@@ -106,7 +106,7 @@ export default function Home() {
           });
         }
       } catch (e: any) {
-        console.error("❌ /search/detail 실패:", {
+        console.error("❌  /serach/detail 실패:", {
           name: e?.name,
           message: e?.message,
           code: e?.code,

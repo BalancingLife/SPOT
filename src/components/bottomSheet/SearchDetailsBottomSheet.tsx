@@ -1,5 +1,5 @@
 // src/components/bottomSheet/SearchDetailsBottomSheet.tsx
-import React from "react";
+import React, { useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -7,8 +7,12 @@ import {
   ActivityIndicator,
   Pressable,
   Image,
-  FlatList,
 } from "react-native";
+import BottomSheet, {
+  BottomSheetScrollView,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+
 import { useSearchStore } from "@/src/stores/useSearchStore";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
@@ -16,19 +20,22 @@ import PlaceCard from "@/src/components/PlaceCard";
 
 type Props = {
   onClose: () => void; // 검색 모드 종료(Places 시트로 복귀)
-  onPressItem?: (placeId: string) => void; // 카드 선택 시 지도 카메라 이동 등
+  onPressItem?: (placeId: string) => void; // 카드 탭 시 지도 이동
 };
 
 export default function SearchDetailsBottomSheet({
   onClose,
   onPressItem,
 }: Props) {
+  const sheetRef = useRef<BottomSheet>(null);
+
   const phase = useSearchStore((s) => s.phase);
   const items = useSearchStore((s) => s.items);
   const error = useSearchStore((s) => s.error);
   const focus = useSearchStore((s) => s.focus);
 
-  // ----- 공통 헤더 -----
+  const snapPoints = useMemo(() => ["6.7%", "50%", "75%"], []);
+
   const Header = (
     <View style={styles.header}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -48,12 +55,10 @@ export default function SearchDetailsBottomSheet({
     </View>
   );
 
-  // ----- 상태별 렌더 -----
-  if (phase === "loading") {
-    return (
-      <View style={styles.sheet}>
-        {Header}
-        <View style={styles.centerWrap}>
+  const Body = () => {
+    if (phase === "loading") {
+      return (
+        <BottomSheetView style={styles.centerWrap}>
           <ActivityIndicator />
           <Text
             style={[
@@ -63,16 +68,13 @@ export default function SearchDetailsBottomSheet({
           >
             검색 중…
           </Text>
-        </View>
-      </View>
-    );
-  }
+        </BottomSheetView>
+      );
+    }
 
-  if (phase === "error") {
-    return (
-      <View style={styles.sheet}>
-        {Header}
-        <View style={styles.centerWrap}>
+    if (phase === "error") {
+      return (
+        <BottomSheetView style={styles.centerWrap}>
           <Text style={TextStyles.Medium16}>문제가 발생했어요</Text>
           {!!error && (
             <Text
@@ -93,16 +95,13 @@ export default function SearchDetailsBottomSheet({
           >
             검색어를 바꾸거나 잠시 후 다시 시도해 주세요.
           </Text>
-        </View>
-      </View>
-    );
-  }
+        </BottomSheetView>
+      );
+    }
 
-  if (phase === "empty") {
-    return (
-      <View style={styles.sheet}>
-        {Header}
-        <View style={styles.centerWrap}>
+    if (phase === "empty") {
+      return (
+        <BottomSheetView style={styles.centerWrap}>
           <Text style={TextStyles.Medium16}>검색 결과가 없어요</Text>
           <Text
             style={[
@@ -112,41 +111,38 @@ export default function SearchDetailsBottomSheet({
           >
             키워드를 바꿔보거나 위치를 이동해보세요.
           </Text>
-        </View>
-      </View>
-    );
-  }
+        </BottomSheetView>
+      );
+    }
 
-  // ----- success: 리스트 렌더 -----
-  return (
-    <View style={styles.sheet}>
-      {Header}
-
-      <FlatList
-        data={items}
-        keyExtractor={(p) => p.id}
+    // success
+    return (
+      <BottomSheetScrollView
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 16 }}
-        renderItem={({ item: p }) => {
-          // Place -> PlaceCard props 매핑
+      >
+        {items.map((p) => {
           const category =
-            (p as any).categoryPath?.join(" > ") ?? (p as any).list ?? ""; // 서버에서 list:string 올 수도 있음
+            (p as any).categoryPath?.join(" > ") ?? (p as any).list ?? "";
           const images =
             p.thumbnails && p.thumbnails.length > 0
-              ? p.thumbnails.slice(0, 5).map((uri) => ({ uri }))
+              ? p.thumbnails.slice(0, 5).map((uri: string) => ({ uri }))
               : p.photo
               ? [{ uri: p.photo }]
-              : []; // 이미지 없을 때는 빈 배열
+              : [];
           const savedUsers =
             p.savers && p.savers.length > 0
-              ? p.savers.slice(0, 3).map((s) => ({ uri: s.profileImageUrl }))
+              ? p.savers
+                  .slice(0, 3)
+                  .map((s: any) => ({ uri: s.profileImageUrl }))
               : [];
           const savedCount = p.savers ? p.savers.length : 0;
 
           return (
             <Pressable
+              key={p.id}
               onPress={() => {
-                onPressItem?.(p.id); // 지도 이동
-                focus(p); // 단일 상세 시트 전환 준비
+                onPressItem?.(p.id);
+                focus(p);
               }}
               style={{ paddingVertical: 2 }}
             >
@@ -165,32 +161,38 @@ export default function SearchDetailsBottomSheet({
               />
             </Pressable>
           );
-        }}
-      />
-    </View>
+        })}
+      </BottomSheetScrollView>
+    );
+  };
+
+  return (
+    <BottomSheet
+      ref={sheetRef}
+      snapPoints={snapPoints}
+      index={2} // 기본 70%로 열림
+      enableDynamicSizing={false} // 내용 높이 때문에 스냅 초과 상승 방지
+      enablePanDownToClose
+      enableOverDrag={false}
+      onClose={onClose}
+      backgroundStyle={styles.sheetBackground}
+      handleIndicatorStyle={{ backgroundColor: Colors.gray_300 }}
+    >
+      {Header}
+      {Body()}
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  sheet: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    maxHeight: "70%",
+  sheetBackground: {
     backgroundColor: Colors.white,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    paddingBottom: 12,
-    // 그림자
-    elevation: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
   },
   header: {
     height: 48,
+    backgroundColor: Colors.white,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

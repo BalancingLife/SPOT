@@ -72,14 +72,14 @@ export async function fetchPlaceDetail(params: {
   // if (inflightDetail) inflightDetail.abort();
   inflightDetail = new AbortController();
 
-  console.log("🚀 /search/detail API 요청:", { gid, lat, lng });
+  console.log("🚀 /serach/detail API 요청:", { gid, lat, lng });
 
   const res = await client.get("/serach/detail", {
     params: { gid, lat, lng },
     signal: inflightDetail.signal,
   });
 
-  console.log("✅ /search/detail res.data:", res.data);
+  console.log("✅ /serach/detail res.data:", res.data);
 
   const it = res.data;
   const placeLat = Number(it.latitude);
