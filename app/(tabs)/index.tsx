@@ -184,7 +184,7 @@ export default function Home() {
     }
   };
 
-  // ✅ 바텀 시트 표시 규칙:
+  //  바텀 시트 표시 규칙:
   // - idle: 기존 PlacesBottomSheetContainer
   // - loading/success/empty/error: SearchDetailsBottomSheet
   // - focused 가 있으면 SearchDetailBottomSheet(단일 상세)
