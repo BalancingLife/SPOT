@@ -29,22 +29,13 @@ export default function HotPlacesTab() {
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
     null
   );
-  const [sort, setSort] = useState<string[]>(["recent"]); // 기본 최신순
-  const [saveType, setSaveType] = useState<string[]>([]); // 비어있음 = 전체
   const [category, setCategory] = useState<string[]>([]); // 비어있음 = 전체
+  const [sort, setSort] = useState<string[]>(["recent"]); // 기본 최신순
 
   const sortOptions = useMemo(
     () => [
       { label: "최신순", value: "latest" },
       { label: "거리순", value: "distance" },
-    ],
-    []
-  );
-  const saveOptions = useMemo(
-    () => [
-      { label: "전체", value: "all" },
-      { label: "인스타그램", value: "instagram" },
-      { label: "직접 저장", value: "self" },
     ],
     []
   );
@@ -61,10 +52,7 @@ export default function HotPlacesTab() {
     ],
     []
   );
-  const saveOptionsForModal = useMemo(
-    () => saveOptions.filter((o) => o.value !== "all"),
-    [saveOptions]
-  );
+
   const categoryOptionsForModal = useMemo(
     () => categoryOptions.filter((o) => o.value !== "all"),
     [categoryOptions]

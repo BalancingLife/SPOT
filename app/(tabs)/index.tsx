@@ -5,11 +5,14 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
-import { ScrollView } from "react-native-gesture-handler";
+import FilterBar from "@/src/components/bottomSheet/FilterBar";
+import PlaceCard from "@/src/components/PlaceCard";
+import OptionModal from "@/src/components/OptionModal";
 
 const TABS = [
   { key: "map", label: "지도" },
@@ -19,8 +22,66 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]["key"];
 
+const dummyData = new Array(4).fill(0).map((_, i) => ({
+  name: `장소 이름${i + 1}`,
+  category: "카페 / 베이커리",
+  address: `서울 주소구 주소동 ${123 + i}-1`,
+  images: [
+    require("@/assets/images/example.png"),
+    require("@/assets/images/react-logo.png"),
+    require("@/assets/images/spot-icon-orange.png"),
+  ],
+  savedUsers: [
+    require("@/assets/images/spot-icon-orange.png"),
+    require("@/assets/images/react-logo.png"),
+  ],
+  savedCount: 4 + i,
+  rating: 4.5,
+  reviewCount: 199,
+  showBookmark: true,
+  isBookmarked: true,
+}));
+
 export default function Home() {
+  const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
+    null
+  );
+  const [category, setCategory] = useState<string[]>([]); // 비어있음 = 전체
+  const [sort, setSort] = useState<string[]>(["recent"]); // 기본 최신순
+
   const [activeTab, setActiveTab] = useState<TabKey>("map");
+
+  const sortOptions = useMemo(
+    () => [
+      { label: "최신순", value: "latest" },
+      { label: "거리순", value: "distance" },
+    ],
+    []
+  );
+  const categoryOptions = useMemo(
+    () => [
+      { label: "음식점", value: "restaurant" },
+      { label: "술집", value: "bar" },
+      { label: "전시회", value: "exhibition" },
+      { label: "카페", value: "cafe" },
+      { label: "소품샵", value: "gift_shop" },
+      { label: "체험", value: "experience" },
+      { label: "옷가게", value: "clothing_store" },
+    ],
+    []
+  );
+
+  const sortLabel =
+    sortOptions.find((o) => o.value === sort[0])?.label ?? "최신순";
+  const categoryLabel =
+    category.length > 0
+      ? categoryOptions.find((o) => o.value === category[0])?.label ?? "업종"
+      : "업종";
+
+  const categoryOptionsForModal = useMemo(
+    () => categoryOptions.filter((o) => o.value !== "all"),
+    [categoryOptions]
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -108,7 +169,48 @@ export default function Home() {
 
           {activeTab === "place" && (
             <View style={styles.placeholderBox}>
-              <Text style={styles.placeholderText}>장소 리스트 영역</Text>
+              <View style={{ flex: 1 }}>
+                {/* 필터 바 */}
+                <FilterBar
+                  sortLabel={sortLabel}
+                  categoryLabel={categoryLabel}
+                  onPressSort={() => setOpened("sort")}
+                  onPressCategory={() => setOpened("category")}
+                  showSaveType={false}
+                />
+
+                <ScrollView
+                  style={{ flex: 1 }}
+                  contentContainerStyle={{ paddingHorizontal: 16 }}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {dummyData.map((item, index) => (
+                    <PlaceCard
+                      key={index}
+                      {...item}
+                      showDirectionButton={true}
+                    />
+                  ))}
+                </ScrollView>
+
+                {/* ✅ 모달: 단일 선택 + 즉시 적용, '전체'는 모달에서 숨김 */}
+                <OptionModal
+                  visible={opened === "sort"}
+                  title="정렬 기준"
+                  options={sortOptions}
+                  selected={sort}
+                  onSelect={(next) => setSort(next)}
+                  onClose={() => setOpened(null)}
+                />
+                <OptionModal
+                  visible={opened === "category"}
+                  title="업종"
+                  options={categoryOptionsForModal}
+                  selected={category}
+                  onSelect={(next) => setCategory(next)}
+                  onClose={() => setOpened(null)}
+                />
+              </View>
             </View>
           )}
 
