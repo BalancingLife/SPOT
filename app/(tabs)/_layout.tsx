@@ -80,9 +80,24 @@ export default function TabLayout() {
             createTabBarIcon(
               focused,
               focused
-                ? require("@/assets/images/spot-icon-orange.png")
+                ? require("@/assets/images/spot-icon-black.png")
                 : require("@/assets/images/spot-icon-gray.png"),
               "홈"
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: "지도",
+          tabBarLabel: () => null, // 기본 라벨 숨김
+          tabBarIcon: ({ focused }) =>
+            createTabBarIcon(
+              focused,
+              focused
+                ? require("@/assets/images/marker-gray.png")
+                : require("@/assets/images/marker-gray.png"),
+              "지도"
             ),
         }}
       />
