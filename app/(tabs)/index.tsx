@@ -161,9 +161,7 @@ export default function Home() {
         <View style={styles.tabContent}>
           {activeTab === "map" && (
             <View style={styles.mapPlaceholder}>
-              <Text style={styles.placeholderText}>
-                지도 영역 (나중에 네이버/카카오 지도)
-              </Text>
+              <Text style={styles.placeholderText}>지도 영역</Text>
             </View>
           )}
 
