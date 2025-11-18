@@ -86,6 +86,12 @@ export const TextStyles = {
     fontSize: 12,
     lineHeight: 12 * 1.3,
   },
+  Regular14: {
+    ...base,
+    fontFamily: "PretendardRegular",
+    fontSize: 14,
+    lineHeight: 14 * 1.3,
+  },
   Regular12: {
     ...base,
     fontFamily: "PretendardRegular",
