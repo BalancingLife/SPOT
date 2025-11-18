@@ -18,6 +18,7 @@ import { Colors } from "@/src/styles/Colors";
 import Pagination from "@/src/components/Pagination";
 import { useState, useRef } from "react";
 import { SCREEN_WIDTH } from "@gorhom/bottom-sheet";
+import CommentWriteButton from "@/src/components/CommentWriteButton";
 
 export default function PlaceDetailScreen() {
   const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -48,81 +49,92 @@ export default function PlaceDetailScreen() {
     }
   };
 
+  const handleOpenCommentSheet = () => {
+    // 나중에 BottomSheetModalRef.current.present() 넣을 자리
+    console.log("코멘트 작성 버튼 눌림");
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      {/* 상단 이미지 */}
-      <View style={styles.topImageContainer}>
-        <FlatList
-          ref={flatListRef}
-          data={imageSources}
-          horizontal
-          pagingEnabled
-          onScroll={handleScroll}
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(_, index) => index.toString()}
-          renderItem={({ item }) => (
-            <Image source={item} style={styles.topImage} />
-          )}
-        />
-        <View style={styles.paginationContainer}>
-          <Pagination
-            currentPage={currentPage}
-            totalPages={imageSources.length}
-            onPrev={handlePrev}
-            onNext={handleNext}
+    <View style={styles.container}>
+      <ScrollView>
+        {/* 상단 이미지 */}
+        <View style={styles.topImageContainer}>
+          <FlatList
+            ref={flatListRef}
+            data={imageSources}
+            horizontal
+            pagingEnabled
+            onScroll={handleScroll}
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(_, index) => index.toString()}
+            renderItem={({ item }) => (
+              <Image source={item} style={styles.topImage} />
+            )}
+          />
+          <View style={styles.paginationContainer}>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={imageSources.length}
+              onPrev={handlePrev}
+              onNext={handleNext}
+            />
+          </View>
+        </View>
+
+        {/* 장소 정보 */}
+        <View style={styles.infoSection}>
+          <PlaceCard
+            name="상호명예시"
+            category="업종"
+            address="서울 주소구 주소동 주소 123-1"
+            images={[
+              require("@/assets/images/example.png"),
+              require("@/assets/images/example.png"),
+              require("@/assets/images/example.png"),
+            ]}
+            showDirectionButton={false}
           />
         </View>
-      </View>
 
-      {/* 장소 정보 */}
-      <View style={styles.infoSection}>
-        <PlaceCard
-          name="상호명예시"
-          category="업종"
-          address="서울 주소구 주소동 주소 123-1"
-          images={[
-            require("@/assets/images/example.png"),
-            require("@/assets/images/example.png"),
-            require("@/assets/images/example.png"),
+        {/* 지도 안내 텍스트 */}
+        <Text
+          style={[
+            TextStyles.Medium14,
+            { color: Colors.gray_300, textAlign: "center" },
           ]}
-          showDirectionButton={false}
-        />
-      </View>
+        >
+          네이버 지도 api에서 받아올 수 있는{"\n"} 정보 나열 (*개발자와 상의
+          필요)
+        </Text>
 
-      {/* 지도 안내 텍스트 */}
-      <Text
-        style={[
-          TextStyles.Medium14,
-          { color: Colors.gray_300, textAlign: "center" },
-        ]}
-      >
-        네이버 지도 api에서 받아올 수 있는{"\n"} 정보 나열 (*개발자와 상의 필요)
-      </Text>
-
-      {/* 지도 이미지 */}
-      <Text
-        style={[TextStyles.Bold16, { color: Colors.gray_900, padding: 16 }]}
-      >
-        매장 위치
-      </Text>
-      <Image
-        source={require("@/assets/images/example.png")}
-        style={styles.mapImage}
-      />
-
-      {/* 길찾기 버튼 */}
-      <Pressable style={styles.mapButton}>
-        <Text style={styles.mapButtonText}>네이버 지도로 길 찾기</Text>
-      </Pressable>
-
-      {/* 저장한 사람들 안내 */}
-      <View style={styles.savedInfo}>
+        {/* 지도 이미지 */}
+        <Text
+          style={[TextStyles.Bold16, { color: Colors.gray_900, padding: 16 }]}
+        >
+          매장 위치
+        </Text>
         <Image
-          source={require("@/assets/images/example3.png")}
-          style={{ width: 343, height: 64 }}
-        ></Image>
-      </View>
-    </ScrollView>
+          source={require("@/assets/images/example.png")}
+          style={styles.mapImage}
+        />
+
+        {/* 길찾기 버튼 */}
+        <Pressable style={styles.mapButton}>
+          <Text style={styles.mapButtonText}>네이버 지도로 길 찾기</Text>
+        </Pressable>
+
+        {/* 저장한 사람들 안내 */}
+        <View style={styles.savedInfo}>
+          <Image
+            source={require("@/assets/images/example3.png")}
+            style={{ width: 343, height: 64 }}
+          ></Image>
+        </View>
+      </ScrollView>
+
+      {/* 우하단 코멘트 쓰기 버튼 */}
+      <CommentWriteButton onPress={handleOpenCommentSheet} />
+    </View>
   );
 }
 
