@@ -11,7 +11,6 @@ import {
   NativeSyntheticEvent,
   Dimensions,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
 import PlaceCard from "@/src/components/PlaceCard";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
@@ -19,10 +18,13 @@ import Pagination from "@/src/components/Pagination";
 import { useState, useRef } from "react";
 import { SCREEN_WIDTH } from "@gorhom/bottom-sheet";
 import CommentWriteButton from "@/src/components/CommentWriteButton";
+import CommentWriteModal, {
+  CommentWriteModalRef,
+} from "@/src/components/CommentWriteModal";
 
 export default function PlaceDetailScreen() {
   const { width: SCREEN_WIDTH } = Dimensions.get("window");
-  const { placeId } = useLocalSearchParams();
+
   const [currentPage, setCurrentPage] = useState(1);
   const imageSources = [
     require("@/assets/images/example2.png"),
@@ -30,6 +32,7 @@ export default function PlaceDetailScreen() {
     require("@/assets/images/SPOT.png"),
   ];
   const flatListRef = useRef<FlatList>(null);
+  const commentModalRef = useRef<CommentWriteModalRef>(null);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = event.nativeEvent.contentOffset.x;
@@ -50,8 +53,7 @@ export default function PlaceDetailScreen() {
   };
 
   const handleOpenCommentSheet = () => {
-    // 나중에 BottomSheetModalRef.current.present() 넣을 자리
-    console.log("코멘트 작성 버튼 눌림");
+    commentModalRef.current?.open();
   };
 
   return (
@@ -134,6 +136,8 @@ export default function PlaceDetailScreen() {
 
       {/* 우하단 코멘트 쓰기 버튼 */}
       <CommentWriteButton onPress={handleOpenCommentSheet} />
+
+      <CommentWriteModal ref={commentModalRef} />
     </View>
   );
 }

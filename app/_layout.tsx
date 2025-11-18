@@ -1,6 +1,7 @@
 import "react-native-reanimated";
 import { useFonts } from "expo-font";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { Stack, SplashScreen } from "expo-router";
 import { useEffect } from "react";
 
@@ -22,18 +23,20 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Stack screenOptions={{ headerShown: false }}>
-        {/* 탭 그룹은 그대로 */}
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <BottomSheetModalProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          {/* 탭 그룹은 그대로 */}
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
-        <Stack.Screen
-          name="search"
-          options={{
-            headerShown: false,
-            animation: "none", // 전환 아예 없애고 싶으면 이걸로
-          }}
-        />
-      </Stack>
+          <Stack.Screen
+            name="search"
+            options={{
+              headerShown: false,
+              animation: "none", // 전환 아예 없애고 싶으면 이걸로
+            }}
+          />
+        </Stack>
+      </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 }
