@@ -20,6 +20,7 @@ export default function Login() {
       // ✅ 앱으로 복귀할 URL을 환경에 맞게 자동 생성 (슬래시 개수 혼동 방지)
       const returnUrl = Linking.createURL("/oauth/kakao");
       console.log("[KAKAO] returnUrl:", returnUrl);
+      console.log("authrUrl", authUrl);
       // 예: spot://oauth/kakao  또는 spot:///oauth/kakao (환경에 따라)
 
       const result = await WebBrowser.openAuthSessionAsync(

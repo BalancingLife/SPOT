@@ -113,7 +113,7 @@ export default function SearchPage() {
 
         if (seq !== reqSeqRef.current) return;
         setResults(res.data ?? []);
-        console.log("검색 결과:", res.data);
+        console.log("search API 검색 결과:", res.data);
       } catch (err: any) {
         if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") {
           return;
@@ -147,7 +147,7 @@ export default function SearchPage() {
       const keyword = (keywordRaw ?? searchInputText).trim();
       if (!keyword) return;
       submit(keyword);
-      router.replace("/"); // 홈으로 복귀 → 홈에서 API 호출/시트 렌더
+      router.replace("/map"); // 홈으로 복귀 → 홈에서 API 호출/시트 렌더
     },
     [searchInputText, submit]
   );
@@ -218,7 +218,7 @@ export default function SearchPage() {
               requestDetail(place.gid);
 
               // ✅ 홈으로 이동 → index.tsx useEffect에서 /search/detail 호출
-              router.replace("/");
+              router.replace("/map");
             }}
           />
         )}
