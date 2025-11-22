@@ -34,8 +34,8 @@ export default function HotPlacesTab() {
 
   const sortOptions = useMemo(
     () => [
-      { label: "최신순", value: "latest" },
-      { label: "거리순", value: "distance" },
+      { label: "거리순", value: "latest" },
+      { label: "인기순", value: "distance" },
     ],
     []
   );
@@ -46,6 +46,7 @@ export default function HotPlacesTab() {
       { label: "술집", value: "bar" },
       { label: "전시회", value: "exhibition" },
       { label: "카페", value: "cafe" },
+      { label: "디저트", value: "dessert" },
       { label: "소품샵", value: "gift_shop" },
       { label: "체험", value: "experience" },
       { label: "옷가게", value: "clothing_store" },
@@ -59,7 +60,7 @@ export default function HotPlacesTab() {
   );
 
   const sortLabel =
-    sortOptions.find((o) => o.value === sort[0])?.label ?? "최신순";
+    sortOptions.find((o) => o.value === sort[0])?.label ?? "거리순";
   const categoryLabel =
     category.length > 0
       ? categoryOptions.find((o) => o.value === category[0])?.label ?? "업종"

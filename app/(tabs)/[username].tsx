@@ -94,6 +94,7 @@ export default function PlaceDetailScreen() {
               require("@/assets/images/example.png"),
               require("@/assets/images/example.png"),
             ]}
+            showBookmark={true}
             showDirectionButton={false}
           />
         </View>

@@ -45,6 +45,7 @@ export default function SavedPlacesTab() {
       { label: "술집", value: "bar" },
       { label: "전시회", value: "exhibition" },
       { label: "카페", value: "cafe" },
+      { label: "디저트", value: "dessert" },
       { label: "소품샵", value: "gift_shop" },
       { label: "체험", value: "experience" },
       { label: "옷가게", value: "clothing_store" },

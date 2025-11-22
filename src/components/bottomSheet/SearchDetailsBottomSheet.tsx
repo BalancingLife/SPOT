@@ -156,7 +156,7 @@ export default function SearchDetailsBottomSheet({
                 showDirectionButton={true}
                 rating={p.ratingAvg ?? undefined}
                 reviewCount={p.ratingCount ?? undefined}
-                showBookmark={false}
+                showBookmark={true}
                 isBookmarked={p.isBookmarked}
               />
             </Pressable>
