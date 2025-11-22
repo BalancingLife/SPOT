@@ -22,6 +22,9 @@ interface PlaceCardProps {
   reviewCount?: number;
   showBookmark?: boolean; // 북마크 UI를 보여줄지 여부
   isBookmarked?: boolean; // 북마크 되어 있는지 여부
+  distanceText?: string; // ex) "320m", "1.2km"
+  onToggleBookmark?: () => void;
+  onPressDirection?: () => void;
 }
 
 export default function PlaceCard({
@@ -34,8 +37,11 @@ export default function PlaceCard({
   showDirectionButton,
   rating,
   reviewCount,
-  isBookmarked,
   showBookmark,
+  isBookmarked,
+  distanceText,
+  onToggleBookmark,
+  onPressDirection,
 }: PlaceCardProps) {
   return (
     <View style={styles.card}>
@@ -73,17 +79,24 @@ export default function PlaceCard({
         )}
 
         {showBookmark && (
-          <Image
-            source={
-              isBookmarked
-                ? require("@/assets/images/bookmark-orange.png")
-                : require("@/assets/images/bookmark-orange-empty.png")
-            }
-            style={styles.bookmarkIcon}
-          />
+          <Pressable
+            style={styles.bookmarkPressable}
+            onPress={onToggleBookmark}
+            hitSlop={8}
+          >
+            <Image
+              source={
+                isBookmarked
+                  ? require("@/assets/images/bookmark-orange.png")
+                  : require("@/assets/images/bookmark-orange-empty.png")
+              }
+              style={styles.bookmarkIcon}
+            />
+          </Pressable>
         )}
       </View>
 
+      {/* 주소 + 거리 */}
       <View style={styles.addressContainer}>
         <Image
           style={styles.placecardMarker}
@@ -92,8 +105,19 @@ export default function PlaceCard({
         <Text style={[TextStyles.Regular12, { color: Colors.gray_900 }]}>
           {address}
         </Text>
+        {!!distanceText && (
+          <Text
+            style={[
+              TextStyles.Regular12,
+              { color: Colors.gray_400, marginLeft: 8 },
+            ]}
+          >
+            {distanceText}
+          </Text>
+        )}
       </View>
 
+      {/* 이미지 스크롤 */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -104,6 +128,7 @@ export default function PlaceCard({
         ))}
       </ScrollView>
 
+      {/* 저장한 사람들 + 네이버 지도 버튼 */}
       <View style={styles.bottomRow}>
         <View style={styles.savedInfo}>
           {savedUsers && savedUsers.length > 0 && savedCount !== undefined && (
@@ -166,6 +191,11 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
   },
+  bookmarkPressable: {
+    position: "absolute",
+    right: 0,
+  },
+
   bookmarkIcon: {
     position: "absolute",
     right: 0,

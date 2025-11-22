@@ -1,4 +1,5 @@
 import { create } from "zustand";
+// import client from "@/src/lib/api/client";
 
 export type Saver = {
   nickname: string;
@@ -6,6 +7,7 @@ export type Saver = {
 };
 
 export type Place = {
+  placeId: number; // 서버용
   id: string; // placeId 또는 gId
   name: string;
   address?: string;
@@ -53,9 +55,12 @@ type State = {
   // ✅ 상세 요청 신호 관리
   requestDetail: (gid: string) => void;
   clearPendingDetail: () => void;
+
+  // 🔹 북마크 토글 액션
+  // toggleBookmark: (placeId: string) => Promise<void>;
 };
 
-export const useSearchStore = create<State>((set) => ({
+export const useSearchStore = create<State>((set, get) => ({
   query: null,
   phase: "idle",
   items: [],
