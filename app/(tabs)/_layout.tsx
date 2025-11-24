@@ -101,38 +101,9 @@ export default function TabLayout() {
             ),
         }}
       />
+
       <Tabs.Screen
-        name="friends"
-        options={{
-          title: "친구",
-          tabBarLabel: () => null,
-          tabBarIcon: ({ focused }) =>
-            createTabBarIcon(
-              focused,
-              focused
-                ? require("@/assets/images/friends-icon-orange.png")
-                : require("@/assets/images/friends-icon-gray.png"),
-              "친구"
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="journey"
-        options={{
-          title: "여정",
-          tabBarLabel: () => null, // 기본 라벨 숨김
-          tabBarIcon: ({ focused }) =>
-            createTabBarIcon(
-              focused,
-              focused
-                ? require("@/assets/images/journey-icon-orange.png")
-                : require("@/assets/images/journey-icon-gray.png"),
-              "여정"
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="[username]"
+        name="profile"
         options={{
           title: "프로필",
           tabBarLabel: () => null, // 기본 라벨 숨김

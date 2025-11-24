@@ -35,6 +35,27 @@ export default function RootLayout() {
               animation: "none", // 전환 아예 없애고 싶으면 이걸로
             }}
           />
+
+          <Stack.Screen
+            name="profile/notifications"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="profile/friends"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="profile/blocked"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="profile/setting"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="profile/edit"
+            options={{ headerShown: false, presentation: "card" }} // 필요하면
+          />
         </Stack>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
