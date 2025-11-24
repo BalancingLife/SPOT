@@ -69,13 +69,17 @@ export default function ProfileScreen() {
       </View>
 
       {/* 광고 */}
+      <View style={styles.advertise}>
+        <Image
+          style={{ width: "100%", height: 72 }}
+          source={require("@/assets/images/profile-ad.png")}
+        />
+      </View>
 
       {/* 차단 목록 */}
-      <Pressable onPress={() => router.push("/profile/blocked")}>
+      {/* <Pressable onPress={() => router.push("/profile/blocked")}>
         <Text>차단 목록</Text>
-      </Pressable>
-
-      {/* 프로필 수정 */}
+      </Pressable> */}
     </ProfileLayout>
   );
 }
@@ -99,5 +103,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexDirection: "row",
     gap: 10,
+    marginBottom: 16,
   },
+  advertise: { alignItems: "center" },
 });
