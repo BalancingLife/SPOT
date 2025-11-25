@@ -1,3 +1,4 @@
+import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import {
   View,
@@ -7,6 +8,7 @@ import {
   Pressable,
   ScrollView,
   Image,
+  Alert,
 } from "react-native";
 import ProfileLayout from "@/src/components/profile/Layout";
 import ProfileHeader from "@/src/components/profile/Header";
@@ -22,11 +24,68 @@ const VALID_COLOR = "#2EBD5C"; // 초록
 const ERROR_COLOR = "#FF5A3C"; // 주황
 
 export default function EditScreen() {
+  // Photo Menu
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [photoMenuVisible, setPhotoMenuVisible] = useState(false);
 
   const openPhotoMenu = () => setPhotoMenuVisible(true);
   const closePhotoMenu = () => setPhotoMenuVisible(false);
 
+  const handlePickFromGallery = async () => {
+    try {
+      closePhotoMenu();
+
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert("갤러리 접근 권한을 허용해 주세요.");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets?.length > 0) {
+        setAvatarUri(result.assets[0].uri);
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert("사진을 불러오는 중 오류가 발생했어요.");
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    try {
+      closePhotoMenu();
+
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert("카메라 접근 권한을 허용해 주세요.");
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets?.length > 0) {
+        setAvatarUri(result.assets[0].uri);
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert("사진 촬영 중 문제가 발생했어요.");
+    }
+  };
+
+  // 현재 사진 삭제
+  const handleRemovePhoto = () => {
+    setAvatarUri(null);
+    closePhotoMenu();
+  };
+
+  // Field
   const [nickname, setNickname] = useState("");
   const [userId, setUserId] = useState("");
   const [intro, setIntro] = useState("");
@@ -142,10 +201,17 @@ export default function EditScreen() {
             <View style={styles.avatarSection}>
               <View style={styles.avatarWrapper}>
                 <View style={styles.avatarCircle}>
-                  <Image
-                    style={{ width: 60, height: 60 }}
-                    source={require("@/assets/images/profile-icon-gray.png")}
-                  />
+                  {avatarUri ? (
+                    <Image
+                      source={{ uri: avatarUri }}
+                      style={styles.avatarImage}
+                    />
+                  ) : (
+                    <Image
+                      style={{ width: 60, height: 60 }}
+                      source={require("@/assets/images/profile-icon-gray.png")}
+                    />
+                  )}
                 </View>
                 <Pressable style={styles.cameraButton} onPress={openPhotoMenu}>
                   <Image
@@ -165,19 +231,19 @@ export default function EditScreen() {
               <View style={styles.cameraMenuContainer}>
                 <Pressable
                   style={styles.cameraMenuItem}
-                  // onPress={handlePickFromGallery}
+                  onPress={handlePickFromGallery}
                 >
                   <Text style={styles.cameraMenuText}>갤러리에서 선택</Text>
                 </Pressable>
                 <Pressable
                   style={styles.cameraMenuItem}
-                  //  onPress={handleTakePhoto}
+                  onPress={handleTakePhoto}
                 >
                   <Text style={styles.cameraMenuText}>사진 찍기</Text>
                 </Pressable>
                 <Pressable
                   style={styles.cameraMenuItem}
-                  //  onPress={handleRemovePhoto}
+                  onPress={handleRemovePhoto}
                 >
                   <Text style={styles.cameraMenuText}>현재 사진 삭제</Text>
                 </Pressable>
@@ -362,6 +428,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.gray_100,
   },
+
+  avatarImage: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+  },
+
   avatarText: {
     ...TextStyles.Bold12,
     color: Colors.gray_400,

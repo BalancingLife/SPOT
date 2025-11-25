@@ -12,7 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.balancinglife.SPOT",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "프로필 사진을 촬영하기 위해 카메라 접근 권한이 필요합니다.",
+        "NSPhotoLibraryUsageDescription": "갤러리에서 사진을 선택하기 위해 접근 권한이 필요합니다."
       }
     },
     "android": {
