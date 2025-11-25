@@ -1,5 +1,5 @@
 // app/(tabs)/profile.tsx
-import { View, Text, Pressable, StyleSheet, Image } from "react-native";
+import { View, Pressable, StyleSheet, Image } from "react-native";
 import { router } from "expo-router";
 import ProfileLayout from "@/src/components/profile/Layout";
 import ProfileUserCard from "@/src/components/profile/UserCard";

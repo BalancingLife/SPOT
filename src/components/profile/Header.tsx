@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     height: 56,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 5,
     backgroundColor: "#FFFFFF",
   },
   left: {
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   backIcon: {
     width: 40,
     height: 40,
-    paddingRight: 30,
+    paddingRight: 25,
   },
   title: {
     ...TextStyles.SemiBold20,

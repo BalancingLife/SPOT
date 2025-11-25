@@ -53,6 +53,10 @@ export default function RootLayout() {
             options={{ headerShown: false }}
           />
           <Stack.Screen
+            name="profile/accountSetting"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
             name="profile/edit"
             options={{ headerShown: false, presentation: "card" }} // 필요하면
           />
