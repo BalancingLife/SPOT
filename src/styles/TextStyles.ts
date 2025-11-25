@@ -30,6 +30,13 @@ export const TextStyles = {
     fontSize: 16,
     lineHeight: 16 * 1.3,
   },
+  Bold14: {
+    ...base,
+    fontFamily: "PretendardBold",
+    fontSize: 14,
+    lineHeight: 14 * 1.3,
+  },
+
   Bold12: {
     ...base,
     fontFamily: "PretendardBold",
