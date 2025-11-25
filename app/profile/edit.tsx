@@ -22,6 +22,11 @@ const VALID_COLOR = "#2EBD5C"; // 초록
 const ERROR_COLOR = "#FF5A3C"; // 주황
 
 export default function EditScreen() {
+  const [photoMenuVisible, setPhotoMenuVisible] = useState(false);
+
+  const openPhotoMenu = () => setPhotoMenuVisible(true);
+  const closePhotoMenu = () => setPhotoMenuVisible(false);
+
   const [nickname, setNickname] = useState("");
   const [userId, setUserId] = useState("");
   const [intro, setIntro] = useState("");
@@ -133,22 +138,52 @@ export default function EditScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* 프로필 이미지 영역 */}
-          <View style={styles.avatarSection}>
-            <View style={styles.avatarWrapper}>
-              <View style={styles.avatarCircle}>
-                <Image
-                  style={{ width: 60, height: 60 }}
-                  source={require("@/assets/images/profile-icon-gray.png")}
-                />
+          <Pressable onPress={openPhotoMenu}>
+            <View style={styles.avatarSection}>
+              <View style={styles.avatarWrapper}>
+                <View style={styles.avatarCircle}>
+                  <Image
+                    style={{ width: 60, height: 60 }}
+                    source={require("@/assets/images/profile-icon-gray.png")}
+                  />
+                </View>
+                <Pressable style={styles.cameraButton} onPress={openPhotoMenu}>
+                  <Image
+                    style={{ width: 24, height: 24 }}
+                    source={require("@/assets/images/camera-icon.png")}
+                  />
+                </Pressable>
               </View>
-              <Pressable style={styles.cameraButton}>
-                <Image
-                  style={{ width: 24, height: 24 }}
-                  source={require("@/assets/images/camera-icon.png")}
-                />
-              </Pressable>
             </View>
-          </View>
+          </Pressable>
+
+          {photoMenuVisible && (
+            <Pressable
+              style={styles.cameraMenuOverlay}
+              onPress={closePhotoMenu} // 바깥 아무데나 누르면 닫힘
+            >
+              <View style={styles.cameraMenuContainer}>
+                <Pressable
+                  style={styles.cameraMenuItem}
+                  // onPress={handlePickFromGallery}
+                >
+                  <Text style={styles.cameraMenuText}>갤러리에서 선택</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.cameraMenuItem}
+                  //  onPress={handleTakePhoto}
+                >
+                  <Text style={styles.cameraMenuText}>사진 찍기</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.cameraMenuItem}
+                  //  onPress={handleRemovePhoto}
+                >
+                  <Text style={styles.cameraMenuText}>현재 사진 삭제</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          )}
 
           {/* 폼 섹션  */}
           <View style={styles.sectionContainer}>
@@ -341,6 +376,41 @@ const styles = StyleSheet.create({
     backgroundColor: "#303030",
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  cameraMenuOverlay: {
+    zIndex: 10,
+    position: "absolute",
+    top: -20,
+    left: 0,
+    right: -10,
+    bottom: 0,
+    justifyContent: "flex-start",
+    alignItems: "flex-end", // 카메라 버튼 오른쪽 아래 근처로 몰기
+  },
+  cameraMenuContainer: {
+    width: 170,
+    marginTop: 120, // 아바타 위치에 맞춰서 조정
+    marginRight: 32,
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "#0000001F",
+    borderRadius: 8,
+    overflow: "hidden",
+    elevation: 6, // 안드로이드 그림자
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  cameraMenuItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E6E6E680",
+  },
+  cameraMenuText: {
+    ...TextStyles.Medium14,
+    color: Colors.gray_800,
   },
 
   sectionContainer: {},
