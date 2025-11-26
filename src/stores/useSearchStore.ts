@@ -1,5 +1,5 @@
 import { create } from "zustand";
-// import client from "@/src/lib/api/client";
+import client from "@/src/lib/api/client";
 
 export type Saver = {
   nickname: string;
@@ -7,8 +7,8 @@ export type Saver = {
 };
 
 export type Place = {
-  placeId: number; // 서버용
-  id: string; // placeId 또는 gId
+  placeId: number | null; //  서버 place PK, 없을 수도 있어서 null 허용
+  id: string; //  네이버/구글 place id (문자열)
   name: string;
   address?: string;
   lat: number;
@@ -57,7 +57,7 @@ type State = {
   clearPendingDetail: () => void;
 
   // 🔹 북마크 토글 액션
-  // toggleBookmark: (placeId: string) => Promise<void>;
+  toggleBookmark: (placeId: number | null) => Promise<void>;
 };
 
 export const useSearchStore = create<State>((set, get) => ({
@@ -98,4 +98,58 @@ export const useSearchStore = create<State>((set, get) => ({
   // ✅ 상세 요청 신호
   requestDetail: (gid) => set({ pendingDetailGid: gid }),
   clearPendingDetail: () => set({ pendingDetailGid: null }),
+
+  // ✅ 북마크 토글
+  toggleBookmark: async (placeId) => {
+    const { items, focused } = get();
+
+    // 0) placeId 없으면 아예 호출하지 않음
+    if (placeId == null) {
+      console.warn("[bookmark] placeId is null, cannot call API");
+      return;
+    }
+
+    // 0-1) 이전 상태 저장 (롤백용)
+    const prevItems = items;
+    const prevFocused = focused;
+
+    // 🔍 대상 찾기: 이제는 placeId로 찾는다
+    const target =
+      items.find((p) => p.placeId === placeId) ??
+      (focused && focused.placeId === placeId ? focused : null);
+
+    if (!target) return;
+
+    const willBookmark = !target.isBookmarked;
+
+    // 1) 낙관적 업데이트
+    const updatedItems = items.map((p) =>
+      p.placeId === placeId ? { ...p, isBookmarked: willBookmark } : p
+    );
+    const updatedFocused =
+      focused && focused.placeId === placeId
+        ? { ...focused, isBookmarked: willBookmark }
+        : focused;
+
+    set({ items: updatedItems, focused: updatedFocused });
+
+    try {
+      // 숫자는 encode 안 해도 되지만, 습관적으로 감싸도 문제 없음
+      // const encodedId = encodeURIComponent(String(placeId));
+
+      if (willBookmark) {
+        // 🔸 북마크 등록
+        await client.post(`/main/map/bookmark/${placeId}`);
+        console.log("bookmark placeId:", placeId);
+      } else {
+        // 🔸 북마크 해제 (엔드포인트 정확한 건 BE한테 확인 필요)
+        await client.delete(`/main/${placeId}`);
+      }
+    } catch (err) {
+      console.error("toggleBookmark error:", err);
+
+      // 2) 실패 시 롤백
+      set({ items: prevItems, focused: prevFocused });
+    }
+  },
 }));

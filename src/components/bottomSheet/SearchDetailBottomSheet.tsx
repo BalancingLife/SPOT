@@ -19,6 +19,7 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
   const sheetRef = useRef<BottomSheet>(null);
   const focused = useSearchStore((s) => s.focused);
   const unfocus = useSearchStore((s) => s.unfocus);
+  const toggleBookmark = useSearchStore((s) => s.toggleBookmark);
 
   const images = useMemo(() => {
     if (!focused) return [];
@@ -65,7 +66,7 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
   if (!focused) return null;
 
   const {
-    id,
+    placeId,
     name,
     address,
     ratingAvg,
@@ -109,7 +110,7 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
           showBookmark={true}
           isBookmarked={!!isBookmarked}
           distanceText={distanceText ?? undefined}
-          // onToggleBookmark={() => toggleBookmark(id)}
+          onToggleBookmark={() => toggleBookmark(placeId)}
           onPressDirection={openNaverDirection}
         />
       </BottomSheetScrollView>
