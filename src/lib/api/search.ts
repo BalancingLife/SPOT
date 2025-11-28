@@ -37,7 +37,10 @@ export async function fetchSearchDetails(params: {
     const placeLat = Number(it.latitude);
     const placeLng = Number(it.longitude);
 
+    const placeId = typeof it.placeId === "number" ? it.placeId : null;
+
     return {
+      placeId,
       id: String(it.placeId ?? it.gId ?? ""),
       name: it.name ?? "",
       address: it.address ?? "",
@@ -53,6 +56,7 @@ export async function fetchSearchDetails(params: {
           ? haversine(lat, lng, placeLat, placeLng)
           : undefined,
       thumbnails: it.photo ? [it.photo] : [],
+      isBookmarked: !!it.isMarked,
     };
   });
 
@@ -85,7 +89,10 @@ export async function fetchPlaceDetail(params: {
   const placeLat = Number(it.latitude);
   const placeLng = Number(it.longitude);
 
+  const placeId = typeof it.placeId === "number" ? it.placeId : null;
+
   const place: Place = {
+    placeId,
     id: String(it.placeId ?? it.gId ?? gid),
     name: it.name ?? "",
     address: it.address ?? "",
@@ -100,7 +107,13 @@ export async function fetchPlaceDetail(params: {
       isFinite(placeLat) && isFinite(placeLng)
         ? haversine(lat, lng, placeLat, placeLng)
         : undefined,
-    thumbnails: it.photo ? [it.photo] : it.photos ? it.photos : [],
+    thumbnails: it.photo
+      ? [String(it.photo)]
+      : Array.isArray(it.photos)
+      ? it.photos.map(String)
+      : [],
+
+    isBookmarked: !!it.isMarked,
   };
 
   return place;
