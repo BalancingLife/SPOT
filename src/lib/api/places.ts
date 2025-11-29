@@ -13,11 +13,38 @@ export async function fetchMyNewSavedPlaces(params: {
   const res = await client.get<ApiPlace[]>("/new", {
     params: { lat, lng },
   });
-
-  console.log("/new api 요청 결과", res.data);
+  console.log("/new : ", res.data);
 
   return mapApiPlacesToPlaces(res.data, {
     currentLat: lat,
     currentLng: lng,
   });
+}
+
+/** /distance 거리순 */
+export async function fetchPlacesByDistance(params: {
+  lat: number;
+  lng: number;
+}): Promise<Place[]> {
+  const { lat, lng } = params;
+
+  try {
+    const res = await client.get<ApiPlace[]>("/distance", {
+      params: { lat, lng },
+    });
+
+    console.log("[/distance] res.data 이게 나와야 됨!!!!!", res.data);
+
+    return mapApiPlacesToPlaces(res.data, {
+      currentLat: lat,
+      currentLng: lng,
+    });
+  } catch (err: any) {
+    console.error("[/distance] ERROR", {
+      message: err?.message,
+      status: err?.response?.status,
+      data: err?.response?.data,
+    });
+    throw err; // 위로 다시 던져서 SavedPlacesTab의 try/catch로 올라가게
+  }
 }

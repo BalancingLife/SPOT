@@ -2,7 +2,10 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { ActivityIndicator, View, Text } from "react-native";
 import PlaceCard from "@/src/components/PlaceCard";
 import type { Place } from "@/src/types/place";
-import { fetchMyNewSavedPlaces } from "@/src/lib/api/places";
+import {
+  fetchMyNewSavedPlaces,
+  fetchPlacesByDistance,
+} from "@/src/lib/api/places";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { useLocationStore } from "@/src/stores/useLocationStore";
@@ -78,7 +81,7 @@ export default function SavedPlacesTab() {
       : "업종";
 
   // /new에서 데이터 로드
-  const load = useCallback(async () => {
+  const loadByNew = useCallback(async () => {
     if (lat == null || lng == null) return;
 
     setLoading(true);
@@ -95,8 +98,45 @@ export default function SavedPlacesTab() {
   }, [lat, lng]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    loadByNew();
+  }, [loadByNew]);
+
+  // /distance에서 데이터 로드 (거리순)
+  const loadByDistance = useCallback(async () => {
+    if (lat == null || lng == null) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const list = await fetchPlacesByDistance({ lat, lng });
+      setItems(list);
+    } catch (e: any) {
+      setError(e?.message ?? "불러오기 실패");
+    } finally {
+      setLoading(false);
+    }
+  }, [lat, lng]);
+
+  const handleSelectSort = useCallback(
+    (next: string[]) => {
+      setSort(next);
+      const value = next[0];
+
+      console.log("[SavedPlacesTab] sort selected", value);
+
+      if (value === "latest") {
+        // 최신순 → /new
+        loadByNew();
+      } else if (value === "distance") {
+        // 거리순 → /distance
+        loadByDistance();
+      }
+
+      setOpened(null);
+    },
+    [loadByNew, loadByDistance]
+  );
 
   // ✅ SavedPlacesTab 전용 북마크 토글
   const handleToggleBookmark = useCallback(
@@ -143,21 +183,7 @@ export default function SavedPlacesTab() {
   );
 
   // 클라이언트 측 정렬/필터 (지금은 정렬만 적용)
-  const filteredItems = useMemo(() => {
-    let result = [...items];
-
-    // 정렬
-    if (sort[0] === "distance") {
-      result.sort(
-        (a, b) =>
-          (a.distanceM ?? Number.POSITIVE_INFINITY) -
-          (b.distanceM ?? Number.POSITIVE_INFINITY)
-      );
-    }
-    // saveType / category는 백에서 아직 안 주니까 일단 UI만 있고 동작은 보류
-
-    return result;
-  }, [items, sort]);
+  const filteredItems = items;
 
   if (loading && items.length === 0) {
     return <ActivityIndicator style={{ marginVertical: 12 }} />;
@@ -214,12 +240,6 @@ export default function SavedPlacesTab() {
             onToggleBookmark={() => handleToggleBookmark(p)}
           />
         ))}
-
-        {loading && filteredItems.length > 0 && (
-          <ActivityIndicator style={{ marginTop: 8 }} />
-        )}
-
-        {error && <Text style={{ color: "red", marginTop: 8 }}>{error}</Text>}
       </View>
 
       {/* 모달 */}
@@ -228,7 +248,7 @@ export default function SavedPlacesTab() {
         title="정렬 기준"
         options={sortOptions}
         selected={sort}
-        onSelect={(next) => setSort(next)}
+        onSelect={handleSelectSort}
         onClose={() => setOpened(null)}
       />
       <OptionModal
