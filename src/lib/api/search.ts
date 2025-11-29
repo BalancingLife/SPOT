@@ -1,21 +1,14 @@
+// src/lib/api/search.ts
 import client from "@/src/lib/api/client";
-import type { Place } from "@/src/stores/useSearchStore";
-
-// 하버사인으로 거리(m) 계산
-function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371000; // meters
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.round(R * c);
-}
+import type { ApiPlace, Place } from "@/src/types/place";
+import {
+  mapApiPlaceToPlace,
+  mapApiPlacesToPlaces,
+} from "@/src/lib/mappers/placeMapper";
 
 let inflight: AbortController | null = null;
 
+/** /search/details (장소 목록) */
 export async function fetchSearchDetails(params: {
   keyword: string;
   lat: number;
@@ -23,48 +16,24 @@ export async function fetchSearchDetails(params: {
 }): Promise<Place[]> {
   const { keyword, lat, lng } = params;
 
-  // 이전 요청 있으면 취소
   if (inflight) inflight.abort();
   inflight = new AbortController();
 
-  const res = await client.get("/search/details", {
+  const res = await client.get<ApiPlace[]>("/search/details", {
     params: { keyword, lat, lng },
     signal: inflight.signal,
   });
 
-  const raw: any[] = Array.isArray(res.data) ? res.data : [];
-  const items: Place[] = raw.map((it) => {
-    const placeLat = Number(it.latitude);
-    const placeLng = Number(it.longitude);
-
-    const placeId = typeof it.placeId === "number" ? it.placeId : null;
-
-    return {
-      placeId,
-      id: String(it.placeId ?? it.gId ?? ""),
-      name: it.name ?? "",
-      address: it.address ?? "",
-      lat: placeLat,
-      lng: placeLng,
-      photo: it.photo ?? null,
-      ratingAvg: typeof it.ratingAvg === "number" ? it.ratingAvg : null,
-      ratingCount: typeof it.ratingCount === "number" ? it.ratingCount : null,
-      myRating: typeof it.myRating === "number" ? it.myRating : null,
-      savers: Array.isArray(it.savers) ? it.savers : [],
-      distanceM:
-        isFinite(placeLat) && isFinite(placeLng)
-          ? haversine(lat, lng, placeLat, placeLng)
-          : undefined,
-      thumbnails: it.photo ? [it.photo] : [],
-      isBookmarked: !!it.isMarked,
-    };
+  const raw = Array.isArray(res.data) ? res.data : [];
+  return mapApiPlacesToPlaces(raw, {
+    currentLat: lat,
+    currentLng: lng,
   });
-
-  return items;
 }
 
 let inflightDetail: AbortController | null = null;
 
+/** /search/detail (단일 장소 상세) */
 export async function fetchPlaceDetail(params: {
   gid: string;
   lat: number;
@@ -72,49 +41,16 @@ export async function fetchPlaceDetail(params: {
 }): Promise<Place> {
   const { gid, lat, lng } = params;
 
-  // 이전 요청 있으면 취소
-  // if (inflightDetail) inflightDetail.abort();
   inflightDetail = new AbortController();
 
-  console.log("🚀 /search/detail API 요청:", { gid, lat, lng });
-
-  const res = await client.get("/search/detail", {
+  const res = await client.get<ApiPlace>("/search/detail", {
     params: { gid, lat, lng },
     signal: inflightDetail.signal,
   });
 
-  console.log("✅ /search/detail res.data:", res.data);
-
-  const it = res.data;
-  const placeLat = Number(it.latitude);
-  const placeLng = Number(it.longitude);
-
-  const placeId = typeof it.placeId === "number" ? it.placeId : null;
-
-  const place: Place = {
-    placeId,
-    id: String(it.placeId ?? it.gId ?? gid),
-    name: it.name ?? "",
-    address: it.address ?? "",
-    lat: placeLat,
-    lng: placeLng,
-    photo: it.photo ?? it.photoUrl ?? null,
-    ratingAvg: typeof it.ratingAvg === "number" ? it.ratingAvg : null,
-    ratingCount: typeof it.ratingCount === "number" ? it.ratingCount : null,
-    myRating: typeof it.myRating === "number" ? it.myRating : null,
-    savers: Array.isArray(it.savers) ? it.savers : [],
-    distanceM:
-      isFinite(placeLat) && isFinite(placeLng)
-        ? haversine(lat, lng, placeLat, placeLng)
-        : undefined,
-    thumbnails: it.photo
-      ? [String(it.photo)]
-      : Array.isArray(it.photos)
-      ? it.photos.map(String)
-      : [],
-
-    isBookmarked: !!it.isMarked,
-  };
-
-  return place;
+  return mapApiPlaceToPlace(res.data, {
+    currentLat: lat,
+    currentLng: lng,
+    fallbackGid: gid,
+  });
 }

@@ -10,7 +10,11 @@ import UserLocationMarker from "@/src/components/UserLocationMarker";
 import { useLocationStore } from "@/src/stores/useLocationStore";
 import { useAuthStore } from "@/src/stores/useAuthStore";
 import { useSearchStore } from "@/src/stores/useSearchStore";
+import { useSavedPlacesStore } from "@/src/stores/useSavedPlacesStore";
+
 import { fetchSearchDetails, fetchPlaceDetail } from "@/src/lib/api/search"; // ← 상세 함수 import
+import { fetchMyNewSavedPlaces } from "@/src/lib/api/places";
+
 import SearchDetailsBottomSheet from "@/src/components/bottomSheet/SearchDetailsBottomSheet";
 import SearchDetailBottomSheet from "@/src/components/bottomSheet/SearchDetailBottomSheet";
 
@@ -32,6 +36,10 @@ export default function Map() {
   const pendingDetailGid = useSearchStore((s) => s.pendingDetailGid);
   const clearPendingDetail = useSearchStore((s) => s.clearPendingDetail);
   const focus = useSearchStore((s) => s.focus);
+
+  const setSavedList = useSavedPlacesStore((s) => s.setSavedList);
+  const setSavedLoading = useSavedPlacesStore((s) => s.setSavedLoading);
+  const setSavedError = useSavedPlacesStore((s) => s.setSavedError);
 
   useEffect(() => {
     hydrate();
@@ -184,6 +192,27 @@ export default function Map() {
       });
     }
   };
+
+  useEffect(() => {
+    if (coords.lat == null || coords.lng == null) return;
+
+    const loadSaved = async () => {
+      setSavedLoading(true);
+      try {
+        const list = await fetchMyNewSavedPlaces({
+          lat: coords.lat!,
+          lng: coords.lng!,
+        });
+        setSavedList(list);
+      } catch (e: any) {
+        setSavedError(e?.message ?? "저장된 장소 불러오기 실패");
+      } finally {
+        setSavedLoading(false);
+      }
+    };
+
+    loadSaved();
+  }, [coords.lat, coords.lng, setSavedError, setSavedList, setSavedLoading]);
 
   //  바텀 시트 표시 규칙:
   // - idle: 기존 PlacesBottomSheetContainer

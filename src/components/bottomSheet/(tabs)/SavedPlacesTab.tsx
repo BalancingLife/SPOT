@@ -1,27 +1,30 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { ActivityIndicator, View, Pressable, Text } from "react-native";
+import { ActivityIndicator, View, Text } from "react-native";
 import PlaceCard from "@/src/components/PlaceCard";
-import type { SavedPlace } from "@/src/types/place";
-import { fetchMySavedPlaces } from "@/src/lib/api/places";
+import type { Place } from "@/src/types/place";
+import { fetchMyNewSavedPlaces } from "@/src/lib/api/places";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
+import { useLocationStore } from "@/src/stores/useLocationStore";
 
-// 이미 만들어둔 컴포넌트들
 import FilterBar from "@/src/components/bottomSheet/FilterBar";
 import OptionModal from "@/src/components/OptionModal";
 
 export default function SavedPlacesTab() {
-  const [items, setItems] = useState<SavedPlace[]>([]);
+  const lat = useLocationStore((s) => s.coords.lat);
+  const lng = useLocationStore((s) => s.coords.lng);
+
+  const [items, setItems] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ 탭 로컬 필터 상태
+  // 로컬 필터 상태
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
     null
   );
-  const [sort, setSort] = useState<string[]>(["recent"]); // 기본 최신순
-  const [saveType, setSaveType] = useState<string[]>([]); // 비어있음 = 전체
-  const [category, setCategory] = useState<string[]>([]); // 비어있음 = 전체
+  const [sort, setSort] = useState<string[]>(["latest"]); // 기본 최신순
+  const [saveType, setSaveType] = useState<string[]>([]);
+  const [category, setCategory] = useState<string[]>([]);
 
   const sortOptions = useMemo(
     () => [
@@ -38,7 +41,6 @@ export default function SavedPlacesTab() {
     ],
     []
   );
-
   const categoryOptions = useMemo(
     () => [
       { label: "음식점", value: "restaurant" },
@@ -66,38 +68,50 @@ export default function SavedPlacesTab() {
     sortOptions.find((o) => o.value === sort[0])?.label || "최신순";
   const saveTypeLabel =
     saveType.length > 0
-      ? saveOptions.find((o) => o.value === saveType[0])?.label || "저장방식"
+      ? saveOptions.find((o) => o.value === saveType[0])?.label
       : "저장방식";
   const categoryLabel =
     category.length > 0
-      ? categoryOptions.find((o) => o.value === category[0])?.label || "업종"
+      ? categoryOptions.find((o) => o.value === category[0])?.label
       : "업종";
 
-  // ✅ 데이터 로드 (필터 변경 시 재호출)
+  // /new에서 데이터 로드
   const load = useCallback(async () => {
+    if (lat == null || lng == null) return;
+
     setLoading(true);
     setError(null);
+
     try {
-      const res = await fetchMySavedPlaces({
-        lat: 37.125, // TODO: 실제 값으로 바인딩
-        lng: 126.1234,
-        userId: 139,
-        // 서버 스펙에 맞게 변환: sort, saveType, category는 선택 시에만 전달
-        sort: sort[0] === "recent" ? "latest" : "distance", // 예: 서버가 latest/distance라면 이런 매핑
-        ...(saveType.length ? { saveType: saveType[0] } : {}),
-        ...(category.length ? { category: category[0] } : {}),
-      });
-      setItems(res);
+      const list = await fetchMyNewSavedPlaces({ lat, lng });
+      setItems(list);
     } catch (e: any) {
       setError(e?.message ?? "불러오기 실패");
     } finally {
       setLoading(false);
     }
-  }, [sort, saveType, category]);
+  }, [lat, lng]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  // 클라이언트 측 정렬/필터 (지금은 정렬만 적용)
+  const filteredItems = useMemo(() => {
+    let result = [...items];
+
+    // 정렬
+    if (sort[0] === "distance") {
+      result.sort(
+        (a, b) =>
+          (a.distanceM ?? Number.POSITIVE_INFINITY) -
+          (b.distanceM ?? Number.POSITIVE_INFINITY)
+      );
+    }
+    // saveType / category는 백에서 아직 안 주니까 일단 UI만 있고 동작은 보류
+
+    return result;
+  }, [items, sort]);
 
   if (loading && items.length === 0) {
     return <ActivityIndicator style={{ marginVertical: 12 }} />;
@@ -115,8 +129,8 @@ export default function SavedPlacesTab() {
       />
 
       <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
-        {/* 목록 */}
-        {items.length === 0 && !loading ? (
+        {/* 목록 없음 */}
+        {filteredItems.length === 0 && !loading && (
           <View style={{ flex: 1, alignItems: "center", paddingTop: 150 }}>
             <Text
               style={[
@@ -130,38 +144,38 @@ export default function SavedPlacesTab() {
               첫 장소를 저장하고, 여정을 시작해 보세요!
             </Text>
           </View>
-        ) : null}
+        )}
 
-        {items.map((item) => {
-          const imageSources =
-            item.images && item.images.length > 0
-              ? item.images.map((u) => ({ uri: u }))
-              : [require("@/assets/images/example.png")];
+        {/* 리스트 */}
+        {filteredItems.map((p) => (
+          <PlaceCard
+            key={p.id}
+            name={p.name}
+            category={p.category ?? ""}
+            address={p.address}
+            images={
+              p.thumbnails.length > 0
+                ? p.thumbnails.map((u) => ({ uri: u }))
+                : [require("@/assets/images/example.png")]
+            }
+            savedUsers={p.savers}
+            savedCount={p.savers.length}
+            showDirectionButton={true}
+            rating={p.ratingAvg ?? 0}
+            reviewCount={p.ratingCount ?? 0}
+            showBookmark={true}
+            isBookmarked={p.isBookmarked}
+          />
+        ))}
 
-          return (
-            <PlaceCard
-              key={item.id}
-              name={item.title}
-              category={item.category}
-              address={item.address}
-              images={imageSources}
-              savedUsers={[]} // API 아직 없음
-              savedCount={item.savedCount}
-              showDirectionButton={true}
-              rating={item.rating}
-              reviewCount={0}
-              showBookmark={false}
-              isBookmarked={false}
-            />
-          );
-        })}
-
-        {loading && items.length > 0 ? (
+        {loading && filteredItems.length > 0 && (
           <ActivityIndicator style={{ marginTop: 8 }} />
-        ) : null}
+        )}
+
+        {error && <Text style={{ color: "red", marginTop: 8 }}>{error}</Text>}
       </View>
 
-      {/* ✅ 모달들: 단일 선택 + 즉시 적용 */}
+      {/* 모달 */}
       <OptionModal
         visible={opened === "sort"}
         title="정렬 기준"
@@ -173,7 +187,7 @@ export default function SavedPlacesTab() {
       <OptionModal
         visible={opened === "save"}
         title="저장 방식"
-        options={saveOptionsForModal} // '전체' 제외
+        options={saveOptionsForModal}
         selected={saveType}
         onSelect={(next) => setSaveType(next)}
         onClose={() => setOpened(null)}
@@ -181,7 +195,7 @@ export default function SavedPlacesTab() {
       <OptionModal
         visible={opened === "category"}
         title="업종"
-        options={categoryOptionsForModal} // '전체' 제외
+        options={categoryOptionsForModal}
         selected={category}
         onSelect={(next) => setCategory(next)}
         onClose={() => setOpened(null)}

@@ -13,8 +13,11 @@ import Animated, {
 import SavedPlacesTab from "./(tabs)/SavedPlacesTab";
 import HotPlacesTab from "./(tabs)/HotPlacesTab";
 import PlacesBottomSheetTabSelector from "./PlacesBottomSheetTabSelector";
+
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
+
+import { useSavedPlacesStore } from "@/src/stores/useSavedPlacesStore"; // ← 추가
 
 interface PlacesBottomSheetContainerProps {
   onPressMyLocation: () => void;
@@ -27,6 +30,12 @@ export default function PlacesBottomSheetContainer({
   const animatedIndex = useSharedValue(0);
   const snapPoints = useMemo(() => ["6.7%", "50%", "75%"], []);
   const [selectedTab, setSelectedTab] = useState<"saved" | "hot">("saved");
+
+  // 🔥 저장한 장소 개수 가져오기
+  const savedCount = useSavedPlacesStore((s) => s.savedList.length);
+
+  // Hot 탭 API가 아직 없다면 임시 0
+  const hotCount = 0;
 
   // 버튼 위치 애니메이션
   const animatedButtonStyle = useAnimatedStyle(() => {
@@ -127,7 +136,7 @@ export default function PlacesBottomSheetContainer({
                 {selectedTab === "saved" ? "저장한 장소 " : "인기 장소 "}
               </Text>
               <Text style={[TextStyles.Bold16, { color: Colors.gray_300 }]}>
-                {selectedTab === "saved" ? "13" : "15"}
+                {selectedTab === "saved" ? savedCount : hotCount}
               </Text>
             </Text>
           </View>

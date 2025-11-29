@@ -1,31 +1,10 @@
 import { create } from "zustand";
 import client from "@/src/lib/api/client";
+import type { Place } from "@/src/types/place";
 
 export type Saver = {
   nickname: string;
   profileImageUrl: string;
-};
-
-export type Place = {
-  placeId: number | null; //  서버 place PK, 없을 수도 있어서 null 허용
-  id: string; //  네이버/구글 place id (문자열)
-  name: string;
-  address?: string;
-  lat: number;
-  lng: number;
-
-  // 응답 기반 필드
-  photo?: string; // 대표 이미지 1장
-  ratingAvg?: number | null;
-  ratingCount?: number | null;
-  myRating?: number | null;
-  savers?: Saver[]; // 저장한 사람들(아바타용)
-
-  // 클라이언트 계산/표시용
-  distanceM?: number; // 하버사인 계산
-  thumbnails?: string[]; // UI 호환(= [photo])
-  categoryPath?: string[]; // 응답엔 list(string)만 있으므로 필요시 파싱
-  isBookmarked?: boolean; // 서버 스키마엔 없음 → 필요 시 별도 API로 동기화
 };
 
 type Phase = "idle" | "loading" | "success" | "empty" | "error";
