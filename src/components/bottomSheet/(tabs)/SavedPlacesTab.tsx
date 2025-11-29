@@ -10,6 +10,8 @@ import { useLocationStore } from "@/src/stores/useLocationStore";
 import FilterBar from "@/src/components/bottomSheet/FilterBar";
 import OptionModal from "@/src/components/OptionModal";
 
+import { toggleBookmarkApi } from "@/src/lib/api/bookmark";
+
 export default function SavedPlacesTab() {
   const lat = useLocationStore((s) => s.coords.lat);
   const lng = useLocationStore((s) => s.coords.lng);
@@ -96,6 +98,50 @@ export default function SavedPlacesTab() {
     load();
   }, [load]);
 
+  // ✅ SavedPlacesTab 전용 북마크 토글
+  const handleToggleBookmark = useCallback(
+    async (place: Place) => {
+      if (place.placeId == null) {
+        console.warn(
+          "[SavedPlacesTab] placeId is null, cannot toggle bookmark"
+        );
+        return;
+      }
+
+      const willBookmark = !place.isBookmarked;
+      console.log("[SavedPlacesTab] toggle bookmark", {
+        placeId: place.placeId,
+        willBookmark,
+      });
+
+      const prevItems = items; // 롤백용 스냅샷
+
+      // 1) 낙관적 업데이트
+      setItems((prev) => {
+        if (willBookmark) {
+          // 이 탭은 "이미 저장된 장소"가 메인이라서,
+          // 새로 저장하는 케이스는 거의 없지만 일단 토글에 맞춰준다.
+          return prev.map((p) =>
+            p.placeId === place.placeId ? { ...p, isBookmarked: true } : p
+          );
+        }
+
+        // willBookmark === false → 언북마크면 리스트에서 제거하는 UX
+        return prev.filter((p) => p.placeId !== place.placeId);
+      });
+
+      // 2) API 호출
+      try {
+        await toggleBookmarkApi(place.placeId, willBookmark);
+      } catch (err) {
+        console.error("[SavedPlacesTab] toggleBookmark failed:", err);
+        // 3) 실패하면 상태 롤백
+        setItems(prevItems);
+      }
+    },
+    [items]
+  );
+
   // 클라이언트 측 정렬/필터 (지금은 정렬만 적용)
   const filteredItems = useMemo(() => {
     let result = [...items];
@@ -165,6 +211,7 @@ export default function SavedPlacesTab() {
             reviewCount={p.ratingCount ?? 0}
             showBookmark={true}
             isBookmarked={p.isBookmarked}
+            onToggleBookmark={() => handleToggleBookmark(p)}
           />
         ))}
 

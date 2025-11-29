@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import client from "@/src/lib/api/client";
 import type { Place } from "@/src/types/place";
+import { toggleBookmarkApi } from "@/src/lib/api/bookmark";
 
 export type Saver = {
   nickname: string;
@@ -36,7 +36,7 @@ type State = {
   clearPendingDetail: () => void;
 
   // 🔹 북마크 토글 액션
-  toggleBookmark: (placeId: number | null) => Promise<void>;
+  toggleBookmark: (placeId: number | null) => Promise<void> | void;
 };
 
 export const useSearchStore = create<State>((set, get) => ({
@@ -81,53 +81,57 @@ export const useSearchStore = create<State>((set, get) => ({
   // ✅ 북마크 토글
   toggleBookmark: async (placeId) => {
     const { items, focused } = get();
+    console.log("[bookmark] called with", {
+      placeId,
+      itemsLen: items.length,
+      hasFocused: !!focused,
+    });
 
-    // 0) placeId 없으면 아예 호출하지 않음
     if (placeId == null) {
       console.warn("[bookmark] placeId is null, cannot call API");
       return;
     }
 
-    // 0-1) 이전 상태 저장 (롤백용)
     const prevItems = items;
     const prevFocused = focused;
 
-    // 🔍 대상 찾기: 이제는 placeId로 찾는다
-    const target =
-      items.find((p) => p.placeId === placeId) ??
-      (focused && focused.placeId === placeId ? focused : null);
+    const targetInList = items.find((p) => p.placeId === placeId);
+    const targetInFocused =
+      !targetInList && focused?.placeId === placeId ? focused : null;
 
-    if (!target) return;
+    const target = targetInList ?? targetInFocused;
+
+    if (!target) {
+      console.warn(
+        "[searchStore] target not found in items/focused. ignore in search context."
+      );
+      return;
+    }
 
     const willBookmark = !target.isBookmarked;
 
     // 1) 낙관적 업데이트
-    const updatedItems = items.map((p) =>
-      p.placeId === placeId ? { ...p, isBookmarked: willBookmark } : p
-    );
-    const updatedFocused =
-      focused && focused.placeId === placeId
-        ? { ...focused, isBookmarked: willBookmark }
-        : focused;
+    set((state) => ({
+      ...state,
+      items: state.items.map((p) =>
+        p.placeId === placeId ? { ...p, isBookmarked: willBookmark } : p
+      ),
+      focused:
+        state.focused && state.focused.placeId === placeId
+          ? { ...state.focused, isBookmarked: willBookmark }
+          : state.focused,
+    }));
 
-    set({ items: updatedItems, focused: updatedFocused });
-
+    // 2) API 호출
     try {
-      // 숫자는 encode 안 해도 되지만, 습관적으로 감싸도 문제 없음
-      // const encodedId = encodeURIComponent(String(placeId));
-
-      if (willBookmark) {
-        // 🔸 북마크 등록
-        await client.post(`/main/map/bookmark/${placeId}`);
-        console.log("bookmark placeId:", placeId);
-      } else {
-        // 🔸 북마크 해제 (엔드포인트 정확한 건 BE한테 확인 필요)
-        await client.delete(`/main/${placeId}`);
-      }
+      await toggleBookmarkApi(placeId, willBookmark);
+      console.log("[searchStore] toggleBookmark success", {
+        placeId,
+        willBookmark,
+      });
     } catch (err) {
-      console.error("toggleBookmark error:", err);
-
-      // 2) 실패 시 롤백
+      console.error("[searchStore] toggleBookmark failed", err);
+      // 3) 실패 시 롤백
       set({ items: prevItems, focused: prevFocused });
     }
   },

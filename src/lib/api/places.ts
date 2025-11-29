@@ -14,6 +14,8 @@ export async function fetchMyNewSavedPlaces(params: {
     params: { lat, lng },
   });
 
+  console.log("/new api 요청 결과", res.data);
+
   return mapApiPlacesToPlaces(res.data, {
     currentLat: lat,
     currentLng: lng,
