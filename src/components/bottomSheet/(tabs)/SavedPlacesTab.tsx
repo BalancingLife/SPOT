@@ -9,6 +9,7 @@ import {
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { useLocationStore } from "@/src/stores/useLocationStore";
+import { useSavedPlacesStore } from "@/src/stores/useSavedPlacesStore";
 
 import FilterBar from "@/src/components/bottomSheet/FilterBar";
 import OptionModal from "@/src/components/OptionModal";
@@ -19,9 +20,15 @@ export default function SavedPlacesTab() {
   const lat = useLocationStore((s) => s.coords.lat);
   const lng = useLocationStore((s) => s.coords.lng);
 
-  const [items, setItems] = useState<Place[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const items = useSavedPlacesStore((s) => s.savedList);
+  const setSavedList = useSavedPlacesStore((s) => s.setSavedList);
+  const loading = useSavedPlacesStore((s) => s.savedLoading);
+  const setSavedLoading = useSavedPlacesStore((s) => s.setSavedLoading);
+  const setSavedError = useSavedPlacesStore((s) => s.setSavedError);
+
+  const applyBookmarkFromPlace = useSavedPlacesStore(
+    (s) => s.applyBookmarkFromPlace
+  );
 
   // 로컬 필터 상태
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
@@ -84,18 +91,18 @@ export default function SavedPlacesTab() {
   const loadByNew = useCallback(async () => {
     if (lat == null || lng == null) return;
 
-    setLoading(true);
-    setError(null);
+    setSavedLoading(true);
+    setSavedError(null);
 
     try {
       const list = await fetchMyNewSavedPlaces({ lat, lng });
-      setItems(list);
+      setSavedList(list);
     } catch (e: any) {
-      setError(e?.message ?? "불러오기 실패");
+      setSavedError(e?.message ?? "불러오기 실패");
     } finally {
-      setLoading(false);
+      setSavedLoading(false);
     }
-  }, [lat, lng]);
+  }, [lat, lng, setSavedList, setSavedLoading, setSavedError]);
 
   useEffect(() => {
     loadByNew();
@@ -105,18 +112,18 @@ export default function SavedPlacesTab() {
   const loadByDistance = useCallback(async () => {
     if (lat == null || lng == null) return;
 
-    setLoading(true);
-    setError(null);
+    setSavedLoading(true);
+    setSavedError(null);
 
     try {
       const list = await fetchPlacesByDistance({ lat, lng });
-      setItems(list);
+      setSavedList(list);
     } catch (e: any) {
-      setError(e?.message ?? "불러오기 실패");
+      setSavedError(e?.message ?? "불러오기 실패");
     } finally {
-      setLoading(false);
+      setSavedLoading(false);
     }
-  }, [lat, lng]);
+  }, [lat, lng, setSavedList, setSavedLoading, setSavedError]);
 
   const handleSelectSort = useCallback(
     (next: string[]) => {
@@ -138,7 +145,7 @@ export default function SavedPlacesTab() {
     [loadByNew, loadByDistance]
   );
 
-  // ✅ SavedPlacesTab 전용 북마크 토글
+  //  SavedPlacesTab 전용 북마크 토글
   const handleToggleBookmark = useCallback(
     async (place: Place) => {
       if (place.placeId == null) {
@@ -154,32 +161,22 @@ export default function SavedPlacesTab() {
         willBookmark,
       });
 
-      const prevItems = items; // 롤백용 스냅샷
-
-      // 1) 낙관적 업데이트
-      setItems((prev) => {
-        if (willBookmark) {
-          // 이 탭은 "이미 저장된 장소"가 메인이라서,
-          // 새로 저장하는 케이스는 거의 없지만 일단 토글에 맞춰준다.
-          return prev.map((p) =>
-            p.placeId === place.placeId ? { ...p, isBookmarked: true } : p
-          );
-        }
-
-        // willBookmark === false → 언북마크면 리스트에서 제거하는 UX
-        return prev.filter((p) => p.placeId !== place.placeId);
-      });
+      // 1) 전역 store 낙관적 업데이트
+      applyBookmarkFromPlace(place, willBookmark);
 
       // 2) API 호출
       try {
         await toggleBookmarkApi(place.placeId, willBookmark);
       } catch (err) {
         console.error("[SavedPlacesTab] toggleBookmark failed:", err);
-        // 3) 실패하면 상태 롤백
-        setItems(prevItems);
+        // 3) 실패 시 새로 불러오기(또는 나중에 refreshSavedPlaces 사용)
+        if (lat != null && lng != null) {
+          // 여기서 refreshSavedPlaces({ lat, lng }) 같은 걸 쓰게 설계해도 됨
+          await loadByNew();
+        }
       }
     },
-    [items]
+    [applyBookmarkFromPlace, lat, lng, loadByNew]
   );
 
   // 클라이언트 측 정렬/필터 (지금은 정렬만 적용)

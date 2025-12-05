@@ -13,7 +13,7 @@ import { useSearchStore } from "@/src/stores/useSearchStore";
 import { useSavedPlacesStore } from "@/src/stores/useSavedPlacesStore";
 
 import { fetchSearchDetails, fetchPlaceDetail } from "@/src/lib/api/search"; // ← 상세 함수 import
-import { fetchMyNewSavedPlaces } from "@/src/lib/api/places";
+import { fetchMyNewSavedPlaces, fetchMapPlaces } from "@/src/lib/api/places";
 
 import SearchDetailsBottomSheet from "@/src/components/bottomSheet/SearchDetailsBottomSheet";
 import SearchDetailBottomSheet from "@/src/components/bottomSheet/SearchDetailBottomSheet";
@@ -213,6 +213,30 @@ export default function Map() {
 
     loadSaved();
   }, [coords.lat, coords.lng, setSavedError, setSavedList, setSavedLoading]);
+
+  // /main/map 호출
+  useEffect(() => {
+    async function loadMap() {
+      if (coords.lat == null || coords.lng == null) {
+        console.log("[map] 위치 정보 없음 → API 호출 스킵");
+        return;
+      }
+
+      try {
+        const list = await fetchMapPlaces({
+          latitude: coords.lat,
+          longitude: coords.lng,
+          radius: 1000, // 필요없으면 생략해도 백엔드 default 1000
+        });
+
+        console.log("[map] /main/map 응답 Place[]:", list);
+      } catch (err: any) {
+        console.log("[map] 에러:", err?.response ?? err);
+      }
+    }
+
+    loadMap();
+  }, [coords.lat, coords.lng]);
 
   //  바텀 시트 표시 규칙:
   // - idle: 기존 PlacesBottomSheetContainer

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Place } from "@/src/types/place";
 import { toggleBookmarkApi } from "@/src/lib/api/bookmark";
+import { useSavedPlacesStore } from "@/src/stores/useSavedPlacesStore";
 
 export type Saver = {
   nickname: string;
@@ -81,6 +82,7 @@ export const useSearchStore = create<State>((set, get) => ({
   // ✅ 북마크 토글
   toggleBookmark: async (placeId) => {
     const { items, focused } = get();
+
     console.log("[bookmark] called with", {
       placeId,
       itemsLen: items.length,
@@ -125,6 +127,11 @@ export const useSearchStore = create<State>((set, get) => ({
     // 2) API 호출
     try {
       await toggleBookmarkApi(placeId, willBookmark);
+
+      // SavedPlacesStore에도 반영
+      const { applyBookmarkFromPlace } = useSavedPlacesStore.getState();
+      applyBookmarkFromPlace(target, willBookmark);
+
       console.log("[searchStore] toggleBookmark success", {
         placeId,
         willBookmark,

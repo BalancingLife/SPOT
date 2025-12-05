@@ -3,6 +3,27 @@ import client from "@/src/lib/api/client";
 import type { ApiPlace, Place } from "@/src/types/place";
 import { mapApiPlacesToPlaces } from "@/src/lib/mappers/placeMapper";
 
+export async function fetchMapPlaces(params: {
+  latitude: number;
+  longitude: number;
+  radius?: number; // 안 넘기면 백엔드 기본값 1000
+}): Promise<Place[]> {
+  const { latitude, longitude, radius } = params;
+
+  const res = await client.get<ApiPlace[]>("/main/map", {
+    params: {
+      latitude,
+      longitude,
+      radius, // 필요 없으면 생략 가능
+    },
+  });
+
+  return mapApiPlacesToPlaces(res.data, {
+    currentLat: latitude,
+    currentLng: longitude,
+  });
+}
+
 /** /new 저장한 장소 최신순 */
 export async function fetchMyNewSavedPlaces(params: {
   lat: number;
@@ -13,7 +34,7 @@ export async function fetchMyNewSavedPlaces(params: {
   const res = await client.get<ApiPlace[]>("/new", {
     params: { lat, lng },
   });
-  console.log("/new : ", res.data);
+  console.log("/new api 호출 결과 : ", res.data);
 
   return mapApiPlacesToPlaces(res.data, {
     currentLat: lat,
@@ -33,7 +54,7 @@ export async function fetchPlacesByDistance(params: {
       params: { lat, lng },
     });
 
-    console.log("[/distance] res.data 이게 나와야 됨!!!!!", res.data);
+    console.log("[/distance] ", res.data);
 
     return mapApiPlacesToPlaces(res.data, {
       currentLat: lat,

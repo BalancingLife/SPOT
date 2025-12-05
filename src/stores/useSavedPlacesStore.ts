@@ -1,6 +1,7 @@
 // src/stores/useSavedPlacesStore.ts
 import { create } from "zustand";
 import type { Place } from "@/src/types/place";
+import { fetchMyNewSavedPlaces } from "../lib/api/places";
 
 type SavedPlacesStore = {
   savedList: Place[];
@@ -11,6 +12,9 @@ type SavedPlacesStore = {
   setSavedLoading: (v: boolean) => void;
   setSavedError: (msg: string | null) => void;
   resetSaved: () => void;
+
+  applyBookmarkFromPlace: (place: Place, willBookmark: boolean) => void;
+  refreshSavedPlaces: (coords: { lat: number; lng: number }) => Promise<void>;
 };
 
 export const useSavedPlacesStore = create<SavedPlacesStore>((set) => ({
@@ -28,4 +32,49 @@ export const useSavedPlacesStore = create<SavedPlacesStore>((set) => ({
       savedLoading: false,
       savedError: null,
     }),
+
+  applyBookmarkFromPlace: (place, willBookmark) =>
+    set((state) => {
+      const exists = state.savedList.some((p) => p.placeId === place.placeId);
+
+      // 언북마크 → 리스트에서 제거
+      if (!willBookmark) {
+        return {
+          ...state,
+          savedList: state.savedList.filter((p) => p.placeId !== place.placeId),
+        };
+      }
+
+      // 등록 + 이미 있음 → flag만 켜기
+      if (exists) {
+        return {
+          ...state,
+          savedList: state.savedList.map((p) =>
+            p.placeId === place.placeId ? { ...p, isBookmarked: true } : p
+          ),
+        };
+      }
+
+      // 등록 + 없음 → 리스트 맨 앞에 추가
+      return {
+        ...state,
+        savedList: [{ ...place, isBookmarked: true }, ...state.savedList],
+      };
+    }),
+
+  refreshSavedPlaces: async ({ lat, lng }) => {
+    try {
+      set({ savedLoading: true, savedError: null });
+      const list = await fetchMyNewSavedPlaces({ lat, lng });
+      set({
+        savedList: list,
+        savedLoading: false,
+      });
+    } catch {
+      set({
+        savedLoading: false,
+        savedError: "저장한 장소를 불러오는데 실패했습니다.",
+      });
+    }
+  },
 }));
