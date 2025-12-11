@@ -1,6 +1,6 @@
 // src/lib/api/places.ts
 import client from "@/src/lib/api/client";
-import type { ApiPlace, Place } from "@/src/types/place";
+import type { ApiPlace, Place, ApiPlaceMoreResponse } from "@/src/types/place";
 import { mapApiPlacesToPlaces } from "@/src/lib/mappers/placeMapper";
 
 export async function fetchMapPlaces(params: {
@@ -67,5 +67,30 @@ export async function fetchPlacesByDistance(params: {
       data: err?.response?.data,
     });
     throw err; // 위로 다시 던져서 SavedPlacesTab의 try/catch로 올라가게
+  }
+}
+
+/** /more API */
+export async function fetchPlaceMore(params: {
+  lat: number;
+  lng: number;
+  placeId: number;
+}): Promise<ApiPlaceMoreResponse> {
+  const { lat, lng, placeId } = params;
+
+  try {
+    const res = await client.get<ApiPlaceMoreResponse>("/more", {
+      params: { lat, lng, placeId },
+    });
+
+    console.log("[/more] 상세 조회:", res.data);
+    return res.data;
+  } catch (err: any) {
+    console.error("[/more] ERROR", {
+      message: err?.message,
+      status: err?.response?.status,
+      data: err?.response?.data,
+    });
+    throw err;
   }
 }
