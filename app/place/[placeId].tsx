@@ -23,6 +23,8 @@ import CommentWriteModal, {
   CommentWriteModalRef,
 } from "@/src/components/CommentWriteModal";
 
+import SpotButton from "@/src/components/SpotButton";
+
 import { fetchPlaceMore } from "@/src/lib/api/places";
 import { usePlaceMoreStore } from "@/src/stores/usePlaceMoreStore";
 import type { ApiPlace, ApiPlaceComment } from "@/src/types/place";
@@ -215,9 +217,12 @@ export default function PlaceDetailScreen() {
         />
 
         {/* 길찾기 버튼 */}
-        <Pressable style={styles.mapButton}>
-          <Text style={styles.mapButtonText}>네이버 지도로 길 찾기</Text>
-        </Pressable>
+        <SpotButton
+          label="네이버 지도로 길 찾기"
+          variant="primary"
+          size="large"
+          style={{ marginHorizontal: 16 }}
+        />
 
         {/* 저장한 사람들 안내 (지금은 예전 이미지 그대로 사용) */}
         <View style={styles.savedInfo}>
@@ -358,18 +363,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 10,
   },
-  mapButton: {
-    height: 53,
-    backgroundColor: Colors.primary_500,
-    borderRadius: 10,
-    marginHorizontal: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  mapButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
+
   savedInfo: {
     marginTop: 16,
     padding: 16,
