@@ -1,30 +1,23 @@
 // src/types/place.ts
 
 export type ApiPlace = {
-  placeId?: number | null;
-  gId?: string | null;
-  name?: string | null;
-  address?: string | null;
-  latitude?: number | string | null;
-  longitude?: number | string | null;
-  list?: string | null; // 업종 카테고리
-  photo?: string | null;
-  photoUrl?: string | null;
-  photos?: (string | null)[] | null;
-
-  ratingAvg?: number | null;
-  ratingCount?: number | null;
-  myRating?: number | null;
-
-  savers?:
-    | {
-        nickname: string;
-        profileImageUrl: string;
-      }[]
-    | null;
-
-  distance?: number | null;
-  isMarked?: boolean | null;
+  placeId: number;
+  gId: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  list: string;
+  photo: string | null;
+  ratingAvg: number;
+  ratingCount: number;
+  myRating: number | null;
+  savers: {
+    nickname: string;
+    profileImageUrl: string;
+  }[];
+  distance: number;
+  isMarked: boolean;
 };
 
 export type Place = {
@@ -49,4 +42,27 @@ export type Place = {
   distanceM?: number;
 
   isBookmarked: boolean;
+};
+
+// ---------- /more API용 ----------
+
+export type ApiPlaceComment = {
+  id: number;
+  placeId: number;
+  gid: string;
+  photos: string[];
+  name: string;
+  address: string;
+  score: number;
+  comment: string;
+  memId: number;
+  memEmail: string;
+  commentPhoto: string;
+  createdAt: string;
+  marked: boolean;
+};
+
+export type ApiPlaceMoreResponse = {
+  places: ApiPlace;
+  comments: ApiPlaceComment[];
 };
