@@ -16,7 +16,13 @@ import OptionModal from "@/src/components/OptionModal";
 
 import { toggleBookmarkApi } from "@/src/lib/api/bookmark";
 
+import { usePlaceMoreNavigation } from "@/src/hooks/usePlaceMoreNavigation";
+
+import { formatDistance } from "@/src/utils/format";
+
 export default function SavedPlacesTab() {
+  const { handlePressPlaceCard } = usePlaceMoreNavigation();
+
   const lat = useLocationStore((s) => s.coords.lat);
   const lng = useLocationStore((s) => s.coords.lng);
 
@@ -235,6 +241,10 @@ export default function SavedPlacesTab() {
             showBookmark={true}
             isBookmarked={p.isBookmarked}
             onToggleBookmark={() => handleToggleBookmark(p)}
+            distanceText={
+              p.distanceM != null ? formatDistance(p.distanceM) : undefined
+            }
+            onPress={() => handlePressPlaceCard(p)}
           />
         ))}
       </View>

@@ -25,6 +25,7 @@ interface PlaceCardProps {
   distanceText?: string; // ex) "320m", "1.2km"
   onToggleBookmark?: () => void;
   onPressDirection?: () => void;
+  onPress?: () => void;
 }
 
 export default function PlaceCard({
@@ -42,9 +43,10 @@ export default function PlaceCard({
   distanceText,
   onToggleBookmark,
   onPressDirection,
+  onPress,
 }: PlaceCardProps) {
   return (
-    <View style={styles.card}>
+    <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.header}>
         <Text style={[TextStyles.SemiBold20, { marginRight: 3 }]}>{name}</Text>
         <Text
@@ -166,7 +168,7 @@ export default function PlaceCard({
           </Pressable>
         )}
       </View>
-    </View>
+    </Pressable>
   );
 }
 

@@ -10,17 +10,12 @@ import {
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 import type { SearchResultItem } from "@/app/search";
+import { formatDistance } from "@/src/utils/format";
 
 type Props = {
   data: SearchResultItem[];
   onPressItem: (item: SearchResultItem) => void;
 };
-
-function formatDistance(meters: number) {
-  return meters >= 1000
-    ? `${(meters / 1000).toFixed(1)}km`
-    : `${Math.round(meters)}m`;
-}
 
 export default function SearchResult({ data, onPressItem }: Props) {
   return (

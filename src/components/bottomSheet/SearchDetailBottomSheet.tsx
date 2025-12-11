@@ -6,14 +6,9 @@ import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useSearchStore } from "@/src/stores/useSearchStore";
 import { Colors } from "@/src/styles/Colors";
 import PlaceCard from "@/src/components/PlaceCard";
+import { formatDistance } from "@/src/utils/format"; // ✅ 공통 util 사용
 
 type Props = { onClose: () => void };
-
-function formatDistance(m?: number) {
-  if (m == null || !isFinite(m)) return null;
-  if (m >= 1000) return `${(m / 1000).toFixed(1)}km`;
-  return `${Math.round(m)}m`;
-}
 
 export default function SearchDetailBottomSheet({ onClose }: Props) {
   const sheetRef = useRef<BottomSheet>(null);
@@ -37,10 +32,10 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
     return focused.savers.slice(0, 6).map((s) => ({ uri: s.profileImageUrl }));
   }, [focused]);
 
-  const distanceText = useMemo(
-    () => formatDistance(focused?.distanceM),
-    [focused]
-  );
+  const distanceText = useMemo(() => {
+    if (!focused?.distanceM) return undefined;
+    return formatDistance(focused.distanceM);
+  }, [focused]);
 
   const openNaverDirection = () => {
     if (!focused) return;
@@ -72,34 +67,30 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
     ratingAvg,
     ratingCount,
     isBookmarked,
-    categoryPath,
+    category,
   } = focused;
 
-  const category =
-    (categoryPath && categoryPath.length > 0 ? categoryPath.join(" > ") : "") ??
-    "";
-
+  const categoryLabel = category ?? "";
   const savedCount = focused.savers?.length ?? 0;
 
   return (
     <BottomSheet
       ref={sheetRef}
-      enableDynamicSizing // ✅ 내용물 높이에 맞춰서 자동 조절
-      index={0} // 첫 오픈시 내용물 높이로 열림
+      enableDynamicSizing
+      index={0}
       enablePanDownToClose
-      enableOverDrag={false} // 위로 더 못 당기게
+      enableOverDrag={false}
       onClose={handleClose}
       backgroundStyle={styles.sheetBackground}
       handleIndicatorStyle={{ backgroundColor: Colors.gray_300 }}
     >
-      {/* 본문 */}
       <BottomSheetScrollView
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
       >
         <PlaceCard
           name={name}
-          category={category}
+          category={categoryLabel}
           address={address ?? ""}
           images={images}
           savedUsers={savedUsers}
@@ -109,7 +100,7 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
           reviewCount={ratingCount ?? undefined}
           showBookmark={true}
           isBookmarked={!!isBookmarked}
-          distanceText={distanceText ?? undefined}
+          distanceText={distanceText}
           onToggleBookmark={() => toggleBookmark(placeId)}
           onPressDirection={openNaverDirection}
         />
