@@ -229,9 +229,13 @@ export default function Map() {
           radius: 1000, // 필요없으면 생략해도 백엔드 default 1000
         });
 
-        console.log("[map] /main/map 응답 Place[]:", list);
+        console.log("[/main/map] 응답 Place[]:", list);
       } catch (err: any) {
-        console.log("[map] 에러:", err?.response ?? err);
+        console.log(
+          "[/main/map] 에러:",
+          err?.response?.status,
+          err?.response?.data ?? err.message
+        );
       }
     }
 

@@ -20,7 +20,7 @@ export default function UserCard({
   friendAvatars,
   profileImage,
 }: Props) {
-  const profileImg = require("@/assets/images/profile-icon-gray.png");
+  const profileImg = require("@/assets/images/profile-example.png");
 
   return (
     <View style={styles.container}>
@@ -36,7 +36,7 @@ export default function UserCard({
             {friendAvatars.map((uri, i) => (
               <Image
                 key={i}
-                source={profileImg}
+                source={require("@/assets/images/profile-icon-gray.png")}
                 style={[styles.avatar, { marginLeft: i === 0 ? 0 : -6 }]}
               />
             ))}
@@ -104,7 +104,11 @@ const styles = StyleSheet.create({
     color: Colors.gray_600,
   },
 
-  right: {},
+  right: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   profileImage: {
     backgroundColor: "lightgray",
     width: 77,
