@@ -111,14 +111,7 @@ export default function PlaceCard({
           {address}
         </Text>
         {!!distanceText && (
-          <Text
-            style={[
-              TextStyles.Regular12,
-              { color: Colors.gray_400, marginLeft: 8 },
-            ]}
-          >
-            {distanceText}
-          </Text>
+          <Text style={styles.distanceText}>{distanceText}</Text>
         )}
       </View>
 
@@ -199,6 +192,7 @@ const styles = StyleSheet.create({
   bookmarkPressable: {
     position: "absolute",
     right: 0,
+    top: 3,
   },
 
   bookmarkIcon: {
@@ -217,6 +211,12 @@ const styles = StyleSheet.create({
     width: 12.15,
     height: 12.15,
     marginRight: 1.92,
+  },
+  distanceText: {
+    ...TextStyles.Regular12,
+    color: Colors.gray_400,
+    position: "absolute",
+    right: 0,
   },
   imageScroll: {
     marginBottom: 11.25,
