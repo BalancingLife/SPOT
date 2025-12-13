@@ -7,7 +7,7 @@ export async function toggleBookmarkApi(
 ) {
   if (willBookmark) {
     // 북마크 등록
-    return client.post(`/main/map/bookmark/${placeId}`);
+    return client.post(`${placeId}/toggle`);
   } else {
     // 북마크 삭제
     return client.post(`${placeId}/toggle`);
