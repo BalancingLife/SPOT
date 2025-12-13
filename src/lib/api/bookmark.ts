@@ -10,6 +10,6 @@ export async function toggleBookmarkApi(
     return client.post(`/main/map/bookmark/${placeId}`);
   } else {
     // 북마크 삭제
-    return client.post(`/main/map/bookmark/${placeId}`);
+    return client.post(`${placeId}/toggle`);
   }
 }

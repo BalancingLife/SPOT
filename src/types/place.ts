@@ -66,3 +66,11 @@ export type ApiPlaceMoreResponse = {
   places: ApiPlace;
   comments: ApiPlaceComment[];
 };
+
+export type ApiMapPlace = {
+  placeId: number;
+  latitude: number;
+  longitude: number;
+  list: string; // "cafe" 같은 카테고리
+  name: string;
+};

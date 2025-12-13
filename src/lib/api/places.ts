@@ -1,27 +1,25 @@
 // src/lib/api/places.ts
 import client from "@/src/lib/api/client";
-import type { ApiPlace, Place, ApiPlaceMoreResponse } from "@/src/types/place";
+import type {
+  ApiPlace,
+  ApiMapPlace,
+  Place,
+  ApiPlaceMoreResponse,
+} from "@/src/types/place";
 import { mapApiPlacesToPlaces } from "@/src/lib/mappers/placeMapper";
 
 export async function fetchMapPlaces(params: {
   latitude: number;
   longitude: number;
-  radius?: number; // 안 넘기면 백엔드 기본값 1000
-}): Promise<Place[]> {
+  radius?: number;
+}): Promise<ApiMapPlace[]> {
   const { latitude, longitude, radius } = params;
 
-  const res = await client.get<ApiPlace[]>("/main/map", {
-    params: {
-      latitude,
-      longitude,
-      radius, // 필요 없으면 생략 가능
-    },
+  const res = await client.get<ApiMapPlace[]>("/main/map", {
+    params: { latitude, longitude, radius },
   });
 
-  return mapApiPlacesToPlaces(res.data, {
-    currentLat: latitude,
-    currentLng: longitude,
-  });
+  return res.data;
 }
 
 /** /new 저장한 장소 최신순 */
@@ -34,7 +32,6 @@ export async function fetchMyNewSavedPlaces(params: {
   const res = await client.get<ApiPlace[]>("/new", {
     params: { lat, lng },
   });
-  console.log("/new api 호출 결과 : ", res.data);
 
   return mapApiPlacesToPlaces(res.data, {
     currentLat: lat,
@@ -82,8 +79,8 @@ export async function fetchPlaceMore(params: {
     const res = await client.get<ApiPlaceMoreResponse>("/more", {
       params: { lat, lng, placeId },
     });
-
-    console.log("[/more] 상세 조회:", res.data);
+    console.log("final url:", res.request?.responseURL);
+    console.log("[/more] api res.data:", res.data);
     return res.data;
   } catch (err: any) {
     console.error("[/more] ERROR", {
