@@ -121,8 +121,8 @@ export default function SearchDetailsBottomSheet({
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 16 }}
       >
         {items.map((p) => {
-          const category =
-            (p as any).categoryPath?.join(" > ") ?? (p as any).list ?? "";
+          const category = p.category ?? "";
+
           const images =
             p.thumbnails && p.thumbnails.length > 0
               ? p.thumbnails.slice(0, 5).map((uri: string) => ({ uri }))

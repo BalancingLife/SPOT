@@ -1,5 +1,6 @@
 // src/lib/mappers/placeMapper.ts
 import type { ApiPlace, Place } from "@/src/types/place";
+import { getCategoryLabel } from "@/src/utils/categoryLabel";
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371000;
@@ -17,23 +18,6 @@ type MapOptions = {
   currentLng?: number;
   fallbackGid?: string;
 };
-
-// 서버 list 코드 → 클라이언트에서 보여줄 카테고리 텍스트
-function mapListToCategory(list?: string | null): string | null {
-  if (!list) return null;
-
-  // 필요하면 여기서 한글 라벨로 매핑
-  switch (list) {
-    case "cafe":
-      return "카페";
-    case "restaurant":
-      return "음식점";
-    case "bar":
-      return "술집";
-    default:
-      return list; // 모르는 값은 그대로 노출
-  }
-}
 
 export function mapApiPlaceToPlace(
   it: ApiPlace,
@@ -54,15 +38,15 @@ export function mapApiPlaceToPlace(
       ? it.placeId
       : null;
 
-  const photo = it.photo ?? it.photoUrl ?? null;
+  const anyIt = it as any;
+  const photo = it.photo ?? anyIt.photoUrl ?? null;
 
   const thumbnails =
     photo != null
       ? [String(photo)]
-      : Array.isArray(it.photos)
-      ? it.photos.filter(Boolean).map(String)
+      : Array.isArray(anyIt.photos)
+      ? anyIt.photos.filter(Boolean).map(String)
       : [];
-
   return {
     placeId,
     id: String(it.placeId ?? it.gId ?? fallbackGid ?? ""),
@@ -74,7 +58,7 @@ export function mapApiPlaceToPlace(
     lng,
 
     // 🔥 여기
-    category: mapListToCategory(it.list),
+    category: getCategoryLabel(it.list) || null,
 
     photo,
     thumbnails,

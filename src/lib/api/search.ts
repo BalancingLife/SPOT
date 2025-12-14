@@ -38,6 +38,8 @@ export async function fetchSearchDetails(params: {
     signal: inflight.signal,
   });
 
+  console.log("/search/details 성공: ", res.data);
+
   const raw = Array.isArray(res.data) ? res.data : [];
   return mapApiPlacesToPlaces(raw, {
     currentLat: lat,

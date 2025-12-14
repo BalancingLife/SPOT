@@ -11,6 +11,7 @@ import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 import type { SearchItem } from "@/src/types/search";
 import { formatDistance } from "@/src/utils/format";
+import { getCategoryLabel } from "@/src/utils/categoryLabel";
 
 type Props = {
   data: SearchItem[];
@@ -45,7 +46,7 @@ export default function SearchResult({ data, onPressItem }: Props) {
                 style={[TextStyles.Regular10, { color: Colors.gray_300 }]}
                 numberOfLines={1}
               >
-                {item.list}
+                {getCategoryLabel(item.list)}
               </Text>
             </View>
 
