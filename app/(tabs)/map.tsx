@@ -226,7 +226,7 @@ export default function Map() {
         const list = await fetchMapPlaces({
           latitude: coords.lat,
           longitude: coords.lng,
-          radius: 1000,
+          radius: 10, // 반경 10km
         });
         console.log("지도 [/main/map] 응답 :", list);
       } catch (err: any) {

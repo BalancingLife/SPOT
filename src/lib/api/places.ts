@@ -33,6 +33,8 @@ export async function fetchMyNewSavedPlaces(params: {
     params: { lat, lng },
   });
 
+  console.log("/new API 응답:", res.data);
+
   return mapApiPlacesToPlaces(res.data, {
     currentLat: lat,
     currentLng: lng,
