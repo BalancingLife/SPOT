@@ -18,21 +18,7 @@ import RecentSearch from "@/src/components/search/recentSearch";
 import SearchResult from "@/src/components/search/searchResult";
 import { useSearchStore } from "@/src/stores/useSearchStore";
 import { useRecentSearchStore } from "@/src/stores/useRecentSearchStore";
-
-type SearchPayload = {
-  keyword: string;
-  lat: number | null;
-  lng: number | null;
-};
-
-export type SearchResultItem = {
-  name: string;
-  address: string;
-  gid: string;
-  photoUrl: string | null;
-  category: string;
-  distance: number; // m
-};
+import type { SearchItem, SearchPayload } from "@/src/types/search";
 
 export type RecentItem = {
   id: string;
@@ -42,7 +28,7 @@ export type RecentItem = {
 export default function SearchPage() {
   const [searchInputText, setSearchInputText] = useState("");
   const { coords, refreshOnce } = useLocationStore();
-  const [results, setResults] = useState<SearchResultItem[] | null>(null);
+  const [results, setResults] = useState<SearchItem[] | null>(null);
 
   const showRecent = !searchInputText || results === null;
   const showResults = Array.isArray(results) && results.length > 0;
@@ -106,7 +92,7 @@ export default function SearchPage() {
           lng: coords.lng,
         };
 
-        const res = await client.get<SearchResultItem[]>("/search", {
+        const res = await client.get<SearchItem[]>("/search", {
           params,
           signal: controller.signal,
         });

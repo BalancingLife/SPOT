@@ -1,10 +1,24 @@
 // src/lib/api/search.ts
 import client from "@/src/lib/api/client";
+import type { SearchItem, SearchPayload } from "@/src/types/search";
 import type { ApiPlace, Place } from "@/src/types/place";
 import {
   mapApiPlaceToPlace,
   mapApiPlacesToPlaces,
 } from "@/src/lib/mappers/placeMapper";
+
+export async function fetchSearch(
+  params: SearchPayload,
+  options?: { signal?: AbortSignal }
+): Promise<SearchItem[]> {
+  const res = await client.get<SearchItem[]>("/search", {
+    params,
+    signal: options?.signal,
+  });
+
+  // 안전장치(서버가 이상한 값 줄 때 대비)
+  return Array.isArray(res.data) ? res.data : [];
+}
 
 let inflight: AbortController | null = null;
 

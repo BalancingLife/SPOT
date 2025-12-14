@@ -9,12 +9,12 @@ import {
 } from "react-native";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
-import type { SearchResultItem } from "@/app/search";
+import type { SearchItem } from "@/src/types/search";
 import { formatDistance } from "@/src/utils/format";
 
 type Props = {
-  data: SearchResultItem[];
-  onPressItem: (item: SearchResultItem) => void;
+  data: SearchItem[];
+  onPressItem: (item: SearchItem) => void;
 };
 
 export default function SearchResult({ data, onPressItem }: Props) {
@@ -45,7 +45,7 @@ export default function SearchResult({ data, onPressItem }: Props) {
                 style={[TextStyles.Regular10, { color: Colors.gray_300 }]}
                 numberOfLines={1}
               >
-                {item.category}
+                {item.list}
               </Text>
             </View>
 
