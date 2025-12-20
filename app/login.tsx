@@ -18,7 +18,7 @@ export default function Login() {
     try {
       await WebBrowser.warmUpAsync();
 
-      // ✅ 앱으로 복귀할 URL을 환경에 맞게 자동 생성 (슬래시 개수 혼동 방지)
+      //  앱으로 복귀할 URL을 환경에 맞게 자동 생성 (슬래시 개수 혼동 방지)
       const returnUrl = Linking.createURL("/oauth/kakao");
       console.log("[KAKAO] returnUrl:", returnUrl);
       // 예: spot://oauth/kakao  또는 spot:///oauth/kakao (환경에 따라)
@@ -30,7 +30,7 @@ export default function Login() {
       console.log("[KAKAO][AuthSession] raw result:", result);
 
       if (result.type === "success" && result.url) {
-        // ✅ URL 파싱
+        //  URL 파싱
         const parsed = new URL(result.url);
         const token = parsed.searchParams.get("token") ?? "";
         const email = parsed.searchParams.get("email") ?? "";
@@ -42,7 +42,7 @@ export default function Login() {
         console.log("🔗 복귀 URL:", result.url);
         console.log("🛠 token:", token, "email:", email, "nickname:", nickname);
 
-        // ✅ 콜백 라우트로 직접 이동 (슬래시 1개여도 OK)
+        //  콜백 라우트로 직접 이동 (슬래시 1개여도 OK)
         router.replace({
           pathname: "/oauth/kakao",
           params: { token, email, nickname },
