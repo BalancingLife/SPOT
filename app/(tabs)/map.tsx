@@ -1,7 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text, Pressable, StyleSheet, Image, Alert } from "react-native";
 import { router } from "expo-router";
-import { NaverMapView } from "@mj-studio/react-native-naver-map";
+import {
+  NaverMapView,
+  NaverMapMarkerOverlay,
+} from "@mj-studio/react-native-naver-map";
+import type { ApiMapPlace } from "@/src/types/place";
+import { getMapPinImage } from "@/src/utils/getMapPinImage";
+
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
 import PlacesBottomSheetContainer from "../../src/components/bottomSheet/PlacesBottomSheetContainer";
 import { Colors } from "@/src/styles/Colors";
@@ -20,6 +26,9 @@ import SearchDetailBottomSheet from "@/src/components/bottomSheet/SearchDetailBo
 
 export default function Map() {
   const mapRef = useRef<NaverMapViewRef>(null);
+
+  const [myPlaces, setMyPlaces] = useState<ApiMapPlace[]>([]);
+
   const hydrate = useAuthStore((s) => s.hydrate);
   const { refreshOnce, coords } = useLocationStore();
 
@@ -228,6 +237,9 @@ export default function Map() {
           longitude: coords.lng,
           radius: 10, // 반경 10km
         });
+
+        setMyPlaces(list);
+
         console.log("지도 [/main/map] 응답 :", list);
       } catch (err: any) {
         console.log(
@@ -262,6 +274,22 @@ export default function Map() {
       >
         {/* 커스텀 사용자 마커 */}
         <UserLocationMarker enableRotation />
+
+        {/* 저장한 장소 핀들 */}
+        {myPlaces.map((p) => (
+          <NaverMapMarkerOverlay
+            key={String(p.placeId)}
+            latitude={p.latitude}
+            longitude={p.longitude}
+            image={getMapPinImage(p.list)}
+            width={52}
+            height={58}
+            onTap={() => {
+              // 일단 동작 확인용
+              console.log("[marker tap]", p.placeId, p.name);
+            }}
+          />
+        ))}
       </NaverMapView>
 
       {/* 검색창 */}
