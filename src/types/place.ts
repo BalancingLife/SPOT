@@ -69,6 +69,7 @@ export type ApiPlaceMoreResponse = {
 
 export type ApiMapPlace = {
   placeId: number;
+  gid?: string;
   latitude: number;
   longitude: number;
   list: string; // "cafe" 같은 카테고리

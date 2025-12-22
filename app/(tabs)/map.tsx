@@ -50,6 +50,9 @@ export default function Map() {
   const setSavedLoading = useSavedPlacesStore((s) => s.setSavedLoading);
   const setSavedError = useSavedPlacesStore((s) => s.setSavedError);
 
+  const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
+  const requestDetail = useSearchStore((s) => s.requestDetail);
+
   useEffect(() => {
     hydrate();
   }, [hydrate]);
@@ -257,9 +260,13 @@ export default function Map() {
   // - idle: 기존 PlacesBottomSheetContainer
   // - loading/success/empty/error: SearchDetailsBottomSheet
   // - focused 가 있으면 SearchDetailBottomSheet(단일 상세)
-  const showPlacesSheet = phase === "idle";
+  const showPlacesSheet = phase === "idle" && !focused;
   const showSearchListSheet = phase !== "idle" && !focused;
   const showSearchDetailSheet = !!focused;
+
+  const PIN_W = 52;
+  const PIN_H = 58;
+  const PIN_SCALE = 1.5;
 
   return (
     <View style={styles.container}>
@@ -276,20 +283,29 @@ export default function Map() {
         <UserLocationMarker enableRotation />
 
         {/* 저장한 장소 핀들 */}
-        {myPlaces.map((p) => (
-          <NaverMapMarkerOverlay
-            key={String(p.placeId)}
-            latitude={p.latitude}
-            longitude={p.longitude}
-            image={getMapPinImage(p.list)}
-            width={52}
-            height={58}
-            onTap={() => {
-              // 일단 동작 확인용
-              console.log("[marker tap]", p.placeId, p.name);
-            }}
-          />
-        ))}
+        {myPlaces.map((p) => {
+          const isSelected = selectedPlaceId === p.placeId;
+          const w = isSelected ? Math.round(PIN_W * PIN_SCALE) : PIN_W;
+          const h = isSelected ? Math.round(PIN_H * PIN_SCALE) : PIN_H;
+
+          return (
+            <NaverMapMarkerOverlay
+              key={String(p.placeId)}
+              latitude={p.latitude}
+              longitude={p.longitude}
+              image={getMapPinImage(p.list)}
+              width={w}
+              height={h}
+              zIndex={isSelected ? 999 : 1}
+              onTap={() => {
+                const gid = p.gid;
+                if (!gid) return;
+                setSelectedPlaceId(p.placeId); // 핀 1.5배
+                requestDetail(gid); // gid로 상세 트리거 → pendingDetailGid effect가 처리
+              }}
+            />
+          );
+        })}
       </NaverMapView>
 
       {/* 검색창 */}
