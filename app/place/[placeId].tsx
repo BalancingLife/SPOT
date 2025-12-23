@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   Image,
-  Pressable,
   FlatList,
   NativeScrollEvent,
   NativeSyntheticEvent,
