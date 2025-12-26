@@ -7,12 +7,15 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 import FilterBar from "@/src/components/bottomSheet/FilterBar";
 import PlaceCard from "@/src/components/PlaceCard";
 import OptionModal from "@/src/components/OptionModal";
+import { NaverMapView } from "@mj-studio/react-native-naver-map";
+import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
+import UserLocationMarker from "@/src/components/UserLocationMarker";
 
 const TABS = [
   { key: "map", label: "지도" },
@@ -83,6 +86,7 @@ export default function Home() {
     () => categoryOptions.filter((o) => o.value !== "all"),
     [categoryOptions]
   );
+  const mapRef = useRef<NaverMapViewRef>(null);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -158,11 +162,23 @@ export default function Home() {
           })}
         </View>
 
-        {/* 탭 콘텐츠 (지금은 placeholder만) */}
+        {/* 탭 콘텐츠 */}
         <View style={styles.tabContent}>
+          {/* 지도 탭 */}
           {activeTab === "map" && (
-            <View style={styles.mapPlaceholder}>
-              <Text style={styles.placeholderText}>지도 영역</Text>
+            <View style={styles.mapContainer}>
+              {/* 지도 */}
+              <NaverMapView
+                ref={mapRef}
+                isShowLocationButton={false}
+                style={[styles.map, StyleSheet.absoluteFillObject]}
+                onInitialized={() => {
+                  mapRef.current?.setLocationTrackingMode("None" as any);
+                }}
+              ></NaverMapView>
+
+              {/* 커스텀 사용자 마커 */}
+              <UserLocationMarker enableRotation />
             </View>
           )}
 
@@ -308,12 +324,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  mapPlaceholder: {
+  mapContainer: {
     flex: 1,
     backgroundColor: Colors.gray_100,
-    justifyContent: "center",
-    alignItems: "center",
   },
+
+  map: { zIndex: 0, flex: 1 },
+
   placeholderBox: {
     flex: 1,
     borderWidth: 1,
