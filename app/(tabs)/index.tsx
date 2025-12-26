@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 import FilterBar from "@/src/components/bottomSheet/FilterBar";
@@ -15,7 +15,9 @@ import PlaceCard from "@/src/components/PlaceCard";
 import OptionModal from "@/src/components/OptionModal";
 import { NaverMapView } from "@mj-studio/react-native-naver-map";
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
-import UserLocationMarker from "@/src/components/UserLocationMarker";
+import MyLocationButton from "@/src/components/map/MyLocationButton";
+import UserLocationMarker from "@/src/components/map/UserLocationMarker";
+import { useLocationStore } from "@/src/stores/useLocationStore";
 
 const TABS = [
   { key: "map", label: "지도" },
@@ -86,7 +88,62 @@ export default function Home() {
     () => categoryOptions.filter((o) => o.value !== "all"),
     [categoryOptions]
   );
+
   const mapRef = useRef<NaverMapViewRef>(null);
+
+  const refreshOnce = useLocationStore((s) => s.refreshOnce);
+  const coords = useLocationStore((s) => s.coords);
+  // coords 형태는 네 store 기준. 예: { latitude, longitude } or { lat, lng }
+
+  const [didInitCamera, setDidInitCamera] = useState(false);
+
+  // 탭 진입 시 1회 위치 갱신
+  useEffect(() => {
+    if (activeTab !== "map") return;
+    refreshOnce?.();
+    setDidInitCamera(false);
+  }, [activeTab, refreshOnce]);
+
+  // coords 잡히면 “내 위치에서 시작”
+  useEffect(() => {
+    if (activeTab !== "map") return;
+    if (!coords) return;
+    if (didInitCamera) return;
+
+    const latitude = (coords as any).latitude ?? (coords as any).lat;
+    const longitude = (coords as any).longitude ?? (coords as any).lng;
+
+    if (latitude == null || longitude == null) return;
+
+    mapRef.current?.animateCameraTo?.({
+      latitude,
+      longitude,
+      zoom: 16,
+      duration: 400,
+    });
+
+    setDidInitCamera(true);
+  }, [activeTab, coords, didInitCamera]);
+
+  const moveToCurrentLocation = async () => {
+    // refreshOnce가 좌표를 return하면 그거 쓰고, 아니면 store 최신값을 다시 읽는 방식으로
+    const next = await refreshOnce?.();
+    const c = next ?? coords ?? (useLocationStore as any).getState?.().coords;
+
+    if (!c) return;
+
+    const latitude = (c as any).latitude ?? (c as any).lat;
+    const longitude = (c as any).longitude ?? (c as any).lng;
+
+    if (latitude == null || longitude == null) return;
+
+    mapRef.current?.animateCameraTo?.({
+      latitude,
+      longitude,
+      zoom: 16,
+      duration: 400,
+    });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -175,10 +232,17 @@ export default function Home() {
                 onInitialized={() => {
                   mapRef.current?.setLocationTrackingMode("None" as any);
                 }}
-              ></NaverMapView>
+              >
+                {/* 커스텀 사용자 마커 */}
+                <UserLocationMarker enableRotation />
+              </NaverMapView>
 
-              {/* 커스텀 사용자 마커 */}
-              <UserLocationMarker enableRotation />
+              {/* 내 위치 버튼 */}
+              <MyLocationButton
+                onPress={moveToCurrentLocation}
+                bottom={40}
+                left={15}
+              />
             </View>
           )}
 
@@ -329,7 +393,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gray_100,
   },
 
-  map: { zIndex: 0, flex: 1 },
+  map: { flex: 1, zIndex: 0 },
 
   placeholderBox: {
     flex: 1,

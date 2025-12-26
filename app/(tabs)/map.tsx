@@ -12,7 +12,7 @@ import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
 import PlacesBottomSheetContainer from "../../src/components/bottomSheet/PlacesBottomSheetContainer";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
-import UserLocationMarker from "@/src/components/UserLocationMarker";
+import UserLocationMarker from "@/src/components/map/UserLocationMarker";
 import { useLocationStore } from "@/src/stores/useLocationStore";
 import { useAuthStore } from "@/src/stores/useAuthStore";
 import { useSearchStore } from "@/src/stores/useSearchStore";
