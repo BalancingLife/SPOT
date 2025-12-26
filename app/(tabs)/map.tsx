@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, Pressable, StyleSheet, Image, Alert } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import {
   NaverMapView,
@@ -205,27 +206,41 @@ export default function Map() {
     }
   };
 
-  useEffect(() => {
-    if (coords.lat == null || coords.lng == null) return;
+  useFocusEffect(
+    React.useCallback(() => {
+      let cancelled = false;
 
-    const loadSaved = async () => {
-      setSavedLoading(true);
-      try {
-        const list = await fetchMyNewSavedPlaces({
-          lat: coords.lat!,
-          lng: coords.lng!,
-        });
-        setSavedList(list);
-      } catch (e: any) {
-        setSavedError(e?.message ?? "저장된 장소 불러오기 실패");
-      } finally {
-        setSavedLoading(false);
-      }
-    };
+      (async () => {
+        // 1) 포커스 시점에 위치부터 확보
+        await refreshOnce(); // <- 너 store/훅에 있는 위치 갱신 함수
 
-    loadSaved();
-  }, [coords.lat, coords.lng, setSavedError, setSavedList, setSavedLoading]);
+        if (cancelled) return;
 
+        // 2) 최신 coords로 saved 로드 (클로저 coords 쓰지 말고 getState로 최신 읽기)
+        const { coords } = useLocationStore.getState(); // <- 너가 쓰는 store 기준으로
+        if (coords.lat == null || coords.lng == null) return;
+
+        setSavedLoading(true);
+        setSavedError(null);
+
+        try {
+          const list = await fetchMyNewSavedPlaces({
+            lat: coords.lat,
+            lng: coords.lng,
+          });
+          if (!cancelled) setSavedList(list);
+        } catch (e: any) {
+          if (!cancelled) setSavedError(e?.message ?? "failed to load");
+        } finally {
+          if (!cancelled) setSavedLoading(false);
+        }
+      })();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [refreshOnce, setSavedList, setSavedLoading, setSavedError])
+  );
   // /main/map 호출
   useEffect(() => {
     async function loadMap() {
@@ -323,7 +338,6 @@ export default function Map() {
       </Pressable>
 
       {/* 바텀시트 - 교대 렌더 */}
-
       {/* 기본 default 바텀시트 */}
       {showPlacesSheet && (
         <PlacesBottomSheetContainer onPressMyLocation={moveToCurrentLocation} />
