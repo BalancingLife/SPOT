@@ -18,6 +18,35 @@ import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
 import MyLocationButton from "@/src/components/map/MyLocationButton";
 import UserLocationMarker from "@/src/components/map/UserLocationMarker";
 import { useLocationStore } from "@/src/stores/useLocationStore";
+import StoryList from "@/src/components/home/StoryList";
+
+const friends = [
+  {
+    id: 1,
+    nickname: "민지",
+    avatarUrl: "https://randomuser.me/api/portraits/women/44.jpg",
+  },
+  {
+    id: 2,
+    nickname: "지훈",
+    avatarUrl: "https://randomuser.me/api/portraits/men/32.jpg",
+  },
+  {
+    id: 3,
+    nickname: "수아",
+    avatarUrl: "https://randomuser.me/api/portraits/women/65.jpg",
+  },
+  {
+    id: 4,
+    nickname: "현우",
+    avatarUrl: "https://randomuser.me/api/portraits/men/75.jpg",
+  },
+  {
+    id: 5,
+    nickname: "예린",
+    avatarUrl: "https://randomuser.me/api/portraits/women/12.jpg",
+  },
+];
 
 const TABS = [
   { key: "map", label: "지도" },
@@ -48,6 +77,7 @@ const dummyData = new Array(4).fill(0).map((_, i) => ({
 }));
 
 export default function Home() {
+  const DEFAULT_MY_IMAGE = require("@/assets/images/SPOT.png");
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
     null
   );
@@ -173,23 +203,16 @@ export default function Home() {
         </View>
 
         {/* 스토리 (친구 / 나의닉네임 / 닉네임예시...) */}
-
         {/* 스토리 리스트 */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.storyScroll}
-          contentContainerStyle={styles.storyContent}
-        >
-          {["친구", "나의닉네임", "닉네임예시", "닉네임예시", "닉네임예시"].map(
-            (label, i) => (
-              <View key={i} style={styles.storyItem}>
-                <View style={styles.storyAvatar} />
-                <Text style={styles.storyLabel}>{label}</Text>
-              </View>
-            )
-          )}
-        </ScrollView>
+        <StoryList
+          // myNickname={profile.nickname}
+          // myAvatarUrl={profile.avatarUrl}
+          // friends={friends}
+
+          myNickname={"내 닉네임"}
+          myAvatarSource={DEFAULT_MY_IMAGE}
+          friends={friends}
+        />
       </View>
 
       {/* 아래 탭 + 콘텐츠 영역 */}

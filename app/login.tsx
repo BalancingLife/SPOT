@@ -20,6 +20,7 @@ export default function Login() {
 
       //  앱으로 복귀할 URL을 환경에 맞게 자동 생성 (슬래시 개수 혼동 방지)
       const returnUrl = Linking.createURL("/oauth/kakao");
+      console.log("[KAKAO] authUrl:", authUrl);
       console.log("[KAKAO] returnUrl:", returnUrl);
       // 예: spot://oauth/kakao  또는 spot:///oauth/kakao (환경에 따라)
 
@@ -28,6 +29,7 @@ export default function Login() {
         Linking.createURL("/oauth/kakao")
       );
       console.log("[KAKAO][AuthSession] raw result:", result);
+      console.log("[KAKAO][AuthSession] type:", result.type);
 
       if (result.type === "success" && result.url) {
         //  URL 파싱
