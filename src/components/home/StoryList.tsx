@@ -23,7 +23,7 @@ type Props = {
   friends: FriendStory[];
 };
 
-const friendsIcon = require("@/assets/images/friends-icon-gray.png");
+const friendsIcon = require("@/assets/images/friends-icon-black-filled.png");
 
 export default function StoryList({
   myNickname,
@@ -36,6 +36,7 @@ export default function StoryList({
         key: "friends",
         label: "친구",
         source: friendsIcon as ImageSourcePropType,
+        kind: "friendsIcon",
       },
       { key: "me", label: myNickname, source: myAvatarSource ?? null },
       ...friends.map((f) => ({
@@ -61,7 +62,11 @@ export default function StoryList({
             {item.source ? (
               <Image
                 source={item.source}
-                style={StyleSheet.absoluteFillObject}
+                style={
+                  item.kind === "friendsIcon"
+                    ? styles.friendsIconImage
+                    : styles.avatarImage
+                }
               />
             ) : null}
           </View>
@@ -86,6 +91,20 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     marginBottom: 6,
     overflow: "hidden", // ✅ 이미지가 원형 안에 딱 들어가게
+
+    justifyContent: "center",
+    alignItems: "center",
   },
+
+  friendsIconImage: {
+    width: 40,
+    height: 40,
+  },
+
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+  },
+
   storyLabel: { ...TextStyles.Regular12 },
 });

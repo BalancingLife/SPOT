@@ -83,7 +83,7 @@ export default function Home() {
   const token = useAuthStore((s) => s.token);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
 
-  const DEFAULT_MY_IMAGE = require("@/assets/images/SPOT.png");
+  const DEFAULT_MY_IMAGE = require("@/assets/images/dog.png");
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
     null
   );
@@ -222,10 +222,6 @@ export default function Home() {
         {/* 스토리 (친구 / 나의닉네임 / 닉네임예시...) */}
         {/* 스토리 리스트 */}
         <StoryList
-          // myNickname={profile.nickname}
-          // myAvatarUrl={profile.avatarUrl}
-          // friends={friends}
-
           myNickname={"내 닉네임"}
           myAvatarSource={DEFAULT_MY_IMAGE}
           friends={friends}
