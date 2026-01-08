@@ -13,7 +13,7 @@ import { router } from "expo-router";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { useLocationStore } from "@/src/stores/useLocationStore";
-import client from "@/src/lib/api/client";
+import { api8080 } from "@/src/lib/api/client";
 import RecentSearch from "@/src/components/search/recentSearch";
 import SearchResult from "@/src/components/search/searchResult";
 import { useSearchStore } from "@/src/stores/useSearchStore";
@@ -92,7 +92,7 @@ export default function SearchPage() {
           lng: coords.lng,
         };
 
-        const res = await client.get<SearchItem[]>("/search", {
+        const res = await api8080.get<SearchItem[]>("/search", {
           params,
           signal: controller.signal,
         });

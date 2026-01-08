@@ -1,5 +1,5 @@
 // src/lib/api/places.ts
-import client from "@/src/lib/api/client";
+import { api8080 } from "@/src/lib/api/client";
 import type {
   ApiPlace,
   ApiMapPlace,
@@ -15,7 +15,7 @@ export async function fetchMapPlaces(params: {
 }): Promise<ApiMapPlace[]> {
   const { latitude, longitude, radius } = params;
 
-  const res = await client.get<ApiMapPlace[]>("/main/map", {
+  const res = await api8080.get<ApiMapPlace[]>("/main/map", {
     params: { latitude, longitude, radius },
   });
 
@@ -29,7 +29,7 @@ export async function fetchMyNewSavedPlaces(params: {
 }): Promise<Place[]> {
   const { lat, lng } = params;
 
-  const res = await client.get<ApiPlace[]>("/new", {
+  const res = await api8080.get<ApiPlace[]>("/new", {
     params: { lat, lng },
   });
 
@@ -49,7 +49,7 @@ export async function fetchPlacesByDistance(params: {
   const { lat, lng } = params;
 
   try {
-    const res = await client.get<ApiPlace[]>("/distance", {
+    const res = await api8080.get<ApiPlace[]>("/distance", {
       params: { lat, lng },
     });
 
@@ -78,7 +78,7 @@ export async function fetchPlaceMore(params: {
   const { lat, lng, placeId } = params;
 
   try {
-    const res = await client.get<ApiPlaceMoreResponse>("/more", {
+    const res = await api8080.get<ApiPlaceMoreResponse>("/more", {
       params: { lat, lng, placeId },
     });
     console.log("final url:", res.request?.responseURL);

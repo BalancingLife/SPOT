@@ -1,5 +1,5 @@
 // src/lib/api/search.ts
-import client from "@/src/lib/api/client";
+import { api8080 } from "@/src/lib/api/client";
 import type { SearchItem, SearchPayload } from "@/src/types/search";
 import type { ApiPlace, Place } from "@/src/types/place";
 import {
@@ -11,7 +11,7 @@ export async function fetchSearch(
   params: SearchPayload,
   options?: { signal?: AbortSignal }
 ): Promise<SearchItem[]> {
-  const res = await client.get<SearchItem[]>("/search", {
+  const res = await api8080.get<SearchItem[]>("/search", {
     params,
     signal: options?.signal,
   });
@@ -33,7 +33,7 @@ export async function fetchSearchDetails(params: {
   if (inflight) inflight.abort();
   inflight = new AbortController();
 
-  const res = await client.get<ApiPlace[]>("/search/details", {
+  const res = await api8080.get<ApiPlace[]>("/search/details", {
     params: { keyword, lat, lng },
     signal: inflight.signal,
   });
@@ -59,7 +59,7 @@ export async function fetchPlaceDetail(params: {
 
   inflightDetail = new AbortController();
 
-  const res = await client.get<ApiPlace>("/search/detail", {
+  const res = await api8080.get<ApiPlace>("/search/detail", {
     params: { gid, lat, lng },
     signal: inflightDetail.signal,
   });

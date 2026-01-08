@@ -1,4 +1,4 @@
-import client from "./client";
+import { api8080 } from "./client";
 
 // lib/api/bookmark.ts
 export async function toggleBookmarkApi(
@@ -7,9 +7,9 @@ export async function toggleBookmarkApi(
 ) {
   if (willBookmark) {
     // 북마크 등록
-    return client.post(`${placeId}/toggle`);
+    return api8080.post(`${placeId}/toggle`);
   } else {
     // 북마크 삭제
-    return client.post(`${placeId}/toggle`);
+    return api8080.post(`${placeId}/toggle`);
   }
 }
