@@ -73,11 +73,7 @@ export default function UserCard({
               style={styles.moreBtn}
               disabled={!onPressMore}
             >
-              <Image
-                source={moreIcon}
-                style={styles.moreIcon}
-                resizeMode="contain"
-              />
+              <Image source={moreIcon} style={styles.moreIcon} />
             </Pressable>
           </View>
         </>
@@ -150,11 +146,12 @@ const styles = StyleSheet.create({
 
   moreBtn: {
     padding: 6,
+    marginTop: -44,
   },
 
   moreIcon: {
-    width: 18,
-    height: 18,
+    width: 30,
+    height: 30,
   },
 
   // ===== story (기존) =====
