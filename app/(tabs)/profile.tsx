@@ -6,6 +6,8 @@ import ProfileUserCard from "@/src/components/UserCard";
 import SpotButton from "@/src/components/SpotButton";
 
 export default function ProfileScreen() {
+  const profileImg = require("@/assets/images/profile-example.png");
+  const fallbackFriendImg = require("@/assets/images/profile-icon-gray.png");
   return (
     <ProfileLayout>
       {/* 헤더 - 로고, 우측 아이콘 두개 */}
@@ -37,17 +39,17 @@ export default function ProfileScreen() {
 
       {/* 프로필 유저 카드 */}
       <ProfileUserCard
-        variant="story"
+        variant="profile"
         nickname="맛있는 건 참을 수 없어"
         userid="othernickname"
         bio="진짜 맛있는 집들만 핀해놓을거야"
         friendCount={36}
         friendAvatars={[
-          "https://example.com/a.png",
-          "https://example.com/b.png",
-          "https://example.com/c.png",
+          fallbackFriendImg,
+          fallbackFriendImg,
+          fallbackFriendImg,
         ]}
-        profileImage="https://example.com/profile.png"
+        profileImage={profileImg}
       />
 
       {/* 프로필 수정, 친구 관리 버튼 */}

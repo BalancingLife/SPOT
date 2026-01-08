@@ -1,18 +1,25 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Pressable,
+  ImageSourcePropType,
+} from "react-native";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 
 type Props = {
   variant?: "profile" | "story";
 
-  profileImage: string;
+  profileImage: ImageSourcePropType;
   nickname: string;
   userid: string;
   bio: string;
 
   friendCount?: number;
-  friendAvatars: string[];
+  friendAvatars: ImageSourcePropType[];
 
   onPressMore?: () => void;
 };
@@ -27,7 +34,6 @@ export default function UserCard({
   profileImage,
   onPressMore,
 }: Props) {
-  const profileImg = require("@/assets/images/profile-example.png");
   const moreIcon = require("@/assets/images/3dot.png");
 
   const isStory = variant === "story";
@@ -43,7 +49,7 @@ export default function UserCard({
       {isStory ? (
         <>
           <View style={styles.leftProfile}>
-            <Image source={profileImg} style={styles.profileImage} />
+            <Image source={profileImage} style={styles.profileImage} />
           </View>
 
           <View style={styles.center}>
@@ -91,10 +97,10 @@ export default function UserCard({
 
             <View style={styles.friendRow}>
               <View style={styles.avatarGroup}>
-                {friendAvatars.map((uri, i) => (
+                {friendAvatars.map((src, i) => (
                   <Image
                     key={i}
-                    source={require("@/assets/images/profile-icon-gray.png")}
+                    source={src}
                     style={[styles.avatar, { marginLeft: i === 0 ? 0 : -6 }]}
                   />
                 ))}
@@ -106,7 +112,7 @@ export default function UserCard({
 
           <View style={styles.right}>
             <Image
-              source={profileImg}
+              source={profileImage}
               style={[styles.profileImage, styles.profileImageStory]}
             />
           </View>

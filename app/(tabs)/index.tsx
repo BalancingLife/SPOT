@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  ImageSourcePropType,
 } from "react-native";
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useFocusEffect } from "expo-router";
@@ -22,6 +23,7 @@ import MyLocationButton from "@/src/components/map/MyLocationButton";
 import UserLocationMarker from "@/src/components/map/UserLocationMarker";
 import { useLocationStore } from "@/src/stores/useLocationStore";
 import StoryList from "@/src/components/home/StoryList";
+import UserCard from "@/src/components/UserCard";
 
 // const friends = [
 //   {
@@ -50,6 +52,13 @@ import StoryList from "@/src/components/home/StoryList";
 //     avatarUrl: "https://randomuser.me/api/portraits/women/12.jpg",
 //   },
 // ];
+
+type SelectedUser = {
+  nickname: string;
+  userid: string;
+  bio: string;
+  profileImage: ImageSourcePropType;
+};
 
 const TABS = [
   { key: "map", label: "지도" },
@@ -80,6 +89,10 @@ const dummyData = new Array(4).fill(0).map((_, i) => ({
 }));
 
 export default function Home() {
+  const [selectedUser, setSelectedUser] = React.useState<SelectedUser | null>(
+    null
+  );
+
   const token = useAuthStore((s) => s.token);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
 
@@ -225,7 +238,23 @@ export default function Home() {
           myNickname={"내 닉네임"}
           myAvatarSource={DEFAULT_MY_IMAGE}
           friends={friends}
+          onPressItem={(u) => setSelectedUser(u)} // ✅ 다음 단계에서 StoryList에 추가할 props
+          onPressFriends={() => setSelectedUser(null)} // ✅ 친구 누르면 닫기
         />
+
+        {selectedUser ? (
+          <View style={{ paddingRight: 16, paddingTop: 12 }}>
+            <UserCard
+              variant="story"
+              profileImage={selectedUser.profileImage}
+              nickname={selectedUser.nickname}
+              userid={selectedUser.userid}
+              bio={selectedUser.bio}
+              friendAvatars={[]} // 일단 빈 배열
+              friendCount={0} // 일단 0
+            />
+          </View>
+        ) : null}
       </View>
 
       {/* 아래 탭 + 콘텐츠 영역 */}

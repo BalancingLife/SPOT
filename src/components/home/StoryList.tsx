@@ -7,6 +7,7 @@ import {
   Image,
   StyleSheet,
   ImageSourcePropType,
+  Pressable,
 } from "react-native";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
@@ -17,35 +18,94 @@ type FriendStory = {
   avatarUrl?: string | null;
 };
 
+type SelectedUser = {
+  nickname: string;
+  userid: string;
+  bio: string;
+  profileImage: ImageSourcePropType;
+};
+
 type Props = {
   myNickname: string;
-  myAvatarSource?: ImageSourcePropType; // ✅ require()도 OK
+  myAvatarSource?: ImageSourcePropType;
   friends: FriendStory[];
+  onPressItem: (user: SelectedUser) => void;
+  onPressFriends: () => void;
 };
 
 const friendsIcon = require("@/assets/images/friends-icon-black-filled.png");
+const fallbackProfile = require("@/assets/images/profile-example.png");
+const fallbackFriend = require("@/assets/images/profile-icon-gray.png");
+
+// ✅ 아이템 타입을 “명확히” 분리 (payload 있는 것 / 없는 것)
+type FriendsItem = {
+  key: "friends";
+  label: "친구";
+  source: ImageSourcePropType;
+  kind: "friends";
+};
+
+type UserItem = {
+  key: string;
+  label: string;
+  source: ImageSourcePropType | null;
+  kind: "user";
+  payload: SelectedUser;
+};
+
+type StoryItem = FriendsItem | UserItem;
+
+// ✅ 타입가드
+function isUserItem(item: StoryItem): item is UserItem {
+  return item.kind === "user";
+}
 
 export default function StoryList({
   myNickname,
   myAvatarSource,
   friends,
+  onPressItem,
+  onPressFriends,
 }: Props) {
-  const items = useMemo(() => {
+  const items = useMemo<StoryItem[]>(() => {
     return [
       {
         key: "friends",
         label: "친구",
         source: friendsIcon as ImageSourcePropType,
-        kind: "friendsIcon",
+        kind: "friends",
       },
-      { key: "me", label: myNickname, source: myAvatarSource ?? null },
-      ...friends.map((f) => ({
-        key: `friend-${f.id}`,
-        label: f.nickname,
-        source: f.avatarUrl
+      {
+        key: "me",
+        label: myNickname,
+        source: myAvatarSource ?? null,
+        kind: "user",
+        payload: {
+          nickname: myNickname,
+          userid: "example@naver.com",
+          bio: "내 소개글",
+          profileImage: (myAvatarSource ??
+            fallbackProfile) as ImageSourcePropType,
+        },
+      },
+      ...friends.map<StoryItem>((f) => {
+        const img: ImageSourcePropType = f.avatarUrl
           ? ({ uri: f.avatarUrl } as ImageSourcePropType)
-          : null,
-      })),
+          : (fallbackFriend as ImageSourcePropType);
+
+        return {
+          key: `friend-${f.id}`,
+          label: f.nickname,
+          source: img,
+          kind: "user",
+          payload: {
+            nickname: f.nickname,
+            userid: `friend-${f.id}`,
+            bio: "",
+            profileImage: img,
+          },
+        };
+      }),
     ];
   }, [myNickname, myAvatarSource, friends]);
 
@@ -56,32 +116,49 @@ export default function StoryList({
       style={styles.storyScroll}
       contentContainerStyle={styles.storyContent}
     >
-      {items.map((item) => (
-        <View key={item.key} style={styles.storyItem}>
-          <View style={styles.storyAvatar}>
-            {item.source ? (
+      {items.map((item) => {
+        const isFriends = item.kind === "friends";
+
+        return (
+          <Pressable
+            key={item.key}
+            style={styles.storyItem}
+            onPress={() => {
+              if (isFriends) {
+                onPressFriends(); // ✅ UserCard 닫기
+                return;
+              }
+              // ✅ 여기서부터 item은 UserItem으로 좁혀짐 -> payload undefined 아님
+              if (isUserItem(item)) onPressItem(item.payload);
+            }}
+          >
+            <View style={styles.storyAvatar}>
               <Image
-                source={item.source}
-                style={
-                  item.kind === "friendsIcon"
-                    ? styles.friendsIconImage
-                    : styles.avatarImage
-                }
+                source={item.source ?? fallbackProfile}
+                style={[
+                  styles.avatarImage,
+                  isFriends ? styles.friendsIcon40 : null,
+                ]}
+                resizeMode={isFriends ? "contain" : "cover"}
               />
-            ) : null}
-          </View>
-          <Text style={styles.storyLabel}>{item.label}</Text>
-        </View>
-      ))}
+            </View>
+
+            <Text style={styles.storyLabel} numberOfLines={1}>
+              {item.label}
+            </Text>
+          </Pressable>
+        );
+      })}
     </ScrollView>
   );
 }
 
-// ✅ index에 있던 style 그대로 복붙
 const styles = StyleSheet.create({
   storyScroll: { marginTop: 20 },
   storyContent: { paddingRight: 16 },
-  storyItem: { alignItems: "center", marginRight: 20 },
+
+  storyItem: { alignItems: "center", marginRight: 20, width: 65 },
+
   storyAvatar: {
     width: 65,
     height: 65,
@@ -90,21 +167,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.gray_100,
     backgroundColor: Colors.white,
     marginBottom: 6,
-    overflow: "hidden", // ✅ 이미지가 원형 안에 딱 들어가게
-
+    overflow: "hidden",
     justifyContent: "center",
     alignItems: "center",
   },
 
-  friendsIconImage: {
-    width: 40,
-    height: 40,
-  },
+  avatarImage: { width: "100%", height: "100%" },
 
-  avatarImage: {
-    width: "100%",
-    height: "100%",
-  },
+  friendsIcon40: { width: 40, height: 40 },
 
-  storyLabel: { ...TextStyles.Regular12 },
+  storyLabel: { ...TextStyles.Regular12, textAlign: "center" },
 });
