@@ -6,12 +6,15 @@ function attachInterceptors(client: AxiosInstance): AxiosInstance {
   client.interceptors.request.use((config) => {
     const token = useAuthStore.getState().token;
 
+    console.log("🔑 token:", token);
+
     if (token) {
-      config.headers = config.headers ?? {};
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    console.log("👉 Authorization:", config.headers.Authorization);
     console.log("🚀 API 요청:", client.defaults.baseURL, config.url);
+
     return config;
   });
 

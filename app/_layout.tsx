@@ -4,8 +4,15 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { Stack, SplashScreen } from "expo-router";
 import { useEffect } from "react";
+import { useAuthStore } from "@/src/stores/useAuthStore";
 
 export default function RootLayout() {
+  const hydrate = useAuthStore((s) => s.hydrate);
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
   const [fontsLoaded] = useFonts({
     PretendardRegular: require("@/assets/fonts/Pretendard-Regular.ttf"),
     PretendardMedium: require("@/assets/fonts/Pretendard-Medium.ttf"),
