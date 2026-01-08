@@ -2,7 +2,7 @@
 import { View, Pressable, StyleSheet, Image } from "react-native";
 import { router } from "expo-router";
 import ProfileLayout from "@/src/components/profile/Layout";
-import ProfileUserCard from "@/src/components/profile/UserCard";
+import ProfileUserCard from "@/src/components/UserCard";
 import SpotButton from "@/src/components/SpotButton";
 
 export default function ProfileScreen() {
@@ -37,6 +37,7 @@ export default function ProfileScreen() {
 
       {/* 프로필 유저 카드 */}
       <ProfileUserCard
+        variant="story"
         nickname="맛있는 건 참을 수 없어"
         userid="othernickname"
         bio="진짜 맛있는 집들만 핀해놓을거야"
