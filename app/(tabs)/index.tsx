@@ -8,6 +8,9 @@ import {
   ScrollView,
 } from "react-native";
 import React, { useState, useMemo, useRef, useEffect } from "react";
+import { useFocusEffect } from "expo-router";
+import { useFriendsStore } from "@/src/stores/useFriendsStore";
+import { useAuthStore } from "@/src/stores/useAuthStore";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 import FilterBar from "@/src/components/bottomSheet/FilterBar";
@@ -20,33 +23,33 @@ import UserLocationMarker from "@/src/components/map/UserLocationMarker";
 import { useLocationStore } from "@/src/stores/useLocationStore";
 import StoryList from "@/src/components/home/StoryList";
 
-const friends = [
-  {
-    id: 1,
-    nickname: "민지",
-    avatarUrl: "https://randomuser.me/api/portraits/women/44.jpg",
-  },
-  {
-    id: 2,
-    nickname: "지훈",
-    avatarUrl: "https://randomuser.me/api/portraits/men/32.jpg",
-  },
-  {
-    id: 3,
-    nickname: "수아",
-    avatarUrl: "https://randomuser.me/api/portraits/women/65.jpg",
-  },
-  {
-    id: 4,
-    nickname: "현우",
-    avatarUrl: "https://randomuser.me/api/portraits/men/75.jpg",
-  },
-  {
-    id: 5,
-    nickname: "예린",
-    avatarUrl: "https://randomuser.me/api/portraits/women/12.jpg",
-  },
-];
+// const friends = [
+//   {
+//     id: 1,
+//     nickname: "민지",
+//     avatarUrl: "https://randomuser.me/api/portraits/women/44.jpg",
+//   },
+//   {
+//     id: 2,
+//     nickname: "지훈",
+//     avatarUrl: "https://randomuser.me/api/portraits/men/32.jpg",
+//   },
+//   {
+//     id: 3,
+//     nickname: "수아",
+//     avatarUrl: "https://randomuser.me/api/portraits/women/65.jpg",
+//   },
+//   {
+//     id: 4,
+//     nickname: "현우",
+//     avatarUrl: "https://randomuser.me/api/portraits/men/75.jpg",
+//   },
+//   {
+//     id: 5,
+//     nickname: "예린",
+//     avatarUrl: "https://randomuser.me/api/portraits/women/12.jpg",
+//   },
+// ];
 
 const TABS = [
   { key: "map", label: "지도" },
@@ -77,6 +80,9 @@ const dummyData = new Array(4).fill(0).map((_, i) => ({
 }));
 
 export default function Home() {
+  const token = useAuthStore((s) => s.token);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
+
   const DEFAULT_MY_IMAGE = require("@/assets/images/SPOT.png");
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
     null
@@ -127,6 +133,9 @@ export default function Home() {
 
   const [didInitCamera, setDidInitCamera] = useState(false);
 
+  const friends = useFriendsStore((s) => s.friends);
+  const loadFriends = useFriendsStore((s) => s.loadFriends);
+
   // 탭 진입 시 1회 위치 갱신
   useEffect(() => {
     if (activeTab !== "map") return;
@@ -174,6 +183,14 @@ export default function Home() {
       duration: 400,
     });
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!hasHydrated) return;
+      if (!token) return;
+      loadFriends();
+    }, [hasHydrated, token, loadFriends])
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
