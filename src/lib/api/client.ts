@@ -28,6 +28,13 @@ export const api8080 = attachInterceptors(
   })
 );
 
+export const api8000 = attachInterceptors(
+  axios.create({
+    baseURL: process.env.EXPO_PUBLIC_API_BASE_URL_8000,
+    timeout: 10_000,
+  })
+);
+
 export const api8001 = attachInterceptors(
   axios.create({
     baseURL: process.env.EXPO_PUBLIC_API_BASE_URL_8001,
