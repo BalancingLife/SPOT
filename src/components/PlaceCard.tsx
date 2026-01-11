@@ -6,6 +6,7 @@ import {
   Image,
   ScrollView,
   Pressable,
+  Modal,
 } from "react-native";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
@@ -45,6 +46,14 @@ export default function PlaceCard({
   onPressDirection,
   onPress,
 }: PlaceCardProps) {
+  const [viewerVisible, setViewerVisible] = React.useState(false); // React.useState는 import useState를 하지 않아도 react에서 바로 꺼내쓸 수 있는 기술
+  const [viewerIndex, setViewerIndex] = React.useState(0);
+
+  const pressImage = (index: number) => {
+    setViewerIndex(index);
+    setViewerVisible(true);
+  };
+
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.header}>
@@ -122,7 +131,9 @@ export default function PlaceCard({
         style={styles.imageScroll}
       >
         {images.map((img, index) => (
-          <Image key={index} source={img} style={styles.image} />
+          <Pressable key={index} onPress={() => pressImage(index)}>
+            <Image source={img} style={styles.image} />
+          </Pressable>
         ))}
       </ScrollView>
 
@@ -161,6 +172,28 @@ export default function PlaceCard({
           </Pressable>
         )}
       </View>
+
+      <Modal
+        visible={viewerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setViewerVisible(false)}
+      >
+        <View style={styles.viewerBackdrop}>
+          <Pressable
+            style={styles.viewerCloseBtn}
+            onPress={() => setViewerVisible(false)}
+            hitSlop={10}
+          >
+            <Image
+              style={{ width: 44, height: 44 }}
+              source={require("@/assets/images/arrow-left-white.png")}
+            />
+          </Pressable>
+
+          <Image source={images[viewerIndex]} style={styles.viewerImage} />
+        </View>
+      </Modal>
     </Pressable>
   );
 }
@@ -267,5 +300,28 @@ const styles = StyleSheet.create({
   },
   mapText: {
     color: "#333",
+  },
+
+  viewerBackdrop: {
+    flex: 1,
+    backgroundColor: "black",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  viewerImage: {
+    width: "100%",
+    height: "70%",
+    resizeMode: "contain",
+  },
+  viewerCloseBtn: {
+    position: "absolute",
+    top: 60,
+    left: 18,
+    zIndex: 10,
+  },
+  viewerCloseText: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "600",
   },
 });
