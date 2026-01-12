@@ -55,8 +55,8 @@ import UserCard from "@/src/components/UserCard";
 
 type SelectedUser = {
   nickname: string;
-  userid: string;
-  bio: string;
+  userid: string; //
+  bio: string | null;
   profileImage: ImageSourcePropType;
 };
 
@@ -248,8 +248,8 @@ export default function Home() {
               variant="story"
               profileImage={selectedUser.profileImage}
               nickname={selectedUser.nickname}
-              userid={selectedUser.userid}
-              bio={selectedUser.bio}
+              userid={selectedUser.userid} //
+              bio={selectedUser.bio ?? ""}
               friendAvatars={[]} // 일단 빈 배열
               friendCount={0} // 일단 0
             />

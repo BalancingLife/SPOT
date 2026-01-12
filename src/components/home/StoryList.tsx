@@ -16,6 +16,8 @@ type FriendStory = {
   id: string | number;
   nickname: string;
   avatarUrl?: string | null;
+  email?: string;
+  comment?: string | null;
 };
 
 type SelectedUser = {
@@ -100,8 +102,8 @@ export default function StoryList({
           kind: "user",
           payload: {
             nickname: f.nickname,
-            userid: `friend-${f.id}`,
-            bio: "",
+            userid: f.email ?? "",
+            bio: f.comment ?? "",
             profileImage: img,
           },
         };
