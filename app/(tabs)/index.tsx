@@ -1,3 +1,4 @@
+// app/(tabs)/index.tsx
 import {
   View,
   Image,
@@ -26,8 +27,21 @@ import UserLocationMarker from "@/src/components/map/UserLocationMarker";
 import { useLocationStore } from "@/src/stores/useLocationStore";
 import StoryList from "@/src/components/home/StoryList";
 import UserCard from "@/src/components/UserCard";
-import { fetchHomeMain, fetchHomeMe, fetchHomeUser } from "@/src/lib/api/home";
 import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
+
+import {
+  fetchHomeMain,
+  fetchHomeMe,
+  fetchHomeUser,
+  fetchHomePlacesMain,
+  fetchHomePlacesMe,
+  fetchHomePlacesUser,
+  fetchHomeCommentsMain,
+  fetchHomeCommentsMe,
+  fetchHomeCommentsUser,
+  type HomePlaceItem,
+  type HomeCommentItem,
+} from "@/src/lib/api/home";
 
 const TABS = [
   { key: "map", label: "지도" },
@@ -37,84 +51,55 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]["key"];
 
-const dummyData = new Array(4).fill(0).map((_, i) => ({
-  name: `장소 이름${i + 1}`,
-  category: "카페 / 베이커리",
-  address: `서울 주소구 주소동 ${123 + i}-1`,
-  images: [
-    require("@/assets/images/example.png"),
-    require("@/assets/images/react-logo.png"),
-    require("@/assets/images/spot-icon-orange.png"),
-  ],
-  savedUsers: [
-    require("@/assets/images/spot-icon-orange.png"),
-    require("@/assets/images/react-logo.png"),
-  ],
-  savedCount: 4 + i,
-  rating: 4.5,
-  reviewCount: 199,
-  showBookmark: true,
-  isBookmarked: true,
-}));
+type HomeScope =
+  | { type: "friends" }
+  | { type: "me" }
+  | { type: "friend"; userId: number };
+
+type HomeMarker = {
+  key: string;
+  lat: number;
+  lng: number;
+  raw: any;
+};
+
+const dummyCardFallbackImgs = [
+  require("@/assets/images/example.png"),
+  require("@/assets/images/react-logo.png"),
+  require("@/assets/images/spot-icon-orange.png"),
+];
 
 export default function Home() {
-  // ---------------------------
-  // types
-  // ---------------------------
-  type HomeScope =
-    | { type: "friends" }
-    | { type: "me" }
-    | { type: "friend"; userId: number };
-
-  type HomeMarker = {
-    key: string;
-    lat: number;
-    lng: number;
-    raw: any; // 테스트 단계: 로그용
-  };
-
-  // ---------------------------
-  // constants
-  // ---------------------------
-  const HOME_DISTANCE = 10;
-  const HOME_PIN = require("@/assets/images/spot-icon-orange.png");
-  const DEFAULT_MY_IMAGE = require("@/assets/images/dog.png");
-
-  // ---------------------------
-  // state
-  // ---------------------------
   const [selectedUser, setSelectedUser] = useState<StorySelectedUser | null>(
     null,
   );
+
+  const HOME_DISTANCE = 10;
+  const HOME_PIN = require("@/assets/images/spot-icon-orange.png");
+
   const [scope, setScope] = React.useState<HomeScope>({ type: "friends" });
+
+  // map markers
   const [markers, setMarkers] = React.useState<HomeMarker[]>([]);
 
+  // place list
+  const [placeList, setPlaceList] = React.useState<HomePlaceItem[]>([]);
+
+  // comment list
+  const [commentList, setCommentList] = React.useState<HomeCommentItem[]>([]);
+
+  const token = useAuthStore((s) => s.token);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
+
+  const DEFAULT_MY_IMAGE = require("@/assets/images/dog.png");
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
     null,
   );
   const [category, setCategory] = useState<string[]>([]);
   const [sort, setSort] = useState<string[]>(["recent"]);
+
   const [activeTab, setActiveTab] = useState<TabKey>("map");
 
-  // coords -> lat/lng state (deps 깔끔하게 하려고)
-  const [lat, setLat] = React.useState<number | null>(null);
-  const [lng, setLng] = React.useState<number | null>(null);
-
-  // ---------------------------
-  // stores
-  // ---------------------------
-  const token = useAuthStore((s) => s.token);
-  const hasHydrated = useAuthStore((s) => s.hasHydrated);
-
-  const refreshOnce = useLocationStore((s) => s.refreshOnce);
-  const coords = useLocationStore((s) => s.coords);
-
-  const friends = useFriendsStore((s) => s.friends);
-  const loadFriends = useFriendsStore((s) => s.loadFriends);
-
-  // ---------------------------
-  // memo
-  // ---------------------------
   const sortOptions = useMemo(
     () => [
       { label: "최신순", value: "latest" },
@@ -139,7 +124,6 @@ export default function Home() {
 
   const sortLabel =
     sortOptions.find((o) => o.value === sort[0])?.label ?? "최신순";
-
   const categoryLabel =
     category.length > 0
       ? (categoryOptions.find((o) => o.value === category[0])?.label ?? "업종")
@@ -150,15 +134,19 @@ export default function Home() {
     [categoryOptions],
   );
 
-  // ---------------------------
-  // refs
-  // ---------------------------
   const mapRef = useRef<NaverMapViewRef>(null);
 
-  // ---------------------------
-  // map init camera
-  // ---------------------------
+  const refreshOnce = useLocationStore((s) => s.refreshOnce);
+  const coords = useLocationStore((s) => s.coords);
+
+  // coords에서 lat/lng만 뽑아서 deps 깔끔하게
+  const lat = (coords as any)?.latitude ?? (coords as any)?.lat;
+  const lng = (coords as any)?.longitude ?? (coords as any)?.lng;
+
   const [didInitCamera, setDidInitCamera] = useState(false);
+
+  const friends = useFriendsStore((s) => s.friends);
+  const loadFriends = useFriendsStore((s) => s.loadFriends);
 
   // 탭 진입 시 1회 위치 갱신
   useEffect(() => {
@@ -170,23 +158,18 @@ export default function Home() {
   // coords 잡히면 “내 위치에서 시작”
   useEffect(() => {
     if (activeTab !== "map") return;
-    if (!coords) return;
+    if (lat == null || lng == null) return;
     if (didInitCamera) return;
 
-    const latitude = (coords as any).latitude ?? (coords as any).lat;
-    const longitude = (coords as any).longitude ?? (coords as any).lng;
-
-    if (latitude == null || longitude == null) return;
-
     mapRef.current?.animateCameraTo?.({
-      latitude,
-      longitude,
+      latitude: lat,
+      longitude: lng,
       zoom: 16,
       duration: 400,
     });
 
     setDidInitCamera(true);
-  }, [activeTab, coords, didInitCamera]);
+  }, [activeTab, lat, lng, didInitCamera]);
 
   const moveToCurrentLocation = async () => {
     const next = await refreshOnce?.();
@@ -194,22 +177,18 @@ export default function Home() {
 
     if (!c) return;
 
-    const latitude = (c as any).latitude ?? (c as any).lat;
-    const longitude = (c as any).longitude ?? (c as any).lng;
-
-    if (latitude == null || longitude == null) return;
+    const nextLat = (c as any).latitude ?? (c as any).lat;
+    const nextLng = (c as any).longitude ?? (c as any).lng;
+    if (nextLat == null || nextLng == null) return;
 
     mapRef.current?.animateCameraTo?.({
-      latitude,
-      longitude,
+      latitude: nextLat,
+      longitude: nextLng,
       zoom: 16,
       duration: 400,
     });
   };
 
-  // ---------------------------
-  // friends list load
-  // ---------------------------
   useFocusEffect(
     React.useCallback(() => {
       if (!hasHydrated) return;
@@ -218,22 +197,10 @@ export default function Home() {
     }, [hasHydrated, token, loadFriends]),
   );
 
-  // ---------------------------
-  // coords -> (lat,lng) state
-  // ---------------------------
-  useEffect(() => {
-    const nextLat = (coords as any)?.latitude ?? (coords as any)?.lat;
-    const nextLng = (coords as any)?.longitude ?? (coords as any)?.lng;
+  /** -----------------------------
+   *  더미 생성기 (테스트용)
+   *  ----------------------------- */
 
-    if (nextLat == null || nextLng == null) return;
-
-    setLat(nextLat);
-    setLng(nextLng);
-  }, [coords]);
-
-  // ---------------------------
-  // dummy markers for EMPTY places
-  // ---------------------------
   const makeDummyMarkers = (baseLat: number, baseLng: number, s: HomeScope) => {
     const tag =
       s.type === "friends"
@@ -241,35 +208,103 @@ export default function Home() {
         : s.type === "me"
           ? "me"
           : `friend-${s.userId}`;
-
-    const base =
+    const offset =
       s.type === "friends" ? 0.0012 : s.type === "me" ? 0.0022 : 0.0032;
 
     return [
       {
         key: `dummy-${tag}-1`,
-        lat: baseLat + base,
-        lng: baseLng + base,
+        lat: baseLat + offset,
+        lng: baseLng + offset,
         raw: { dummy: true, tag, idx: 1 },
       },
       {
         key: `dummy-${tag}-2`,
-        lat: baseLat - base,
-        lng: baseLng - base,
+        lat: baseLat - offset,
+        lng: baseLng - offset,
         raw: { dummy: true, tag, idx: 2 },
       },
     ] as HomeMarker[];
   };
 
-  // ---------------------------
-  // fetch markers (deps: activeTab, scope, lat, lng)
-  // ---------------------------
+  const makeDummyPlaces = (s: HomeScope): HomePlaceItem[] => {
+    const tag =
+      s.type === "friends"
+        ? "friends"
+        : s.type === "me"
+          ? "me"
+          : `friend-${s.userId}`;
+
+    return new Array(3).fill(0).map((_, i) => ({
+      id: 9000 + i,
+      gid: `dummy-gid-${tag}-${i}`,
+      photos: [
+        `https://placehold.co/300x300/png?text=${encodeURIComponent(
+          `${tag}-P${i + 1}-1`,
+        )}`,
+        `https://placehold.co/300x300/png?text=${encodeURIComponent(
+          `${tag}-P${i + 1}-2`,
+        )}`,
+        `https://placehold.co/300x300/png?text=${encodeURIComponent(
+          `${tag}-P${i + 1}-3`,
+        )}`,
+      ],
+      name: `더미 장소(${tag}) #${i + 1}`,
+      address: `더미 주소 ${i + 1}`,
+      rating: 4.2,
+      ratingCount: 123,
+      list: "cafe",
+      savedCount: 10 + i,
+      memPhotos: [
+        `https://placehold.co/100x100/png?text=A`,
+        `https://placehold.co/100x100/png?text=B`,
+        `https://placehold.co/100x100/png?text=C`,
+      ],
+
+      searchCount: 0,
+      score: 0,
+      distance: 0,
+      lat: 37.5665 + 0.001 * i,
+      lng: 126.978 + 0.001 * i,
+      comment: "더미 코멘트",
+      commentCount: 1,
+      memId: 0,
+      commentPhoto: "",
+      marked: false,
+    }));
+  };
+
+  const makeDummyComments = (s: HomeScope): HomeCommentItem[] => {
+    const tag =
+      s.type === "friends"
+        ? "friends"
+        : s.type === "me"
+          ? "me"
+          : `friend-${s.userId}`;
+
+    return new Array(5).fill(0).map((_, i) => ({
+      id: 8000 + i,
+      placeId: 7000 + i,
+      gid: `dummy-gid-${tag}-${i}`,
+      photos: [],
+      name: `더미 장소명(${tag}) #${i + 1}`,
+      address: `더미 주소 ${i + 1}`,
+      score: 5,
+      comment: `더미 코멘트(${tag}) - ${i + 1}`,
+      memId: 0,
+      memEmail: "dummy@spot.com",
+      commentPhoto: "",
+      createdAt: new Date().toISOString(),
+      marked: false,
+    }));
+  };
+
+  /** -----------------------------
+   *  MAP 탭: scope별 마커 데이터 로드 (+ 비면 더미 마커)
+   *  ----------------------------- */
   useEffect(() => {
     if (activeTab !== "map") return;
-    if (lat == null || lng == null) {
-      console.log("[home-map] lat/lng 없음 -> skip");
-      return;
-    }
+    if (lat == null || lng == null) return;
 
     let cancelled = false;
 
@@ -277,7 +312,6 @@ export default function Home() {
       try {
         console.log("[home-map] fetch start:", { scope, lat, lng });
 
-        // 1) friends (/main)
         if (scope.type === "friends") {
           const data = await fetchHomeMain({
             lat,
@@ -307,7 +341,6 @@ export default function Home() {
           return;
         }
 
-        // 2) me (/main/me)
         if (scope.type === "me") {
           const data = await fetchHomeMe({ lat, lng, distance: HOME_DISTANCE });
           if (cancelled) return;
@@ -333,7 +366,7 @@ export default function Home() {
           return;
         }
 
-        // 3) friend (/main/{userId})
+        // friend
         const data = await fetchHomeUser({
           userId: scope.userId,
           lat,
@@ -366,8 +399,7 @@ export default function Home() {
           status: e?.response?.status,
           data: e?.response?.data,
         });
-        // 실패해도 테스트는 계속: 더미로 찍어두기
-        setMarkers(makeDummyMarkers(lat, lng, scope));
+        setMarkers([]);
       }
     })();
 
@@ -376,13 +408,121 @@ export default function Home() {
     };
   }, [activeTab, scope, lat, lng]);
 
-  // ---------------------------
-  // render
-  // ---------------------------
+  /** -----------------------------
+   *  PLACE 탭: scope별 장소 리스트 로드 (+ 비면 더미 리스트)
+   *  ----------------------------- */
+  useEffect(() => {
+    if (activeTab !== "place") return;
+    if (lat == null || lng == null) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        console.log("[home-place] fetch start:", { scope, lat, lng });
+
+        let list: HomePlaceItem[] = [];
+
+        if (scope.type === "friends") {
+          list = await fetchHomePlacesMain({ lat, lng });
+        } else if (scope.type === "me") {
+          list = await fetchHomePlacesMe({ lat, lng });
+        } else {
+          list = await fetchHomePlacesUser({ userId: scope.userId, lat, lng });
+        }
+
+        if (cancelled) return;
+
+        if (!list || list.length === 0) {
+          const dummy = makeDummyPlaces(scope);
+          setPlaceList(dummy);
+          console.log(
+            "[home-place] EMPTY -> dummy",
+            dummy.map((d) => d.name),
+          );
+        } else {
+          setPlaceList(list);
+          console.log("[home-place] ok:", list.length);
+        }
+      } catch (e: any) {
+        console.log("[home-place] fetch error:", {
+          message: e?.message,
+          status: e?.response?.status,
+          data: e?.response?.data,
+        });
+        if (!cancelled) setPlaceList(makeDummyPlaces(scope));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, scope, lat, lng]);
+
+  /** -----------------------------
+   *  COMMENT 탭: scope별 코멘트 리스트 로드 (+ 비면 더미 리스트)
+   *  ----------------------------- */
+  useEffect(() => {
+    if (activeTab !== "comment") return;
+    if (lat == null || lng == null) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        console.log("[home-comment] fetch start:", { scope, lat, lng });
+
+        let list: HomeCommentItem[] = [];
+
+        if (scope.type === "friends") {
+          list = await fetchHomeCommentsMain({ lat, lng, page: 0, size: 10 });
+        } else if (scope.type === "me") {
+          list = await fetchHomeCommentsMe({ lat, lng, page: 0, size: 10 });
+        } else {
+          list = await fetchHomeCommentsUser({
+            userId: scope.userId,
+            lat,
+            lng,
+            page: 0,
+            size: 10,
+          });
+        }
+
+        if (cancelled) return;
+
+        if (!list || list.length === 0) {
+          const dummy = makeDummyComments(scope);
+          setCommentList(dummy);
+          console.log(
+            "[home-comment] EMPTY -> dummy",
+            dummy.map((d) => d.comment),
+          );
+        } else {
+          setCommentList(list);
+          console.log("[home-comment] ok:", list.length);
+        }
+      } catch (e: any) {
+        console.log("[home-comment] fetch error:", {
+          message: e?.message,
+          status: e?.response?.status,
+          data: e?.response?.data,
+        });
+        if (!cancelled) setCommentList(makeDummyComments(scope));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, scope, lat, lng]);
+
+  /** -----------------------------
+   *  UI
+   *  ----------------------------- */
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerContainer}>
-        {/* 좌측 로고, 우측 친구 아이콘 */}
+        {/* top bar */}
         <View style={styles.topBar}>
           <Image
             source={require("@/assets/images/SPOT.png")}
@@ -447,9 +587,9 @@ export default function Home() {
         ) : null}
       </View>
 
-      {/* 아래 탭 + 콘텐츠 영역 */}
+      {/* body */}
       <View style={styles.bodyContainer}>
-        {/* 탭 바 */}
+        {/* tab bar */}
         <View style={styles.tabBar}>
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key;
@@ -474,9 +614,9 @@ export default function Home() {
           })}
         </View>
 
-        {/* 탭 콘텐츠 */}
+        {/* tab content */}
         <View style={styles.tabContent}>
-          {/* 지도 탭 */}
+          {/* MAP */}
           {activeTab === "map" && (
             <View style={styles.mapContainer}>
               <NaverMapView
@@ -488,7 +628,6 @@ export default function Home() {
                 }}
               >
                 <UserLocationMarker enableRotation />
-
                 {markers.map((m) => (
                   <NaverMapMarkerOverlay
                     key={m.key}
@@ -518,57 +657,118 @@ export default function Home() {
             </View>
           )}
 
-          {/* 장소 탭 */}
+          {/* PLACE */}
           {activeTab === "place" && (
-            <View style={styles.placeholderBox}>
-              <View style={{ flex: 1 }}>
-                <FilterBar
-                  sortLabel={sortLabel}
-                  categoryLabel={categoryLabel}
-                  onPressSort={() => setOpened("sort")}
-                  onPressCategory={() => setOpened("category")}
-                  showSaveType={false}
-                />
+            <View style={{ flex: 1 }}>
+              <FilterBar
+                sortLabel={sortLabel}
+                categoryLabel={categoryLabel}
+                onPressSort={() => setOpened("sort")}
+                onPressCategory={() => setOpened("category")}
+                showSaveType={false}
+              />
 
-                <ScrollView
-                  style={{ flex: 1 }}
-                  contentContainerStyle={{ paddingHorizontal: 16 }}
-                  showsVerticalScrollIndicator={false}
-                >
-                  {dummyData.map((item, index) => (
+              <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingHorizontal: 16 }}
+                showsVerticalScrollIndicator={false}
+              >
+                {placeList.map((p) => {
+                  const imgs =
+                    Array.isArray(p.photos) && p.photos.length > 0
+                      ? p.photos.map((u) => ({ uri: u }))
+                      : dummyCardFallbackImgs;
+
+                  const savedUsers =
+                    Array.isArray(p.memPhotos) && p.memPhotos.length > 0
+                      ? p.memPhotos.slice(0, 3).map((u) => ({ uri: u }))
+                      : undefined;
+
+                  return (
                     <PlaceCard
-                      key={index}
-                      {...item}
+                      key={String(p.id)}
+                      name={p.name}
+                      category={p.list}
+                      address={p.address}
+                      images={imgs as any[]}
+                      savedUsers={savedUsers as any[]}
+                      savedCount={p.savedCount}
                       showDirectionButton={true}
+                      rating={p.rating}
+                      reviewCount={p.ratingCount}
+                      showBookmark={true}
+                      isBookmarked={p.marked}
+                      distanceText={
+                        typeof p.distance === "number"
+                          ? p.distance >= 1000
+                            ? `${(p.distance / 1000).toFixed(1)}km`
+                            : `${Math.round(p.distance)}m`
+                          : undefined
+                      }
+                      onToggleBookmark={() =>
+                        console.log("[home-place] bookmark:", p.id)
+                      }
+                      onPress={() => console.log("[home-place] press:", p.id)}
                     />
-                  ))}
-                </ScrollView>
+                  );
+                })}
+              </ScrollView>
 
-                <OptionModal
-                  visible={opened === "sort"}
-                  title="정렬 기준"
-                  options={sortOptions}
-                  selected={sort}
-                  onSelect={(next) => setSort(next)}
-                  onClose={() => setOpened(null)}
-                />
-                <OptionModal
-                  visible={opened === "category"}
-                  title="업종"
-                  options={categoryOptionsForModal}
-                  selected={category}
-                  onSelect={(next) => setCategory(next)}
-                  onClose={() => setOpened(null)}
-                />
-              </View>
+              <OptionModal
+                visible={opened === "sort"}
+                title="정렬 기준"
+                options={sortOptions}
+                selected={sort}
+                onSelect={(next) => setSort(next)}
+                onClose={() => setOpened(null)}
+              />
+              <OptionModal
+                visible={opened === "category"}
+                title="업종"
+                options={categoryOptionsForModal}
+                selected={category}
+                onSelect={(next) => setCategory(next)}
+                onClose={() => setOpened(null)}
+              />
             </View>
           )}
 
-          {/* 코멘트 탭 */}
+          {/* COMMENT */}
           {activeTab === "comment" && (
-            <View style={styles.placeholderBox}>
-              <Text style={styles.placeholderText}>코멘트 리스트 영역</Text>
-            </View>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{ padding: 16 }}
+              showsVerticalScrollIndicator={false}
+            >
+              {commentList.map((c) => (
+                <View
+                  key={String(c.id)}
+                  style={{
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: Colors.gray_100,
+                  }}
+                >
+                  <Text style={TextStyles.SemiBold16}>{c.name}</Text>
+                  <Text
+                    style={[TextStyles.Regular12, { color: Colors.gray_400 }]}
+                  >
+                    {c.address}
+                  </Text>
+                  <Text style={[TextStyles.Regular12, { marginTop: 6 }]}>
+                    {c.comment}
+                  </Text>
+                  <Text
+                    style={[
+                      TextStyles.Regular12,
+                      { color: Colors.gray_300, marginTop: 6 },
+                    ]}
+                  >
+                    {c.createdAt}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
           )}
         </View>
       </View>
@@ -577,14 +777,8 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  headerContainer: {
-    backgroundColor: Colors.white,
-    paddingLeft: 16,
-  },
+  safeArea: { flex: 1, backgroundColor: Colors.white },
+  headerContainer: { backgroundColor: Colors.white, paddingLeft: 16 },
 
   topBar: {
     flexDirection: "row",
@@ -593,37 +787,16 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   spotLogo: { width: 63, height: 29 },
-  friendsIconContainer: {
-    flexDirection: "row",
-    gap: 16,
-  },
+  friendsIconContainer: { flexDirection: "row", gap: 16 },
   friendsIcon: { width: 24, height: 24 },
 
-  bodyContainer: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    paddingTop: 20,
-  },
+  bodyContainer: { flex: 1, backgroundColor: Colors.white, paddingTop: 20 },
 
-  tabBar: {
-    justifyContent: "space-around",
-    flexDirection: "row",
-  },
-  tabItem: {
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  tabLabel: {
-    ...TextStyles.SemiBold16,
-    marginBottom: 4,
-  },
-  tabLabelActive: {
-    color: Colors.primary_500,
-    fontWeight: "600",
-  },
-  tabLabelInactive: {
-    color: Colors.gray_300,
-  },
+  tabBar: { justifyContent: "space-around", flexDirection: "row" },
+  tabItem: { alignItems: "center", paddingHorizontal: 20 },
+  tabLabel: { ...TextStyles.SemiBold16, marginBottom: 4 },
+  tabLabelActive: { color: Colors.primary_500, fontWeight: "600" },
+  tabLabelInactive: { color: Colors.gray_300 },
   tabUnderline: {
     width: "230%",
     height: 4,
@@ -632,21 +805,6 @@ const styles = StyleSheet.create({
 
   tabContent: { flex: 1 },
 
-  mapContainer: {
-    flex: 1,
-    backgroundColor: Colors.gray_100,
-  },
+  mapContainer: { flex: 1, backgroundColor: Colors.gray_100 },
   map: { flex: 1, zIndex: 0 },
-
-  placeholderBox: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: Colors.gray_100,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  placeholderText: {
-    ...TextStyles.Regular12,
-    color: Colors.gray_400,
-  },
 });
