@@ -58,10 +58,9 @@ const dummyData = new Array(4).fill(0).map((_, i) => ({
 }));
 
 export default function Home() {
-  const [selectedUser, setSelectedUser] = useState<StorySelectedUser | null>(
-    null,
-  );
-
+  // ---------------------------
+  // types
+  // ---------------------------
   type HomeScope =
     | { type: "friends" }
     | { type: "me" }
@@ -71,27 +70,51 @@ export default function Home() {
     key: string;
     lat: number;
     lng: number;
-    raw: any; // 일단 로그용
+    raw: any; // 테스트 단계: 로그용
   };
 
-  const HOME_DISTANCE = 10; // 서버 distance 단위는 일단 그대로
+  // ---------------------------
+  // constants
+  // ---------------------------
+  const HOME_DISTANCE = 10;
   const HOME_PIN = require("@/assets/images/spot-icon-orange.png");
+  const DEFAULT_MY_IMAGE = require("@/assets/images/dog.png");
 
+  // ---------------------------
+  // state
+  // ---------------------------
+  const [selectedUser, setSelectedUser] = useState<StorySelectedUser | null>(
+    null,
+  );
   const [scope, setScope] = React.useState<HomeScope>({ type: "friends" });
   const [markers, setMarkers] = React.useState<HomeMarker[]>([]);
 
-  const token = useAuthStore((s) => s.token);
-  const hasHydrated = useAuthStore((s) => s.hasHydrated);
-
-  const DEFAULT_MY_IMAGE = require("@/assets/images/dog.png");
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
     null,
   );
-  const [category, setCategory] = useState<string[]>([]); // 비어있음 = 전체
-  const [sort, setSort] = useState<string[]>(["recent"]); // 기본 최신순
-
+  const [category, setCategory] = useState<string[]>([]);
+  const [sort, setSort] = useState<string[]>(["recent"]);
   const [activeTab, setActiveTab] = useState<TabKey>("map");
 
+  // coords -> lat/lng state (deps 깔끔하게 하려고)
+  const [lat, setLat] = React.useState<number | null>(null);
+  const [lng, setLng] = React.useState<number | null>(null);
+
+  // ---------------------------
+  // stores
+  // ---------------------------
+  const token = useAuthStore((s) => s.token);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
+
+  const refreshOnce = useLocationStore((s) => s.refreshOnce);
+  const coords = useLocationStore((s) => s.coords);
+
+  const friends = useFriendsStore((s) => s.friends);
+  const loadFriends = useFriendsStore((s) => s.loadFriends);
+
+  // ---------------------------
+  // memo
+  // ---------------------------
   const sortOptions = useMemo(
     () => [
       { label: "최신순", value: "latest" },
@@ -99,6 +122,7 @@ export default function Home() {
     ],
     [],
   );
+
   const categoryOptions = useMemo(
     () => [
       { label: "음식점", value: "restaurant" },
@@ -115,6 +139,7 @@ export default function Home() {
 
   const sortLabel =
     sortOptions.find((o) => o.value === sort[0])?.label ?? "최신순";
+
   const categoryLabel =
     category.length > 0
       ? (categoryOptions.find((o) => o.value === category[0])?.label ?? "업종")
@@ -125,16 +150,15 @@ export default function Home() {
     [categoryOptions],
   );
 
+  // ---------------------------
+  // refs
+  // ---------------------------
   const mapRef = useRef<NaverMapViewRef>(null);
 
-  const refreshOnce = useLocationStore((s) => s.refreshOnce);
-  const coords = useLocationStore((s) => s.coords);
-  // coords 형태는 네 store 기준. 예: { latitude, longitude } or { lat, lng }
-
+  // ---------------------------
+  // map init camera
+  // ---------------------------
   const [didInitCamera, setDidInitCamera] = useState(false);
-
-  const friends = useFriendsStore((s) => s.friends);
-  const loadFriends = useFriendsStore((s) => s.loadFriends);
 
   // 탭 진입 시 1회 위치 갱신
   useEffect(() => {
@@ -165,7 +189,6 @@ export default function Home() {
   }, [activeTab, coords, didInitCamera]);
 
   const moveToCurrentLocation = async () => {
-    // refreshOnce가 좌표를 return하면 그거 쓰고, 아니면 store 최신값을 다시 읽는 방식으로
     const next = await refreshOnce?.();
     const c = next ?? coords ?? (useLocationStore as any).getState?.().coords;
 
@@ -184,6 +207,9 @@ export default function Home() {
     });
   };
 
+  // ---------------------------
+  // friends list load
+  // ---------------------------
   useFocusEffect(
     React.useCallback(() => {
       if (!hasHydrated) return;
@@ -192,18 +218,56 @@ export default function Home() {
     }, [hasHydrated, token, loadFriends]),
   );
 
-  const getLatLng = () => {
-    const lat = (coords as any)?.latitude ?? (coords as any)?.lat;
-    const lng = (coords as any)?.longitude ?? (coords as any)?.lng;
-    return { lat, lng };
+  // ---------------------------
+  // coords -> (lat,lng) state
+  // ---------------------------
+  useEffect(() => {
+    const nextLat = (coords as any)?.latitude ?? (coords as any)?.lat;
+    const nextLng = (coords as any)?.longitude ?? (coords as any)?.lng;
+
+    if (nextLat == null || nextLng == null) return;
+
+    setLat(nextLat);
+    setLng(nextLng);
+  }, [coords]);
+
+  // ---------------------------
+  // dummy markers for EMPTY places
+  // ---------------------------
+  const makeDummyMarkers = (baseLat: number, baseLng: number, s: HomeScope) => {
+    const tag =
+      s.type === "friends"
+        ? "friends"
+        : s.type === "me"
+          ? "me"
+          : `friend-${s.userId}`;
+
+    const base =
+      s.type === "friends" ? 0.0012 : s.type === "me" ? 0.0022 : 0.0032;
+
+    return [
+      {
+        key: `dummy-${tag}-1`,
+        lat: baseLat + base,
+        lng: baseLng + base,
+        raw: { dummy: true, tag, idx: 1 },
+      },
+      {
+        key: `dummy-${tag}-2`,
+        lat: baseLat - base,
+        lng: baseLng - base,
+        raw: { dummy: true, tag, idx: 2 },
+      },
+    ] as HomeMarker[];
   };
 
+  // ---------------------------
+  // fetch markers (deps: activeTab, scope, lat, lng)
+  // ---------------------------
   useEffect(() => {
     if (activeTab !== "map") return;
-
-    const { lat, lng } = getLatLng();
     if (lat == null || lng == null) {
-      console.log("[home-map] coords 없음 -> skip");
+      console.log("[home-map] lat/lng 없음 -> skip");
       return;
     }
 
@@ -213,6 +277,7 @@ export default function Home() {
       try {
         console.log("[home-map] fetch start:", { scope, lat, lng });
 
+        // 1) friends (/main)
         if (scope.type === "friends") {
           const data = await fetchHomeMain({
             lat,
@@ -227,11 +292,22 @@ export default function Home() {
             lng: p.lng,
             raw: p,
           }));
-          setMarkers(next);
-          console.log("[home-map] /main ok:", next.length);
+
+          if (next.length === 0) {
+            const dummy = makeDummyMarkers(lat, lng, scope);
+            setMarkers(dummy);
+            console.log(
+              "[home-map] /main ok: EMPTY -> dummy",
+              dummy.map((d) => d.key),
+            );
+          } else {
+            setMarkers(next);
+            console.log("[home-map] /main ok:", next.length);
+          }
           return;
         }
 
+        // 2) me (/main/me)
         if (scope.type === "me") {
           const data = await fetchHomeMe({ lat, lng, distance: HOME_DISTANCE });
           if (cancelled) return;
@@ -242,12 +318,22 @@ export default function Home() {
             lng: p.lng,
             raw: p,
           }));
-          setMarkers(next);
-          console.log("[home-map] /main/me ok:", next.length);
+
+          if (next.length === 0) {
+            const dummy = makeDummyMarkers(lat, lng, scope);
+            setMarkers(dummy);
+            console.log(
+              "[home-map] /main/me ok: EMPTY -> dummy",
+              dummy.map((d) => d.key),
+            );
+          } else {
+            setMarkers(next);
+            console.log("[home-map] /main/me ok:", next.length);
+          }
           return;
         }
 
-        // friend
+        // 3) friend (/main/{userId})
         const data = await fetchHomeUser({
           userId: scope.userId,
           lat,
@@ -262,23 +348,37 @@ export default function Home() {
           lng: p.lng,
           raw: p,
         }));
-        setMarkers(next);
-        console.log("[home-map] /main/{id} ok:", next.length);
+
+        if (next.length === 0) {
+          const dummy = makeDummyMarkers(lat, lng, scope);
+          setMarkers(dummy);
+          console.log(
+            "[home-map] /main/{id} ok: EMPTY -> dummy",
+            dummy.map((d) => d.key),
+          );
+        } else {
+          setMarkers(next);
+          console.log("[home-map] /main/{id} ok:", next.length);
+        }
       } catch (e: any) {
         console.log("[home-map] fetch error:", {
           message: e?.message,
           status: e?.response?.status,
           data: e?.response?.data,
         });
-        setMarkers([]); // 실패 시 마커 비우기(선택)
+        // 실패해도 테스트는 계속: 더미로 찍어두기
+        setMarkers(makeDummyMarkers(lat, lng, scope));
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [activeTab, scope, coords]);
+  }, [activeTab, scope, lat, lng]);
 
+  // ---------------------------
+  // render
+  // ---------------------------
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerContainer}>
@@ -306,8 +406,7 @@ export default function Home() {
           </View>
         </View>
 
-        {/* 스토리 (친구 / 나의닉네임 / 닉네임예시...) */}
-        {/* 스토리 리스트 */}
+        {/* StoryList */}
         <StoryList
           myNickname={"내 닉네임"}
           myAvatarSource={DEFAULT_MY_IMAGE}
@@ -341,8 +440,8 @@ export default function Home() {
                   : (selectedUser.email ?? "")
               }
               bio={selectedUser.bio ?? ""}
-              friendAvatars={[]} // 일단 빈 배열
-              friendCount={0} // 일단 0
+              friendAvatars={[]}
+              friendCount={0}
             />
           </View>
         ) : null}
@@ -380,7 +479,6 @@ export default function Home() {
           {/* 지도 탭 */}
           {activeTab === "map" && (
             <View style={styles.mapContainer}>
-              {/* 지도 */}
               <NaverMapView
                 ref={mapRef}
                 isShowLocationButton={false}
@@ -389,8 +487,8 @@ export default function Home() {
                   mapRef.current?.setLocationTrackingMode("None" as any);
                 }}
               >
-                {/* 커스텀 사용자 마커 */}
                 <UserLocationMarker enableRotation />
+
                 {markers.map((m) => (
                   <NaverMapMarkerOverlay
                     key={m.key}
@@ -412,7 +510,6 @@ export default function Home() {
                 ))}
               </NaverMapView>
 
-              {/* 내 위치 버튼 */}
               <MyLocationButton
                 onPress={moveToCurrentLocation}
                 bottom={40}
@@ -421,10 +518,10 @@ export default function Home() {
             </View>
           )}
 
+          {/* 장소 탭 */}
           {activeTab === "place" && (
             <View style={styles.placeholderBox}>
               <View style={{ flex: 1 }}>
-                {/* 필터 바 */}
                 <FilterBar
                   sortLabel={sortLabel}
                   categoryLabel={categoryLabel}
@@ -447,7 +544,6 @@ export default function Home() {
                   ))}
                 </ScrollView>
 
-                {/*  모달: 단일 선택 + 즉시 적용, '전체'는 모달에서 숨김 */}
                 <OptionModal
                   visible={opened === "sort"}
                   title="정렬 기준"
@@ -468,6 +564,7 @@ export default function Home() {
             </View>
           )}
 
+          {/* 코멘트 탭 */}
           {activeTab === "comment" && (
             <View style={styles.placeholderBox}>
               <Text style={styles.placeholderText}>코멘트 리스트 영역</Text>
@@ -489,7 +586,6 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
   },
 
-  // top bar
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -503,31 +599,6 @@ const styles = StyleSheet.create({
   },
   friendsIcon: { width: 24, height: 24 },
 
-  // story row
-  storyScroll: {
-    marginTop: 20,
-  },
-  storyContent: {
-    paddingRight: 16,
-  },
-  storyItem: {
-    alignItems: "center",
-    marginRight: 20,
-  },
-  storyAvatar: {
-    width: 65,
-    height: 65,
-    borderRadius: 34,
-    borderWidth: 1,
-    borderColor: Colors.gray_100,
-    backgroundColor: Colors.white,
-    marginBottom: 6,
-  },
-  storyLabel: {
-    ...TextStyles.Regular12,
-  },
-
-  // 아래 탭 + 콘텐츠 영역
   bodyContainer: {
     flex: 1,
     backgroundColor: Colors.white,
@@ -535,7 +606,7 @@ const styles = StyleSheet.create({
   },
 
   tabBar: {
-    justifyContent: "space-around", // 혹은 "space-between"
+    justifyContent: "space-around",
     flexDirection: "row",
   },
   tabItem: {
@@ -559,15 +630,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary_500,
   },
 
-  tabContent: {
-    flex: 1,
-  },
+  tabContent: { flex: 1 },
 
   mapContainer: {
     flex: 1,
     backgroundColor: Colors.gray_100,
   },
-
   map: { flex: 1, zIndex: 0 },
 
   placeholderBox: {
