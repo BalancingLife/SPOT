@@ -25,34 +25,6 @@ import { useLocationStore } from "@/src/stores/useLocationStore";
 import StoryList from "@/src/components/home/StoryList";
 import UserCard from "@/src/components/UserCard";
 
-// const friends = [
-//   {
-//     id: 1,
-//     nickname: "민지",
-//     avatarUrl: "https://randomuser.me/api/portraits/women/44.jpg",
-//   },
-//   {
-//     id: 2,
-//     nickname: "지훈",
-//     avatarUrl: "https://randomuser.me/api/portraits/men/32.jpg",
-//   },
-//   {
-//     id: 3,
-//     nickname: "수아",
-//     avatarUrl: "https://randomuser.me/api/portraits/women/65.jpg",
-//   },
-//   {
-//     id: 4,
-//     nickname: "현우",
-//     avatarUrl: "https://randomuser.me/api/portraits/men/75.jpg",
-//   },
-//   {
-//     id: 5,
-//     nickname: "예린",
-//     avatarUrl: "https://randomuser.me/api/portraits/women/12.jpg",
-//   },
-// ];
-
 type SelectedUser = {
   nickname: string;
   userid: string; //
@@ -337,7 +309,7 @@ export default function Home() {
                   ))}
                 </ScrollView>
 
-                {/* ✅ 모달: 단일 선택 + 즉시 적용, '전체'는 모달에서 숨김 */}
+                {/*  모달: 단일 선택 + 즉시 적용, '전체'는 모달에서 숨김 */}
                 <OptionModal
                   visible={opened === "sort"}
                   title="정렬 기준"

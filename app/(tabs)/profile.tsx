@@ -1,13 +1,38 @@
 // app/(tabs)/profile.tsx
+
+import { useCallback, useState } from "react";
 import { View, Pressable, StyleSheet, Image } from "react-native";
 import { router } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
+
 import ProfileLayout from "@/src/components/profile/Layout";
 import ProfileUserCard from "@/src/components/UserCard";
 import SpotButton from "@/src/components/SpotButton";
 
+import { getMyProfile } from "@/src/lib/api/profile";
 export default function ProfileScreen() {
   const profileImg = require("@/assets/images/profile-example.png");
   const fallbackFriendImg = require("@/assets/images/profile-icon-gray.png");
+
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const loadProfile = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getMyProfile();
+      setProfile(data);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [loadProfile]),
+  );
+
   return (
     <ProfileLayout>
       {/* 헤더 - 로고, 우측 아이콘 두개 */}
