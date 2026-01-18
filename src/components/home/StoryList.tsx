@@ -1,4 +1,5 @@
 // src/components/home/StoryList.tsx
+
 import React, { useMemo } from "react";
 import {
   ScrollView,
@@ -13,16 +14,18 @@ import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 
 type FriendStory = {
-  id: string | number;
+  id: number; // ✅ friend_id -> id
   nickname: string;
-  avatarUrl?: string | null;
+  avatarUrl?: string | null; // ✅ profile_url -> avatarUrl
   email?: string;
   comment?: string | null;
 };
 
-type SelectedUser = {
+export type SelectedUser = {
+  scope: "me" | "friend";
+  userId?: number;
   nickname: string;
-  userid: string;
+  email?: string;
   bio: string;
   profileImage: ImageSourcePropType;
 };
@@ -39,7 +42,6 @@ const friendsIcon = require("@/assets/images/friends-icon-black-filled.png");
 const fallbackProfile = require("@/assets/images/profile-example.png");
 const fallbackFriend = require("@/assets/images/profile-icon-gray.png");
 
-// ✅ 아이템 타입을 “명확히” 분리 (payload 있는 것 / 없는 것)
 type FriendsItem = {
   key: "friends";
   label: "친구";
@@ -57,7 +59,6 @@ type UserItem = {
 
 type StoryItem = FriendsItem | UserItem;
 
-// ✅ 타입가드
 function isUserItem(item: StoryItem): item is UserItem {
   return item.kind === "user";
 }
@@ -83,8 +84,9 @@ export default function StoryList({
         source: myAvatarSource ?? null,
         kind: "user",
         payload: {
+          scope: "me",
           nickname: myNickname,
-          userid: "example@naver.com",
+          email: "example@naver.com",
           bio: "내 소개글",
           profileImage: (myAvatarSource ??
             fallbackProfile) as ImageSourcePropType,
@@ -101,8 +103,10 @@ export default function StoryList({
           source: img,
           kind: "user",
           payload: {
+            scope: "friend",
+            userId: f.id,
             nickname: f.nickname,
-            userid: f.email ?? "",
+            email: f.email ?? "",
             bio: f.comment ?? "",
             profileImage: img,
           },
@@ -127,10 +131,9 @@ export default function StoryList({
             style={styles.storyItem}
             onPress={() => {
               if (isFriends) {
-                onPressFriends(); // ✅ UserCard 닫기
+                onPressFriends();
                 return;
               }
-              // ✅ 여기서부터 item은 UserItem으로 좁혀짐 -> payload undefined 아님
               if (isUserItem(item)) onPressItem(item.payload);
             }}
           >
@@ -158,9 +161,7 @@ export default function StoryList({
 const styles = StyleSheet.create({
   storyScroll: { marginTop: 20 },
   storyContent: { paddingRight: 16 },
-
   storyItem: { alignItems: "center", marginRight: 20, width: 65 },
-
   storyAvatar: {
     width: 65,
     height: 65,
@@ -173,10 +174,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   avatarImage: { width: "100%", height: "100%" },
-
   friendsIcon40: { width: 40, height: 40 },
-
   storyLabel: { ...TextStyles.Regular12, textAlign: "center" },
 });

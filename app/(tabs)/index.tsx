@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  ImageSourcePropType,
 } from "react-native";
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useFocusEffect } from "expo-router";
@@ -17,20 +16,18 @@ import { TextStyles } from "@/src/styles/TextStyles";
 import FilterBar from "@/src/components/bottomSheet/FilterBar";
 import PlaceCard from "@/src/components/PlaceCard";
 import OptionModal from "@/src/components/OptionModal";
-import { NaverMapView } from "@mj-studio/react-native-naver-map";
+import {
+  NaverMapView,
+  NaverMapMarkerOverlay,
+} from "@mj-studio/react-native-naver-map";
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
 import MyLocationButton from "@/src/components/map/MyLocationButton";
 import UserLocationMarker from "@/src/components/map/UserLocationMarker";
 import { useLocationStore } from "@/src/stores/useLocationStore";
 import StoryList from "@/src/components/home/StoryList";
 import UserCard from "@/src/components/UserCard";
-
-type SelectedUser = {
-  nickname: string;
-  userid: string; //
-  bio: string | null;
-  profileImage: ImageSourcePropType;
-};
+import { fetchHomeMain, fetchHomeMe, fetchHomeUser } from "@/src/lib/api/home";
+import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
 
 const TABS = [
   { key: "map", label: "지도" },
@@ -61,16 +58,34 @@ const dummyData = new Array(4).fill(0).map((_, i) => ({
 }));
 
 export default function Home() {
-  const [selectedUser, setSelectedUser] = React.useState<SelectedUser | null>(
-    null
+  const [selectedUser, setSelectedUser] = useState<StorySelectedUser | null>(
+    null,
   );
+
+  type HomeScope =
+    | { type: "friends" }
+    | { type: "me" }
+    | { type: "friend"; userId: number };
+
+  type HomeMarker = {
+    key: string;
+    lat: number;
+    lng: number;
+    raw: any; // 일단 로그용
+  };
+
+  const HOME_DISTANCE = 10; // 서버 distance 단위는 일단 그대로
+  const HOME_PIN = require("@/assets/images/spot-icon-orange.png");
+
+  const [scope, setScope] = React.useState<HomeScope>({ type: "friends" });
+  const [markers, setMarkers] = React.useState<HomeMarker[]>([]);
 
   const token = useAuthStore((s) => s.token);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
 
   const DEFAULT_MY_IMAGE = require("@/assets/images/dog.png");
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
-    null
+    null,
   );
   const [category, setCategory] = useState<string[]>([]); // 비어있음 = 전체
   const [sort, setSort] = useState<string[]>(["recent"]); // 기본 최신순
@@ -82,7 +97,7 @@ export default function Home() {
       { label: "최신순", value: "latest" },
       { label: "거리순", value: "distance" },
     ],
-    []
+    [],
   );
   const categoryOptions = useMemo(
     () => [
@@ -95,19 +110,19 @@ export default function Home() {
       { label: "체험", value: "experience" },
       { label: "옷가게", value: "clothing_store" },
     ],
-    []
+    [],
   );
 
   const sortLabel =
     sortOptions.find((o) => o.value === sort[0])?.label ?? "최신순";
   const categoryLabel =
     category.length > 0
-      ? categoryOptions.find((o) => o.value === category[0])?.label ?? "업종"
+      ? (categoryOptions.find((o) => o.value === category[0])?.label ?? "업종")
       : "업종";
 
   const categoryOptionsForModal = useMemo(
     () => categoryOptions.filter((o) => o.value !== "all"),
-    [categoryOptions]
+    [categoryOptions],
   );
 
   const mapRef = useRef<NaverMapViewRef>(null);
@@ -174,8 +189,95 @@ export default function Home() {
       if (!hasHydrated) return;
       if (!token) return;
       loadFriends();
-    }, [hasHydrated, token, loadFriends])
+    }, [hasHydrated, token, loadFriends]),
   );
+
+  const getLatLng = () => {
+    const lat = (coords as any)?.latitude ?? (coords as any)?.lat;
+    const lng = (coords as any)?.longitude ?? (coords as any)?.lng;
+    return { lat, lng };
+  };
+
+  useEffect(() => {
+    if (activeTab !== "map") return;
+
+    const { lat, lng } = getLatLng();
+    if (lat == null || lng == null) {
+      console.log("[home-map] coords 없음 -> skip");
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        console.log("[home-map] fetch start:", { scope, lat, lng });
+
+        if (scope.type === "friends") {
+          const data = await fetchHomeMain({
+            lat,
+            lng,
+            distance: HOME_DISTANCE,
+          });
+          if (cancelled) return;
+
+          const next: HomeMarker[] = (data.places ?? []).map((p) => ({
+            key: `main-${p.id}`,
+            lat: p.lat,
+            lng: p.lng,
+            raw: p,
+          }));
+          setMarkers(next);
+          console.log("[home-map] /main ok:", next.length);
+          return;
+        }
+
+        if (scope.type === "me") {
+          const data = await fetchHomeMe({ lat, lng, distance: HOME_DISTANCE });
+          if (cancelled) return;
+
+          const next: HomeMarker[] = (data.places ?? []).map((p) => ({
+            key: `me-${p.placeId}`,
+            lat: p.lat,
+            lng: p.lng,
+            raw: p,
+          }));
+          setMarkers(next);
+          console.log("[home-map] /main/me ok:", next.length);
+          return;
+        }
+
+        // friend
+        const data = await fetchHomeUser({
+          userId: scope.userId,
+          lat,
+          lng,
+          distance: HOME_DISTANCE,
+        });
+        if (cancelled) return;
+
+        const next: HomeMarker[] = (data.places ?? []).map((p) => ({
+          key: `friend-${scope.userId}-${p.placeId}`,
+          lat: p.lat,
+          lng: p.lng,
+          raw: p,
+        }));
+        setMarkers(next);
+        console.log("[home-map] /main/{id} ok:", next.length);
+      } catch (e: any) {
+        console.log("[home-map] fetch error:", {
+          message: e?.message,
+          status: e?.response?.status,
+          data: e?.response?.data,
+        });
+        setMarkers([]); // 실패 시 마커 비우기(선택)
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, scope, coords]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -210,8 +312,21 @@ export default function Home() {
           myNickname={"내 닉네임"}
           myAvatarSource={DEFAULT_MY_IMAGE}
           friends={friends}
-          onPressItem={(u) => setSelectedUser(u)} // ✅ 다음 단계에서 StoryList에 추가할 props
-          onPressFriends={() => setSelectedUser(null)} // ✅ 친구 누르면 닫기
+          onPressItem={(u: StorySelectedUser) => {
+            setSelectedUser(u);
+
+            if (u.scope === "me") {
+              setScope({ type: "me" });
+              return;
+            }
+            if (u.scope === "friend" && typeof u.userId === "number") {
+              setScope({ type: "friend", userId: u.userId });
+            }
+          }}
+          onPressFriends={() => {
+            setSelectedUser(null);
+            setScope({ type: "friends" });
+          }}
         />
 
         {selectedUser ? (
@@ -220,7 +335,11 @@ export default function Home() {
               variant="story"
               profileImage={selectedUser.profileImage}
               nickname={selectedUser.nickname}
-              userid={selectedUser.userid} //
+              userid={
+                selectedUser.scope === "friend"
+                  ? String(selectedUser.userId ?? "")
+                  : (selectedUser.email ?? "")
+              }
               bio={selectedUser.bio ?? ""}
               friendAvatars={[]} // 일단 빈 배열
               friendCount={0} // 일단 0
@@ -272,6 +391,25 @@ export default function Home() {
               >
                 {/* 커스텀 사용자 마커 */}
                 <UserLocationMarker enableRotation />
+                {markers.map((m) => (
+                  <NaverMapMarkerOverlay
+                    key={m.key}
+                    latitude={m.lat}
+                    longitude={m.lng}
+                    image={HOME_PIN}
+                    width={44}
+                    height={44}
+                    onTap={() => {
+                      console.log("[home-map] marker tap:", {
+                        scope,
+                        key: m.key,
+                        lat: m.lat,
+                        lng: m.lng,
+                        raw: m.raw,
+                      });
+                    }}
+                  />
+                ))}
               </NaverMapView>
 
               {/* 내 위치 버튼 */}
