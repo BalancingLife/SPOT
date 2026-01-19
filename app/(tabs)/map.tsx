@@ -239,7 +239,7 @@ export default function Map() {
       return () => {
         cancelled = true;
       };
-    }, [refreshOnce, setSavedList, setSavedLoading, setSavedError])
+    }, [refreshOnce, setSavedList, setSavedLoading, setSavedError]),
   );
   // /main/map 호출
   useEffect(() => {
@@ -263,7 +263,7 @@ export default function Map() {
         console.log(
           "[/main/map] 에러:",
           err?.response?.status,
-          err?.response?.data ?? err.message
+          err?.response?.data ?? err.message,
         );
       }
     }
@@ -326,7 +326,7 @@ export default function Map() {
       {/* 검색창 */}
       <Pressable
         style={styles.searchInput}
-        onPress={() => router.push("/search")}
+        onPress={() => router.push("/searchPlace")}
       >
         <Image
           source={require("@/assets/images/search-input-icon-gray.png")}

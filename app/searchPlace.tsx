@@ -25,7 +25,7 @@ export type RecentItem = {
   keyword: string;
 };
 
-export default function SearchPage() {
+export default function SearchPlaceScreen() {
   const [searchInputText, setSearchInputText] = useState("");
   const { coords, refreshOnce } = useLocationStore();
   const [results, setResults] = useState<SearchItem[] | null>(null);
@@ -107,7 +107,7 @@ export default function SearchPage() {
         console.warn(
           "검색 요청 에러:",
           err?.response?.status,
-          err?.response?.data ?? err.message
+          err?.response?.data ?? err.message,
         );
       } finally {
         if (abortRef.current === controller) {
@@ -135,7 +135,7 @@ export default function SearchPage() {
       submit(keyword);
       router.replace("/map"); // 홈으로 복귀 → 홈에서 API 호출/시트 렌더
     },
-    [searchInputText, submit]
+    [searchInputText, submit],
   );
 
   return (
@@ -222,7 +222,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     alignItems: "center",
-    paddingTop: 12,
     paddingBottom: 12,
     gap: 12,
   },
