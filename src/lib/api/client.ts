@@ -18,6 +18,19 @@ function attachInterceptors(client: AxiosInstance): AxiosInstance {
     return config;
   });
 
+  client.interceptors.response.use(
+    (res) => {
+      console.log("✅ API 응답:", res.config?.url, res.status);
+      console.log("📦 res.data:", res.data);
+      return res;
+    },
+    (err) => {
+      console.log("❌ API 에러:", err.config?.url, err.response?.status);
+      console.log("📦 err.response.data:", err.response?.data);
+      return Promise.reject(err);
+    },
+  );
+
   return client;
 }
 
@@ -25,19 +38,19 @@ export const api8080 = attachInterceptors(
   axios.create({
     baseURL: process.env.EXPO_PUBLIC_API_BASE_URL_8080,
     timeout: 10_000,
-  })
+  }),
 );
 
 export const api8000 = attachInterceptors(
   axios.create({
     baseURL: process.env.EXPO_PUBLIC_API_BASE_URL_8000,
     timeout: 10_000,
-  })
+  }),
 );
 
 export const api8001 = attachInterceptors(
   axios.create({
     baseURL: process.env.EXPO_PUBLIC_API_BASE_URL_8001,
     timeout: 10_000,
-  })
+  }),
 );
