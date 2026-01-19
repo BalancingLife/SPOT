@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from "react-native";
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, router } from "expo-router";
 import { useFriendsStore } from "@/src/stores/useFriendsStore";
 import { useAuthStore } from "@/src/stores/useAuthStore";
 import { Colors } from "@/src/styles/Colors";
@@ -542,7 +542,7 @@ export default function Home() {
               />
             </TouchableOpacity>
 
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/searchFriends")}>
               <Image
                 source={require("@/assets/images/friends-add-icon-black.png")}
                 style={styles.friendsIcon}
