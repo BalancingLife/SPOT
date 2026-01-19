@@ -46,6 +46,7 @@ export default function Map() {
   const pendingDetailGid = useSearchStore((s) => s.pendingDetailGid);
   const clearPendingDetail = useSearchStore((s) => s.clearPendingDetail);
   const focus = useSearchStore((s) => s.focus);
+  const unfocus = useSearchStore((s) => s.unfocus);
 
   const setSavedList = useSavedPlacesStore((s) => s.setSavedList);
   const setSavedLoading = useSavedPlacesStore((s) => s.setSavedLoading);
@@ -351,12 +352,11 @@ export default function Map() {
         />
       )}
 
-      {/* 검색 페이지에서 장소 하나 선택했을 시 */}
       {showSearchDetailSheet && (
         <SearchDetailBottomSheet
           onClose={() => {
-            // 단일 상세 닫기 → 리스트로 복귀
-            // (SearchDetailBottomSheet 내부에서 unfocus 호출하도록 되어 있으면 생략 가능)
+            setSelectedPlaceId(null); //  마커 작아짐
+            useSearchStore.getState().unfocus(); // 상세 시트 조건(focused) 꺼짐
           }}
         />
       )}
