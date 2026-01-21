@@ -67,13 +67,30 @@ export type FriendPlacesQuery = {
   category?: string;
 };
 
-// 친구리스트 호출 API
+// ✅ friends action 공통 응답 타입(스웨거 예시 기반)
+export type FriendActionResponse = {
+  friend_id?: number;
+  message: string;
+};
+
+export type FriendActionResult = {
+  friendId?: number;
+  message: string;
+};
+
+export type ReportFriendBody = {
+  reason: string;
+};
+
+// ==========================
+// ✅ GET: 친구 리스트
+// ==========================
 export async function fetchFriendsList(): Promise<Friend[]> {
   try {
     const res = await api8001.get<FriendsListResponse>("/friends/list");
 
     const raw = Array.isArray(res.data?.friends) ? res.data.friends : [];
-    console.log("친구 리스트", raw);
+
     return raw.map((f) => ({
       id: f.friend_id,
       nickname: f.nickname,
@@ -82,23 +99,17 @@ export async function fetchFriendsList(): Promise<Friend[]> {
       email: f.email,
       comment: f.comment,
     }));
-  } catch (e: any) {
-    const status = e?.response?.status;
-    const data = e?.response?.data;
-    console.warn(
-      "👥 [friends] fetchFriendsList failed:",
-      status,
-      data ?? e?.message
-    );
-
+  } catch {
     return [];
   }
 }
 
-// 친구가 저장한 장소 목록 조회
+// ==========================
+// ✅ GET: 친구가 저장한 장소 목록 조회
+// ==========================
 export async function fetchFriendPlaces(
   friendId: number,
-  query: FriendPlacesQuery = {}
+  query: FriendPlacesQuery = {},
 ): Promise<FriendPlace[]> {
   try {
     const res = await api8001.get<ApiFriendPlace[]>(
@@ -108,7 +119,7 @@ export async function fetchFriendPlaces(
           ...(query.sort ? { sort: query.sort } : {}),
           ...(query.category ? { category: query.category } : {}),
         },
-      }
+      },
     );
 
     const raw = Array.isArray(res.data) ? res.data : [];
@@ -127,16 +138,151 @@ export async function fetchFriendPlaces(
       ratingAvg: p.ratingAvg,
       savers: Array.isArray(p.savers) ? p.savers : [],
     }));
-  } catch (e: any) {
-    const status = e?.response?.status;
-    const data = e?.response?.data;
+  } catch {
+    return [];
+  }
+}
 
-    console.warn(
-      "📍 [friends] fetchFriendPlaces failed:",
-      status,
-      data ?? e?.message
+// ==========================
+// ✅ POST: 친구 팔로우 요청 보내기
+// POST /friends/follow/{friend_id}
+// ==========================
+export async function requestFollow(
+  friendId: number,
+): Promise<FriendActionResult | null> {
+  try {
+    const res = await api8001.post<FriendActionResponse>(
+      `/friends/follow/${friendId}`,
     );
 
-    return [];
+    return {
+      friendId: res.data?.friend_id ?? friendId,
+      message: res.data?.message ?? "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ==========================
+// ✅ POST: 친구 팔로우 요청 거절하기
+// POST /friends/decline_follow/{friend_id}
+// (요청을 보낸 사람의 유저 ID)
+// ==========================
+export async function declineFollow(
+  friendId: number,
+): Promise<FriendActionResult | null> {
+  try {
+    const res = await api8001.post<FriendActionResponse>(
+      `/friends/decline_follow/${friendId}`,
+    );
+
+    return {
+      friendId: res.data?.friend_id ?? friendId,
+      message: res.data?.message ?? "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ==========================
+// ✅ POST: 친구 팔로우 요청 수락하기
+// POST /friends/access_follow/{friend_id}
+// (요청을 보낸 사람의 유저 ID)
+// ==========================
+export async function acceptFollow(
+  friendId: number,
+): Promise<FriendActionResult | null> {
+  try {
+    const res = await api8001.post<FriendActionResponse>(
+      `/friends/access_follow/${friendId}`,
+    );
+
+    return {
+      friendId: res.data?.friend_id ?? friendId,
+      message: res.data?.message ?? "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ==========================
+// ✅ POST: 친구 차단하기
+// POST /friends/block/{friend_id}
+// ==========================
+export async function blockFriend(
+  friendId: number,
+): Promise<FriendActionResult | null> {
+  try {
+    const res = await api8001.post<FriendActionResponse>(
+      `/friends/block/${friendId}`,
+    );
+
+    return {
+      friendId,
+      message: res.data?.message ?? "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ==========================
+// ✅ POST: 친구 차단 해제하기 (+ 관계 삭제)
+// POST /friends/unblock/{friend_id}
+// ==========================
+export async function unblockFriend(
+  friendId: number,
+): Promise<FriendActionResult | null> {
+  try {
+    const res = await api8001.post<FriendActionResponse>(
+      `/friends/unblock/${friendId}`,
+    );
+
+    return {
+      friendId,
+      message: res.data?.message ?? "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ==========================
+// ✅ DELETE: 친구 삭제(언팔로우)
+// DELETE /friends/{friend_id}
+// ==========================
+export async function deleteFriend(friendId: number): Promise<boolean> {
+  try {
+    await api8001.delete(`/friends/${friendId}`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ==========================
+// ✅ POST: 친구 신고하기
+// POST /friends/report/{friend_id}
+// body: { reason: string }
+// ==========================
+export async function reportFriend(
+  friendId: number,
+  body: ReportFriendBody,
+): Promise<FriendActionResult | null> {
+  try {
+    const res = await api8001.post<FriendActionResponse>(
+      `/friends/report/${friendId}`,
+      body,
+    );
+
+    return {
+      friendId,
+      message: res.data?.message ?? "",
+    };
+  } catch {
+    return null;
   }
 }
