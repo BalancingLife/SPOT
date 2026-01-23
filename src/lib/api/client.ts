@@ -12,8 +12,19 @@ function attachInterceptors(client: AxiosInstance): AxiosInstance {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    const method = (config.method ?? "GET").toUpperCase();
+
+    // ✅ baseURL + url + params 까지 합친 최종 URL
+    const fullUrl = client.getUri(config);
+
     console.log("👉 Authorization:", config.headers.Authorization);
-    console.log("🚀 API 요청:", client.defaults.baseURL, config.url);
+    console.log("🚀 API 요청:", method, fullUrl);
+
+    // ✅ query params 확인
+    console.log("params:", config.params ?? null);
+
+    // (선택) body까지 보고 싶으면 주석 해제
+    // console.log("   body:", config.data ?? null);
 
     return config;
   });
