@@ -1,5 +1,3 @@
-// app/(tabs)/profile.tsx
-
 import { useCallback, useState } from "react";
 import { View, Pressable, StyleSheet, Image } from "react-native";
 import { router } from "expo-router";
@@ -9,19 +7,31 @@ import ProfileLayout from "@/src/components/profile/Layout";
 import ProfileUserCard from "@/src/components/UserCard";
 import SpotButton from "@/src/components/SpotButton";
 
-import { getMyProfile } from "@/src/lib/api/profile";
+import { getMyProfile, type MyProfile } from "@/src/lib/api/profile";
+
 export default function ProfileScreen() {
-  const profileImg = require("@/assets/images/profile-example.png");
+  const defaultProfileImg = require("@/assets/images/profile-example.png");
   const fallbackFriendImg = require("@/assets/images/profile-icon-gray.png");
 
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<MyProfile | null>(null);
+  const [friendCount, setFriendCount] = useState(0);
+  const [recentFriendPhotos, setRecentFriendPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getMyProfile();
-      setProfile(data);
+      if (!data) {
+        setProfile(null);
+        setFriendCount(0);
+        setRecentFriendPhotos([]);
+        return;
+      }
+
+      setProfile(data.profile);
+      setFriendCount(data.friendCount);
+      setRecentFriendPhotos(data.recentFriendPhotos);
     } finally {
       setLoading(false);
     }
@@ -33,9 +43,27 @@ export default function ProfileScreen() {
     }, [loadProfile]),
   );
 
+  // ✅ UI 매핑 (camelCase만)
+  const nickname = profile?.nickname ?? "닉네임 없음";
+  const userid = profile?.spotId ?? "-"; // 보통 spot_id를 아이디처럼 표시
+  const bio = profile?.oneLine ?? "한 줄 소개를 추가해보세요";
+
+  const profileImageSource =
+    profile?.photo && profile.photo.length > 0
+      ? { uri: profile.photo }
+      : defaultProfileImg;
+
+  // ✅ recentFriendPhotos(원격 URL) -> ImageSource로 매핑
+  const friendAvatars =
+    recentFriendPhotos.length > 0
+      ? recentFriendPhotos
+          .slice(0, 3)
+          .map((url) => (url ? { uri: url } : fallbackFriendImg))
+      : [fallbackFriendImg, fallbackFriendImg, fallbackFriendImg];
+
   return (
     <ProfileLayout>
-      {/* 헤더 - 로고, 우측 아이콘 두개 */}
+      {/* 헤더 */}
       <View style={styles.header}>
         <View style={styles.left}>
           <Image
@@ -44,7 +72,6 @@ export default function ProfileScreen() {
           />
         </View>
         <View style={styles.right}>
-          {/* 알림 */}
           <Pressable onPress={() => router.push("/profile/notifications")}>
             <Image
               style={{ width: 24, height: 24 }}
@@ -52,7 +79,6 @@ export default function ProfileScreen() {
             />
           </Pressable>
 
-          {/* 설정 */}
           <Pressable onPress={() => router.push("/profile/setting")}>
             <Image
               style={{ width: 24, height: 24 }}
@@ -65,19 +91,15 @@ export default function ProfileScreen() {
       {/* 프로필 유저 카드 */}
       <ProfileUserCard
         variant="profile"
-        nickname="맛있는 건 참을 수 없어"
-        userid="othernickname"
-        bio="진짜 맛있는 집들만 핀해놓을거야"
-        friendCount={36}
-        friendAvatars={[
-          fallbackFriendImg,
-          fallbackFriendImg,
-          fallbackFriendImg,
-        ]}
-        profileImage={profileImg}
+        nickname={loading ? "불러오는 중..." : nickname}
+        userid={loading ? "" : userid}
+        bio={loading ? "" : bio}
+        friendCount={loading ? 0 : friendCount}
+        friendAvatars={friendAvatars}
+        profileImage={profileImageSource}
       />
 
-      {/* 프로필 수정, 친구 관리 버튼 */}
+      {/* 버튼 */}
       <View style={styles.twoButtonsContainer}>
         <SpotButton
           onPress={() => router.push("/profile/edit")}
@@ -103,11 +125,6 @@ export default function ProfileScreen() {
           source={require("@/assets/images/profile-ad.png")}
         />
       </View>
-
-      {/* 차단 목록 */}
-      {/* <Pressable onPress={() => router.push("/profile/blocked")}>
-        <Text>차단 목록</Text>
-      </Pressable> */}
     </ProfileLayout>
   );
 }
@@ -125,7 +142,6 @@ const styles = StyleSheet.create({
     gap: 14,
     flexDirection: "row",
   },
-
   twoButtonsContainer: {
     marginTop: 20,
     justifyContent: "center",

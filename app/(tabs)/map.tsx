@@ -258,8 +258,6 @@ export default function Map() {
         });
 
         setMyPlaces(list);
-
-        console.log("지도 [/main/map] 응답 :", list);
       } catch (err: any) {
         console.log(
           "[/main/map] 에러:",
@@ -356,7 +354,7 @@ export default function Map() {
         <SearchDetailBottomSheet
           onClose={() => {
             setSelectedPlaceId(null); //  마커 작아짐
-            useSearchStore.getState().unfocus(); // 상세 시트 조건(focused) 꺼짐
+            unfocus(); // 상세 시트 조건(focused) 꺼짐
           }}
         />
       )}
