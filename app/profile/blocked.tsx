@@ -1,52 +1,91 @@
+import React, { useCallback, useMemo, useState } from "react";
+import { Alert } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+
 import ProfileLayout from "@/src/components/profile/Layout";
 import ProfileHeader from "@/src/components/profile/Header";
 import UserRow from "@/src/components/UserRow";
 
-const blockedUsers = [
-  {
-    id: 1,
-    nickname: "맛있는 건 참을 수 없어",
-    userId: "othernick",
-    bio: "진짜 맛있는 집들만 픽해놓을거야",
-    isBlocked: true,
-  },
-  {
-    id: 2,
-    nickname: "맛있는 건 참을 수 있어",
-    userId: "fathernick",
-    bio: "진짜 맛있는 집들만 피해놓을거야",
-    isBlocked: true,
-  },
+import { fetchBlockList, type BlockItem } from "@/src/lib/api/settings";
 
-  {
-    id: 3,
-    nickname: "빌런",
-    userId: "villain",
-    bio: "으하하하하하하하하하하하하하하하하하하하하하하하하",
-    isBlocked: false,
-  },
-
-  // ...
-];
+// status 값은 백엔드 정의에 맞춰 수정
+const isBlockedStatus = (status: string) =>
+  status === "BLOCKED" ||
+  status === "blocked" ||
+  status === "Y" ||
+  status === "ACTIVE";
 
 export default function BlockedScreen() {
+  const [loading, setLoading] = useState(false);
+  const [blocks, setBlocks] = useState<BlockItem[]>([]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetchBlockList();
+      setBlocks(res.blocks);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+
+  // ✅ UI에서 쓰기 좋은 형태로 매핑
+  const rows = useMemo(() => {
+    return (
+      blocks
+        .map((b) => {
+          const blocked = isBlockedStatus(b.status);
+
+          return {
+            key: b.id,
+            friendId: b.friendId,
+            // ⚠️ blocklist 응답엔 유저 정보가 없어서 임시로 표시
+            nickname: `유저 #${b.friendId}`,
+            userId: `friend-${b.friendId}`,
+            bio: blocked ? "차단된 사용자" : "차단 해제됨",
+            avatarUri: null as string | null,
+            isBlocked: blocked,
+          };
+        })
+        // 차단된 애들만 보여주고 싶으면 필터
+        .filter((r) => r.isBlocked)
+    );
+  }, [blocks]);
+
   return (
     <ProfileLayout>
       <ProfileHeader title="차단 목록" showBack />
-      {blockedUsers.map((u) => (
+
+      {rows.map((u) => (
         <UserRow
-          key={u.id}
-          nickname={u.nickname}
-          userId={u.userId}
-          bio={u.bio}
-          avatarUri={null} // 프로필 이미지 있으면 넣고
+          key={u.key}
+          nickname={loading ? "불러오는 중..." : u.nickname}
+          userId={loading ? "" : u.userId}
+          bio={loading ? "" : u.bio}
+          avatarUri={u.avatarUri}
           actionLabel={u.isBlocked ? "차단 해제" : "차단"}
-          actionDisabled={!u.isBlocked} // 이미 차단 안 된 애는 검정? 로직은 니가 결정
+          actionDisabled={loading || !u.isBlocked}
           onPressAction={() => {
-            // 차단/해제 API 호출
+            Alert.alert("차단 해제", `${u.nickname} 차단을 해제할까요?`, [
+              { text: "취소", style: "cancel" },
+              {
+                text: "해제",
+                style: "destructive",
+                onPress: async () => {
+                  // TODO: 여기에 unblock API 붙여야 함 (아래 2번 참고)
+                  Alert.alert("알림", "차단 해제 API가 아직 없습니다.");
+                },
+              },
+            ]);
           }}
           onPressRow={() => {
-            // 프로필로 이동 등
+            // TODO: 프로필 이동(친구 프로필 화면 경로 있으면 여기서 router.push)
           }}
         />
       ))}
