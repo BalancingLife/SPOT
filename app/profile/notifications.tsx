@@ -69,5 +69,3 @@ export default function NotificationsScreen() {
     </ProfileLayout>
   );
 }
-
-const styles = StyleSheet.create({});

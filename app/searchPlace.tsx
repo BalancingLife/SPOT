@@ -1,4 +1,4 @@
-// app/search/index.tsx
+// app/searchPlace.tsx
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
@@ -39,7 +39,6 @@ export default function SearchPlaceScreen() {
   const recent = useRecentSearchStore((s) => s.items);
   const recentLoading = useRecentSearchStore((s) => s.loading);
   const fetchRecent = useRecentSearchStore((s) => s.fetch);
-  const addRecent = useRecentSearchStore((s) => s.add);
   const removeRecent = useRecentSearchStore((s) => s.remove);
 
   // 마운트 시 한 번 로드
