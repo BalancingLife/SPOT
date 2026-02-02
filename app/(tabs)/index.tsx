@@ -60,6 +60,7 @@ type HomeMarker = {
   key: string;
   lat: number;
   lng: number;
+  imageUrl?: string;
   raw: any;
 };
 
@@ -74,7 +75,7 @@ export default function Home() {
     null,
   );
 
-  const HOME_DISTANCE = 10;
+  const HOME_DISTANCE = 1000;
   const HOME_PIN = require("@/assets/images/spot-icon-orange.png");
 
   const [scope, setScope] = React.useState<HomeScope>({ type: "friends" });
@@ -317,6 +318,11 @@ export default function Home() {
       try {
         console.log("[home-map] fetch start:", { scope, lat, lng });
 
+        const toMarkerKey = (prefix: string, p: any, fallbackIdx: number) => {
+          const id = p?.placeId ?? p?.id ?? p?.gid ?? p?.num ?? fallbackIdx;
+          return `${prefix}-${String(id)}`;
+        };
+
         if (scope.type === "friends") {
           const data = await fetchHomeMain({
             lat,
@@ -325,10 +331,11 @@ export default function Home() {
           });
           if (cancelled) return;
 
-          const next: HomeMarker[] = (data.places ?? []).map((p) => ({
-            key: `main-${p.id}`,
+          const next: HomeMarker[] = (data.places ?? []).map((p: any, idx) => ({
+            key: toMarkerKey("main", p, idx),
             lat: p.lat,
             lng: p.lng,
+            imageUrl: p.photo, // ✅ S3 URL을 마커 이미지로
             raw: p,
           }));
 
@@ -350,10 +357,11 @@ export default function Home() {
           const data = await fetchHomeMe({ lat, lng, distance: HOME_DISTANCE });
           if (cancelled) return;
 
-          const next: HomeMarker[] = (data.places ?? []).map((p) => ({
-            key: `me-${p.placeId}`,
+          const next: HomeMarker[] = (data.places ?? []).map((p: any, idx) => ({
+            key: toMarkerKey("me", p, idx),
             lat: p.lat,
             lng: p.lng,
+            imageUrl: p.photo,
             raw: p,
           }));
 
@@ -380,10 +388,11 @@ export default function Home() {
         });
         if (cancelled) return;
 
-        const next: HomeMarker[] = (data.places ?? []).map((p) => ({
-          key: `friend-${scope.userId}-${p.placeId}`,
+        const next: HomeMarker[] = (data.places ?? []).map((p: any, idx) => ({
+          key: toMarkerKey(`friend-${scope.userId}`, p, idx),
           lat: p.lat,
           lng: p.lng,
+          imageUrl: p.photo,
           raw: p,
         }));
 
@@ -633,25 +642,33 @@ export default function Home() {
                 }}
               >
                 <UserLocationMarker enableRotation />
-                {markers.map((m) => (
-                  <NaverMapMarkerOverlay
-                    key={m.key}
-                    latitude={m.lat}
-                    longitude={m.lng}
-                    image={HOME_PIN}
-                    width={44}
-                    height={44}
-                    onTap={() => {
-                      console.log("[home-map] marker tap:", {
-                        scope,
-                        key: m.key,
-                        lat: m.lat,
-                        lng: m.lng,
-                        raw: m.raw,
-                      });
-                    }}
-                  />
-                ))}
+
+                {markers.map((m) => {
+                  const markerImage = m.imageUrl
+                    ? ({ httpUri: m.imageUrl } as const)
+                    : HOME_PIN;
+
+                  return (
+                    <NaverMapMarkerOverlay
+                      key={m.key}
+                      latitude={m.lat}
+                      longitude={m.lng}
+                      image={markerImage}
+                      width={44}
+                      height={44}
+                      anchor={{ x: 0.5, y: 1 }}
+                      onTap={() => {
+                        console.log("[home-map] marker tap:", {
+                          scope,
+                          key: m.key,
+                          lat: m.lat,
+                          lng: m.lng,
+                          raw: m.raw,
+                        });
+                      }}
+                    />
+                  );
+                })}
               </NaverMapView>
 
               <MyLocationButton
