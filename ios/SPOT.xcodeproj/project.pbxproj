@@ -10,7 +10,7 @@
 		0B52FFCBE8B3523E059F4845 /* libPods-SPOT.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CA36C4AA06ED205A74EF39F8 /* libPods-SPOT.a */; };
 		10EAF557F1469D3877D4D912 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 999687C971D06B934B0CF737 /* PrivacyInfo.xcprivacy */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		2DFC0D4F2F322D5000E4BC05 /* SpotShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2DFC0D452F322D5000E4BC05 /* SpotShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2D269DB12F3242DE00BD2D4B /* SpotShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2DFC0D452F322D5000E4BC05 /* SpotShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		587CB20885315F300CE7BAC7 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9CDFC9226D20AE9A64E2B87 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
@@ -28,13 +28,31 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		2D269DAF2F32420D00BD2D4B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D269DB02F3242CD00BD2D4B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2DFC0D502F322D5000E4BC05 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				2DFC0D4F2F322D5000E4BC05 /* SpotShare.appex in Embed Foundation Extensions */,
+				2D269DB12F3242DE00BD2D4B /* SpotShare.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -196,6 +214,8 @@
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
 				AB16720B4C6B356AC27B0F87 /* [CP] Embed Pods Frameworks */,
 				2DFC0D502F322D5000E4BC05 /* Embed Foundation Extensions */,
+				2D269DAF2F32420D00BD2D4B /* CopyFiles */,
+				2D269DB02F3242CD00BD2D4B /* CopyFiles */,
 			);
 			buildRules = (
 			);
