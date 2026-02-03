@@ -10,8 +10,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "icon": "./assets/images/icon.png",
       "deploymentTarget": "15.1",
-      "icon": "./assets/icon.png",
       "supportsTablet": false,
       "bundleIdentifier": "com.balancinglife.SPOT",
       "usesAppleSignIn": true,
