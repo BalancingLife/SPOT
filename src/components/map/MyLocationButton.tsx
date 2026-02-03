@@ -39,7 +39,7 @@ export default function MyLocationButton({
     // scale: 1 → 0.92 → 1
     pressScale.value = withSequence(
       withTiming(0.92, { duration: 90 }),
-      withTiming(1, { duration: 90 })
+      withTiming(1, { duration: 90 }),
     );
 
     // flash
@@ -48,11 +48,11 @@ export default function MyLocationButton({
 
     flashScale.value = withSequence(
       withTiming(1.12, { duration: 120 }),
-      withTiming(1.2, { duration: 120 })
+      withTiming(1.2, { duration: 120 }),
     );
     flashOpacity.value = withSequence(
       withTiming(0.22, { duration: 100 }),
-      withDelay(80, withTiming(0, { duration: 140 }))
+      withDelay(80, withTiming(0, { duration: 140 })),
     );
 
     onPress?.();

@@ -29,6 +29,12 @@ import StoryList from "@/src/components/home/StoryList";
 import UserCard from "@/src/components/UserCard";
 import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
 
+import CommentBottomSheet, {
+  type CommentBottomSheetHandle,
+} from "@/src/components/bottomSheet/CommentBottomSheet";
+
+import { fetchPlaceMore } from "@/src/lib/api/places";
+
 import {
   fetchHomeMain,
   fetchHomeMe,
@@ -148,6 +154,15 @@ export default function Home() {
 
   const friends = useFriendsStore((s) => s.friends);
   const loadFriends = useFriendsStore((s) => s.loadFriends);
+
+  const commentSheetRef = useRef<CommentBottomSheetHandle>(null);
+  const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
+  const [morePlace, setMorePlace] = useState<any>(null);
+  const [moreComments, setMoreComments] = useState<any[]>([]);
+  const [moreLoading, setMoreLoading] = useState(false);
+  const [moreError, setMoreError] = useState<string | null>(null);
+
+  const [isCommentOpen, setIsCommentOpen] = useState(false);
 
   // 탭 진입 시 1회 위치 갱신
   useEffect(() => {
@@ -530,6 +545,25 @@ export default function Home() {
     };
   }, [activeTab, scope, lat, lng]);
 
+  const loadMore = async (placeId: number) => {
+    if (lat == null || lng == null) return;
+
+    setMoreLoading(true);
+    setMoreError(null);
+
+    try {
+      const data = await fetchPlaceMore({ lat, lng, placeId }); // ✅ 너가 준 함수 사용
+      setMorePlace(data.places ?? null);
+      setMoreComments(Array.isArray(data.comments) ? data.comments : []);
+    } catch (e: any) {
+      setMoreError(e?.message ?? "failed");
+      setMorePlace(null);
+      setMoreComments([]);
+    } finally {
+      setMoreLoading(false);
+    }
+  };
+
   /** -----------------------------
    *  UI
    *  ----------------------------- */
@@ -658,24 +692,25 @@ export default function Home() {
                       height={44}
                       anchor={{ x: 0.5, y: 1 }}
                       onTap={() => {
-                        console.log("[home-map] marker tap:", {
-                          scope,
-                          key: m.key,
-                          lat: m.lat,
-                          lng: m.lng,
-                          raw: m.raw,
-                        });
+                        const pid = m?.raw?.placeId ?? m?.raw?.id ?? null;
+                        if (typeof pid !== "number") return;
+
+                        setSelectedPlaceId(pid);
+                        commentSheetRef.current?.open(0);
+                        loadMore(pid);
                       }}
                     />
                   );
                 })}
               </NaverMapView>
 
-              <MyLocationButton
-                onPress={moveToCurrentLocation}
-                bottom={40}
-                left={15}
-              />
+              {!isCommentOpen && (
+                <MyLocationButton
+                  onPress={moveToCurrentLocation}
+                  bottom={40}
+                  left={15}
+                />
+              )}
             </View>
           )}
 
@@ -893,6 +928,20 @@ export default function Home() {
           )}
         </View>
       </View>
+
+      <CommentBottomSheet
+        ref={commentSheetRef}
+        onOpen={() => setIsCommentOpen(true)}
+        onClose={() => setIsCommentOpen(false)}
+        placeId={selectedPlaceId}
+        place={morePlace}
+        comments={moreComments}
+        loading={moreLoading}
+        error={moreError}
+        onRetry={() => {
+          if (selectedPlaceId != null) loadMore(selectedPlaceId);
+        }}
+      />
     </SafeAreaView>
   );
 }
