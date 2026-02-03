@@ -11,6 +11,9 @@
   <key>CFBundleName</key>
   <string>$(PRODUCT_NAME)</string>
 
+  <key>CFBundleDisplayName</key>
+  <string>SPOT</string>
+
   <key>CFBundleShortVersionString</key>
   <string>$(MARKETING_VERSION)</string>
 
@@ -19,15 +22,18 @@
 
   <key>NSExtension</key>
   <dict>
+    <key>NSExtensionPointIdentifier</key>
+    <string>com.apple.share-services</string>
+
+    <key>NSExtensionMainStoryboard</key>
+    <string>MainInterface</string>
+
     <key>NSExtensionAttributes</key>
     <dict>
+      <!-- 개발 중: 무조건 뜨게 -->
       <key>NSExtensionActivationRule</key>
       <string>TRUEPREDICATE</string>
     </dict>
-    <key>NSExtensionMainStoryboard</key>
-    <string>MainInterface</string>
-    <key>NSExtensionPointIdentifier</key>
-    <string>com.apple.share-services</string>
   </dict>
 </dict>
 </plist>
