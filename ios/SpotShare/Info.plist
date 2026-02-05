@@ -30,9 +30,27 @@
 
     <key>NSExtensionAttributes</key>
     <dict>
-      <!-- 개발 중: 무조건 뜨게 -->
       <key>NSExtensionActivationRule</key>
-      <string>TRUEPREDICATE</string>
+      <dict>
+        <!-- 거의 모든 공유 케이스(인스타 포함)에서 뜨게: Text/URL/Image/Video/File 다 허용 -->
+        <key>NSExtensionActivationSupportsText</key>
+        <true/>
+
+        <key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
+        <integer>1</integer>
+
+        <key>NSExtensionActivationSupportsImageWithMaxCount</key>
+        <integer>10</integer>
+
+        <key>NSExtensionActivationSupportsMovieWithMaxCount</key>
+        <integer>10</integer>
+
+        <key>NSExtensionActivationSupportsFileWithMaxCount</key>
+        <integer>10</integer>
+
+        <key>NSExtensionActivationSupportsAttachmentsWithMaxCount</key>
+        <integer>20</integer>
+      </dict>
     </dict>
   </dict>
 </dict>
