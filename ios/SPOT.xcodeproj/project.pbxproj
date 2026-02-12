@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -11,6 +11,8 @@
 		10EAF557F1469D3877D4D912 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 999687C971D06B934B0CF737 /* PrivacyInfo.xcprivacy */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		2D269DB12F3242DE00BD2D4B /* SpotShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2DFC0D452F322D5000E4BC05 /* SpotShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2D6B528B2F3CC9D1007DD0CE /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D6B52892F3CC9D1007DD0CE /* SharedStore.swift */; };
+		2D6B528C2F3CC9D1007DD0CE /* SharedStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 2D6B52882F3CC9D1007DD0CE /* SharedStore.m */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		587CB20885315F300CE7BAC7 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9CDFC9226D20AE9A64E2B87 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
@@ -63,6 +65,9 @@
 		13B07F961A680F5B00A75B9A /* SPOT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SPOT.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = SPOT/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = SPOT/Info.plist; sourceTree = "<group>"; };
+		2D6B52862F3CC81B007DD0CE /* SPOTRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = SPOTRelease.entitlements; path = SPOT/SPOTRelease.entitlements; sourceTree = "<group>"; };
+		2D6B52882F3CC9D1007DD0CE /* SharedStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SharedStore.m; sourceTree = "<group>"; };
+		2D6B52892F3CC9D1007DD0CE /* SharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStore.swift; sourceTree = "<group>"; };
 		2DFC0D452F322D5000E4BC05 /* SpotShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SpotShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		999687C971D06B934B0CF737 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = SPOT/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A18E1FFB5A016D12DC9C8595 /* Pods-SPOT.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SPOT.release.xcconfig"; path = "Target Support Files/Pods-SPOT/Pods-SPOT.release.xcconfig"; sourceTree = "<group>"; };
@@ -112,6 +117,7 @@
 		13B07FAE1A68108700A75B9A /* SPOT */ = {
 			isa = PBXGroup;
 			children = (
+				2D6B52862F3CC81B007DD0CE /* SPOTRelease.entitlements */,
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
 				F11748442D0722820044C1D9 /* SPOT-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
@@ -140,6 +146,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		2D6B528A2F3CC9D1007DD0CE /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				2D6B52882F3CC9D1007DD0CE /* SharedStore.m */,
+				2D6B52892F3CC9D1007DD0CE /* SharedStore.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -150,6 +165,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				2D6B528A2F3CC9D1007DD0CE /* Shared */,
 				13B07FAE1A68108700A75B9A /* SPOT */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				2DFC0D462F322D5000E4BC05 /* SpotShare */,
@@ -440,6 +456,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2D6B528B2F3CC9D1007DD0CE /* SharedStore.swift in Sources */,
+				2D6B528C2F3CC9D1007DD0CE /* SharedStore.m in Sources */,
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
 				587CB20885315F300CE7BAC7 /* ExpoModulesProvider.swift in Sources */,
 			);
@@ -510,7 +528,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = SPOT/SPOT.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SPOT/SPOTRelease.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -553,6 +571,7 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = SpotShare/SpotShare.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -598,6 +617,7 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = SpotShare/SpotShare.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;

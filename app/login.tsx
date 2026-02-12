@@ -1,16 +1,25 @@
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
-import { Image, StyleSheet, View, Text, Pressable } from "react-native";
+import {
+  Image,
+  StyleSheet,
+  View,
+  Text,
+  Pressable,
+  NativeModules,
+} from "react-native";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 import { useAuthStore } from "@/src/stores/useAuthStore";
+
+const { SharedStore } = NativeModules;
 
 const KAKAO_REST_API_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY!;
 const KAKAO_REDIRECT_URI = process.env.EXPO_PUBLIC_KAKAO_REDIRECT_URI!;
 
 const authUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(
-  KAKAO_REDIRECT_URI
+  KAKAO_REDIRECT_URI,
 )}`;
 
 export default function Login() {
@@ -26,7 +35,7 @@ export default function Login() {
 
       const result = await WebBrowser.openAuthSessionAsync(
         authUrl,
-        Linking.createURL("/oauth/kakao")
+        Linking.createURL("/oauth/kakao"),
       );
       console.log("[KAKAO][AuthSession] raw result:", result);
       console.log("[KAKAO][AuthSession] type:", result.type);
@@ -39,7 +48,9 @@ export default function Login() {
         const nickname = parsed.searchParams.get("nickname") ?? "";
 
         await useAuthStore.getState().setAuth({ token, email, nickname });
+        SharedStore?.setAccessToken?.(token);
 
+        console.log("✅ 토큰 AppGroup 저장 완료");
         console.log("✅ 카카오 로그인 성공");
         console.log("🔗 복귀 URL:", result.url);
         console.log("🛠 token:", token, "email:", email, "nickname:", nickname);

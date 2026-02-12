@@ -2,12 +2,14 @@ import "react-native-reanimated";
 import { useFonts } from "expo-font";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { Stack, SplashScreen } from "expo-router";
+import { Stack, SplashScreen, useRouter } from "expo-router";
 import { useEffect } from "react";
+import { AppState, NativeModules } from "react-native";
 import { useAuthStore } from "@/src/stores/useAuthStore";
 
 export default function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
+  const router = useRouter();
 
   useEffect(() => {
     hydrate();
@@ -26,6 +28,27 @@ export default function RootLayout() {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
+  // ✅ Share Extension 결과 수신 (앱이 다시 active 될 때)
+  useEffect(() => {
+    const { SharedStore } = NativeModules;
+
+    const sub = AppState.addEventListener("change", async (state) => {
+      if (state !== "active") return;
+
+      const json = await SharedStore?.getLatestAnalyzeResult?.();
+      if (!json) return;
+
+      await SharedStore?.clearLatestAnalyzeResult?.();
+
+      console.log("[share] analyze result:", json);
+
+      // TODO: 원하는 화면으로 이동
+      // router.push({ pathname: "/shareResult", params: { json } });
+    });
+
+    return () => sub.remove();
+  }, []);
+
   if (!fontsLoaded) return null;
 
   return (
@@ -39,7 +62,7 @@ export default function RootLayout() {
             name="search"
             options={{
               headerShown: false,
-              animation: "none", // 전환 아예 없애고 싶으면 이걸로
+              animation: "none",
             }}
           />
 
@@ -65,7 +88,7 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="profile/edit"
-            options={{ headerShown: false, presentation: "card" }} // 필요하면
+            options={{ headerShown: false, presentation: "card" }}
           />
         </Stack>
       </BottomSheetModalProvider>
