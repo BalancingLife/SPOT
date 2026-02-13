@@ -60,6 +60,7 @@ export async function fetchHomeUser(params: {
   lat: number;
   lng: number;
   distance: number;
+  includeMarkerBadgeLayout: boolean;
 }) {
   const { userId, ...rest } = params;
   const res = await api8080.get<HomeUserResponse>(`/main/${userId}`, {
