@@ -8,9 +8,12 @@ final class ShareViewController: UIViewController {
   private let tokenKey = "accessToken"
   private let latestResultKey = "latestAnalyzeResult"
 
-  // 서버
-  private let baseURL = "http://52.78.23.132:8080"
+  // ✅ analyze는 8001
+  private let baseURL = "http://52.78.23.132:8001"
   private let analyzePath = "/analyze"
+
+  // 디버그 모드 (응답 그대로 화면에 표시)
+  private let debugMode = true
 
   // UI
   private let titleLabel = UILabel()
@@ -19,32 +22,29 @@ final class ShareViewController: UIViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
-
     setupUI()
 
     NSLog("[SpotShare] viewDidLoad")
 
-    // 1) 토큰 읽기
+    // 1) 토큰
     let token = readToken()
     if token.isEmpty {
-      NSLog("[SpotShare] ❌ token empty -> show login needed")
-      showDoneUI(message: "로그인이 필요해요.", buttonTitle: "앱으로 가기")
+      showDoneUI(message: "토큰 없음(AppGroup)\n앱 로그인 후 다시 시도", buttonTitle: "앱으로 가기")
       return
     }
 
-    // 2) 공유된 URL 추출
+    // 2) URL
     extractFirstURL { [weak self] urlString in
       guard let self else { return }
 
       guard let urlString, !urlString.isEmpty else {
-        NSLog("[SpotShare] ❌ No URL found in share items")
-        self.showDoneUI(message: "지원하지 않는 공유 형식이에요.", buttonTitle: "닫기")
+        self.showDoneUI(message: "URL 못 찾음\n(공유 형식 확인 필요)", buttonTitle: "닫기")
         return
       }
 
       NSLog("[SpotShare] ✅ URL: \(urlString)")
 
-      // 3) /analyze 호출
+      // 3) analyze 호출
       self.callAnalyze(url: urlString, token: token)
     }
   }
@@ -55,9 +55,9 @@ final class ShareViewController: UIViewController {
     view.backgroundColor = .systemBackground
 
     titleLabel.textAlignment = .center
-    titleLabel.numberOfLines = 2
+    titleLabel.numberOfLines = 0
     titleLabel.font = .systemFont(ofSize: 16, weight: .semibold)
-    titleLabel.text = "저장 중…"
+    titleLabel.text = "대기 중…"
 
     actionButton.setTitle("앱으로 가기", for: .normal)
     actionButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
@@ -65,7 +65,6 @@ final class ShareViewController: UIViewController {
     actionButton.addTarget(self, action: #selector(onTapButton), for: .touchUpInside)
 
     activity.hidesWhenStopped = true
-    activity.startAnimating()
 
     [titleLabel, activity, actionButton].forEach {
       $0.translatesAutoresizingMaskIntoConstraints = false
@@ -96,14 +95,21 @@ final class ShareViewController: UIViewController {
     }
   }
 
+  private func setStatus(_ message: String, showButton: Bool = false, buttonTitle: String = "닫기") {
+    DispatchQueue.main.async {
+      self.titleLabel.text = message
+      self.activity.stopAnimating()
+      self.actionButton.isHidden = !showButton
+      self.actionButton.setTitle(buttonTitle, for: .normal)
+    }
+  }
+
   @objc private func onTapButton() {
-    // 앱 열기
     if let url = URL(string: "spot://") {
       self.extensionContext?.open(url, completionHandler: { success in
         NSLog("[SpotShare] open app success=\(success)")
       })
     }
-    // 익스텐션 닫기
     self.extensionContext?.completeRequest(returningItems: nil, completionHandler: nil)
   }
 
@@ -112,7 +118,11 @@ final class ShareViewController: UIViewController {
   private func readToken() -> String {
     let d = UserDefaults(suiteName: suiteName)
     let token = d?.string(forKey: tokenKey) ?? ""
-    NSLog("[SpotShare] token len=\(token.count)")
+
+    // ✅ 토큰 형태(점 2개) 확인 로그
+    let dotCount = token.filter { $0 == "." }.count
+    NSLog("[SpotShare] token len=\(token.count), dotCount=\(dotCount)")
+
     return token
   }
 
@@ -129,14 +139,12 @@ final class ShareViewController: UIViewController {
       completion(nil); return
     }
 
-    // URL 우선
     for item in items {
       guard let providers = item.attachments else { continue }
 
       for provider in providers {
         if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
-          provider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { data, error in
-            if let error { NSLog("[SpotShare] load url error: \(error.localizedDescription)") }
+          provider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { data, _ in
             if let url = data as? URL {
               completion(url.absoluteString)
               return
@@ -160,45 +168,70 @@ final class ShareViewController: UIViewController {
       return
     }
 
+    DispatchQueue.main.async {
+      self.activity.startAnimating()
+      self.actionButton.isHidden = true
+    }
+
     var request = URLRequest(url: reqURL)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+    // ✅ 서버가 원하는 형태: Authorization: Bearer <JWT>
+    let cleanToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
+    request.setValue("Bearer \(cleanToken)", forHTTPHeaderField: "Authorization")
 
     let body: [String: Any] = ["url": url]
     request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
-    NSLog("[SpotShare] 🚀 POST \(endpoint)")
-    activity.startAnimating()
+    // ✅ “요청이 진짜 나갔는지” 화면에 박제
+    let authHeader = request.value(forHTTPHeaderField: "Authorization") ?? "nil"
+    let authShort = authHeader.count > 45 ? String(authHeader.prefix(45)) + "…" : authHeader
+    let dotCount = cleanToken.filter { $0 == "." }.count
 
-    URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+    DispatchQueue.main.async {
+      self.titleLabel.text =
+      "요청 보냄 ✅\nPOST \(endpoint)\ndotCount=\(dotCount)\nAUTH=\(authShort)\nurl=\(url)"
+    }
+
+    // ✅ 35초 타임아웃
+    let config = URLSessionConfiguration.default
+    config.timeoutIntervalForRequest = 35    // 첫 바이트 받을 때까지
+    config.timeoutIntervalForResource = 35   // 전체 요청 완료까지
+    let session = URLSession(configuration: config)
+
+    session.dataTask(with: request) { [weak self] data, response, error in
       guard let self else { return }
 
       if let error {
-        NSLog("[SpotShare] ❌ analyze error: \(error.localizedDescription)")
-        self.showDoneUI(message: "저장 실패", buttonTitle: "닫기")
+        let ns = error as NSError
+        self.setStatus("요청 실패 ❌\n\(ns.domain) (\(ns.code))\n\(ns.localizedDescription)",
+                       showButton: true, buttonTitle: "닫기")
         return
       }
 
       let status = (response as? HTTPURLResponse)?.statusCode ?? -1
       let raw = String(data: data ?? Data(), encoding: .utf8) ?? ""
-
       NSLog("[SpotShare] ✅ status=\(status)")
       NSLog("[SpotShare] ✅ body=\(raw)")
 
-      if status == 401 {
-        // 토큰 만료/무효
-        self.showDoneUI(message: "로그인이 만료됐어요.", buttonTitle: "앱으로 가기")
+      // 디버그면 그대로 노출
+      if debugMode {
+        let preview = raw.count > 700 ? String(raw.prefix(700)) + "…" : raw
+        self.setStatus("응답 도착 ✅\nstatus=\(status)\nbody=\n\(preview)",
+                       showButton: true, buttonTitle: "닫기")
         return
       }
 
+      // 운영 UX (원하면 나중에)
       if status >= 200 && status < 300 {
         self.saveLatestResult(raw)
         self.showDoneUI(message: "장소를 저장했어요.", buttonTitle: "앱으로 가기")
+      } else if status == 401 {
+        self.showDoneUI(message: "로그인이 만료됐어요.", buttonTitle: "앱으로 가기")
       } else {
         self.showDoneUI(message: "저장 실패", buttonTitle: "닫기")
       }
-
     }.resume()
   }
 }
