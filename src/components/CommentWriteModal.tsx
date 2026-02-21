@@ -32,7 +32,16 @@ export type CommentWriteModalRef = {
 const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const inputRef = useRef<TextInput>(null);
+  const textRef = useRef("");
+
   const [text, setText] = useState("");
+  const [length, setLength] = useState(0);
+
+  const onChangeText = useCallback((v: string) => {
+    textRef.current = v;
+    // 길이 표시만 업데이트 (렌더 최소화)
+    setLength(v.length);
+  }, []);
 
   // snap points (바텀시트 높이)
   const snapPoints = useMemo(() => ["40%", "85%"], []);
@@ -66,7 +75,6 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
     bottomSheetRef.current?.dismiss();
   };
 
-  const length = text.length;
   const isSubmitDisabled = text.trim().length === 0;
 
   // 바깥(어두운 영역) 탭 시 닫히는 백드롭
@@ -79,7 +87,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
         pressBehavior="close" // 배경 탭 → close
       />
     ),
-    []
+    [],
   );
 
   // 부모에서 .open(), .close()로 제어할 수 있게 expose
@@ -100,6 +108,8 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
       backdropComponent={renderBackdrop} // 밖 탭 시 닫힘
       backgroundStyle={{ borderRadius: 24 }}
       onAnimate={handleAnimate}
+      keyboardBehavior="extend"
+      keyboardBlurBehavior="restore"
     >
       <BottomSheetView style={styles.container}>
         {/* 헤더 */}
@@ -139,12 +149,9 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
             placeholder="방문하신 곳은 어떠셨나요?"
             placeholderTextColor={Colors.gray_300}
             multiline
-            value={text}
-            onChangeText={setText}
-            maxLength={200}
-            textAlignVertical="top"
-            returnKeyType="done"
-            blurOnSubmit={false}
+            defaultValue=""
+            onChangeText={onChangeText}
+            maxLength={200} // 이건 iOS면 보통 괜찮음. 문제면 slice로 대체
           />
         </View>
 
