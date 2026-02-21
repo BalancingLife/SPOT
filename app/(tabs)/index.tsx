@@ -400,6 +400,7 @@ export default function Home() {
           lat,
           lng,
           distance: HOME_DISTANCE,
+          includeMarkerBadgeLayout: true,
         });
         if (cancelled) return;
 

@@ -173,6 +173,12 @@ final class ShareViewController: UIViewController {
       self.actionButton.isHidden = true
     }
 
+    // ✅ 35초 타임아웃
+    let config = URLSessionConfiguration.default
+    config.timeoutIntervalForRequest = 35    // 첫 바이트 받을 때까지
+    config.timeoutIntervalForResource = 35   // 전체 요청 완료까지
+    let session = URLSession(configuration: config)
+
     var request = URLRequest(url: reqURL)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -184,7 +190,7 @@ final class ShareViewController: UIViewController {
     let body: [String: Any] = ["url": url]
     request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
-    // ✅ “요청이 진짜 나갔는지” 화면에 박제
+    // ✅ “요청이 진짜 나갔는지” 화면에 박제(기존)
     let authHeader = request.value(forHTTPHeaderField: "Authorization") ?? "nil"
     let authShort = authHeader.count > 45 ? String(authHeader.prefix(45)) + "…" : authHeader
     let dotCount = cleanToken.filter { $0 == "." }.count
@@ -194,20 +200,43 @@ final class ShareViewController: UIViewController {
       "요청 보냄 ✅\nPOST \(endpoint)\ndotCount=\(dotCount)\nAUTH=\(authShort)\nurl=\(url)"
     }
 
-    // ✅ 35초 타임아웃
-    let config = URLSessionConfiguration.default
-    config.timeoutIntervalForRequest = 35    // 첫 바이트 받을 때까지
-    config.timeoutIntervalForResource = 35   // 전체 요청 완료까지
-    let session = URLSession(configuration: config)
+    // ✅ 콘솔에 "어디로 요청 보내는지" + 헤더/바디까지 풀로그
+    let method = request.httpMethod ?? "?"
+    let urlStr = request.url?.absoluteString ?? "nil"
+    let headers = request.allHTTPHeaderFields ?? [:]
+    let bodyStr = request.httpBody.flatMap { String(data: $0, encoding: .utf8) } ?? "nil"
+
+    // 민감정보 마스킹(Authorization 전체 노출 방지)
+    let maskedHeaders: [String: String] = headers.reduce(into: [:]) { acc, kv in
+      if kv.key.lowercased() == "authorization" {
+        let v = kv.value
+        acc[kv.key] = v.count > 45 ? String(v.prefix(45)) + "…" : v
+      } else {
+        acc[kv.key] = kv.value
+      }
+    }
+
+    NSLog("""
+[SpotShare] 🚀 REQUEST
+- \(method) \(urlStr)
+- timeout(req)=\(config.timeoutIntervalForRequest)s resource=\(config.timeoutIntervalForResource)s
+- headers=\(maskedHeaders)
+- body=\(bodyStr)
+""")
 
     session.dataTask(with: request) { [weak self] data, response, error in
       guard let self else { return }
 
       if let error {
         let ns = error as NSError
+        NSLog("[SpotShare] ❌ ERROR domain=\(ns.domain) code=\(ns.code) desc=\(ns.localizedDescription)")
         self.setStatus("요청 실패 ❌\n\(ns.domain) (\(ns.code))\n\(ns.localizedDescription)",
                        showButton: true, buttonTitle: "닫기")
         return
+      }
+
+      if let http = response as? HTTPURLResponse {
+        NSLog("[SpotShare] ✅ RESPONSE from=\(http.url?.absoluteString ?? "nil") status=\(http.statusCode)")
       }
 
       let status = (response as? HTTPURLResponse)?.statusCode ?? -1

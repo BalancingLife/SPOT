@@ -49,6 +49,8 @@ export default function Login() {
 
         // ✅ 이 두 줄이 핵심
         SharedStore?.setAccessToken?.(token);
+        const check = await SharedStore?.getAccessToken?.();
+        console.log("🔥 AppGroup에 실제 저장된 값:", check);
         console.log("✅ 토큰 AppGroup 저장 완료");
 
         console.log("✅ 카카오 로그인 성공");
