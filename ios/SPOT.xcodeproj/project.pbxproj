@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -82,7 +82,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		2DFC0D532F322D5000E4BC05 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		2DFC0D532F322D5000E4BC05 /* Exceptions for "SpotShare" folder in "SpotShare" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -92,7 +92,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		2DFC0D462F322D5000E4BC05 /* SpotShare */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (2DFC0D532F322D5000E4BC05 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SpotShare; sourceTree = "<group>"; };
+		2DFC0D462F322D5000E4BC05 /* SpotShare */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2DFC0D532F322D5000E4BC05 /* Exceptions for "SpotShare" folder in "SpotShare" target */,
+			);
+			path = SpotShare;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -283,7 +290,6 @@
 				};
 			};
 			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "SPOT" */;
-			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -291,6 +297,7 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
+			preferredProjectObjectVersion = 77;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
