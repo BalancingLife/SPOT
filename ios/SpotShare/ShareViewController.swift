@@ -9,7 +9,7 @@ final class ShareViewController: UIViewController {
   private let latestResultKey = "latestAnalyzeResult"
 
   // ✅ analyze는 8001
-  private let baseURL = "http://52.78.23.132:8001"
+  private let baseURL = "http://13.125.197.83:8001"
   private let analyzePath = "/analyze"
 
   // 디버그 모드 (응답 그대로 화면에 표시)
