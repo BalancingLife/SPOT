@@ -30,6 +30,7 @@ export type Place = {
   lng: number;
 
   category: string | null;
+  categoryKey?: string | null;
 
   photo: string | null;
   thumbnails: string[];

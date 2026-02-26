@@ -79,27 +79,15 @@ export default function HotPlacesTab() {
     refreshHotPlaces({ lat, lng });
   }, [lat, lng, refreshHotPlaces]);
 
-  const handleSelectSort = useCallback(
-    (next: string[]) => {
-      setSort(next);
-      setOpened(null);
+  const handleSelectSort = useCallback((next: string[]) => {
+    setSort(next);
+    setOpened(null);
+  }, []);
 
-      // 지금 API 스펙상 정렬 파라미터 없음 → 그냥 리프레시만
-      if (lat != null && lng != null) refreshHotPlaces({ lat, lng });
-    },
-    [lat, lng, refreshHotPlaces],
-  );
-
-  const handleSelectCategory = useCallback(
-    (next: string[]) => {
-      setCategory(next);
-      setOpened(null);
-
-      // 지금 API 스펙상 category 파라미터 없음 → 그냥 리프레시만
-      if (lat != null && lng != null) refreshHotPlaces({ lat, lng });
-    },
-    [lat, lng, refreshHotPlaces],
-  );
+  const handleSelectCategory = useCallback((next: string[]) => {
+    setCategory(next);
+    setOpened(null);
+  }, []);
 
   // ✅ 북마크 토글: store 낙관적 업데이트 + 실패 롤백
   const handleToggleBookmark = useCallback(
@@ -130,7 +118,31 @@ export default function HotPlacesTab() {
     [applyHotBookmarkFromPlace],
   );
 
-  if (loading && items.length === 0) {
+  const filteredItems = useMemo(() => {
+    let arr = items;
+
+    // ✅ 카테고리 필터 (선택 안 했으면 전체)
+    if (category.length > 0) {
+      const key = category[0]; // "cafe" | "restaurant" ...
+      arr = arr.filter((p) => p.categoryKey === key);
+    }
+
+    // ✅ 정렬
+    if (sort[0] === "distance") {
+      arr = [...arr].sort(
+        (a, b) =>
+          (a.distanceM ?? Number.MAX_SAFE_INTEGER) -
+          (b.distanceM ?? Number.MAX_SAFE_INTEGER),
+      );
+    } else {
+      // "hot" (인기순) -> 서버가 이미 인기순으로 내려준다고 가정하면 그대로 둠
+      // 필요하면 여기서 따로 인기 지표 기준 정렬 추가
+    }
+
+    return arr;
+  }, [items, category, sort]);
+
+  if (loading && filteredItems.length === 0) {
     return <ActivityIndicator style={{ marginVertical: 12 }} />;
   }
 
@@ -159,7 +171,7 @@ export default function HotPlacesTab() {
         )}
 
         {/* 목록 없음 */}
-        {items.length === 0 && !loading && !errorMsg && (
+        {filteredItems.length === 0 && !loading && !errorMsg && (
           <View style={{ flex: 1, alignItems: "center", paddingTop: 150 }}>
             <Text
               style={[
@@ -176,7 +188,7 @@ export default function HotPlacesTab() {
         )}
 
         {/* 리스트 */}
-        {items.map((p) => (
+        {filteredItems.map((p) => (
           <PlaceCard
             key={p.id}
             name={p.name}

@@ -209,7 +209,7 @@ final class ShareViewController: UIViewController {
     // 민감정보 마스킹(Authorization 전체 노출 방지)
     let maskedHeaders: [String: String] = headers.reduce(into: [:]) { acc, kv in
       if kv.key.lowercased() == "authorization" {
-        let v = kv.value
+        let v = kv.value  
         acc[kv.key] = v.count > 45 ? String(v.prefix(45)) + "…" : v
       } else {
         acc[kv.key] = kv.value

@@ -21,7 +21,7 @@ type MapOptions = {
 
 export function mapApiPlaceToPlace(
   it: ApiPlace,
-  options: MapOptions = {}
+  options: MapOptions = {},
 ): Place {
   const { currentLat, currentLng, fallbackGid } = options;
 
@@ -45,8 +45,11 @@ export function mapApiPlaceToPlace(
     photo != null
       ? [String(photo)]
       : Array.isArray(anyIt.photos)
-      ? anyIt.photos.filter(Boolean).map(String)
-      : [];
+        ? anyIt.photos.filter(Boolean).map(String)
+        : [];
+
+  const categoryKey = (it as any).list ?? null; // ✅ 원본 키 보존 ("cafe", "restaurant"...)
+
   return {
     placeId,
     id: String(it.placeId ?? it.gId ?? fallbackGid ?? ""),
@@ -57,8 +60,9 @@ export function mapApiPlaceToPlace(
     lat,
     lng,
 
-    // 🔥 여기
-    category: getCategoryLabel(it.list) || null,
+    // ✅ 필터용 키 + 표시용 라벨을 분리
+    categoryKey,
+    category: getCategoryLabel(categoryKey) || null,
 
     photo,
     thumbnails,
@@ -76,12 +80,12 @@ export function mapApiPlaceToPlace(
 
 export function mapApiPlacesToPlaces(
   data: ApiPlace[],
-  options: MapOptions = {}
+  options: MapOptions = {},
 ): Place[] {
   return data.map((it, idx) =>
     mapApiPlaceToPlace(it, {
       ...options,
       fallbackGid: options.fallbackGid ?? String(idx),
-    })
+    }),
   );
 }

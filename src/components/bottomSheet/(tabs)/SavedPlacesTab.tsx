@@ -2,10 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { ActivityIndicator, View, Text } from "react-native";
 import PlaceCard from "@/src/components/PlaceCard";
 import type { Place } from "@/src/types/place";
-import {
-  fetchMyNewSavedPlaces,
-  fetchPlacesByDistance,
-} from "@/src/lib/api/places";
+import { fetchMyNewSavedPlaces } from "@/src/lib/api/places";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { useLocationStore } from "@/src/stores/useLocationStore";
@@ -15,9 +12,7 @@ import FilterBar from "@/src/components/bottomSheet/FilterBar";
 import OptionModal from "@/src/components/OptionModal";
 
 import { toggleBookmarkApi } from "@/src/lib/api/bookmark";
-
 import { usePlaceMoreNavigation } from "@/src/hooks/usePlaceMoreNavigation";
-
 import { formatDistance } from "@/src/utils/format";
 
 export default function SavedPlacesTab() {
@@ -33,23 +28,23 @@ export default function SavedPlacesTab() {
   const setSavedError = useSavedPlacesStore((s) => s.setSavedError);
 
   const applyBookmarkFromPlace = useSavedPlacesStore(
-    (s) => s.applyBookmarkFromPlace
+    (s) => s.applyBookmarkFromPlace,
   );
 
   // 로컬 필터 상태
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
-    null
+    null,
   );
-  const [sort, setSort] = useState<string[]>(["latest"]); // 기본 최신순
-  const [saveType, setSaveType] = useState<string[]>([]);
-  const [category, setCategory] = useState<string[]>([]);
+  const [sort, setSort] = useState<string[]>(["latest"]); // 기본 최신순(표시용)
+  const [saveType, setSaveType] = useState<string[]>([]); // ["instagram"] | ["self"] | []
+  const [category, setCategory] = useState<string[]>([]); // ["cafe"] | ... | []
 
   const sortOptions = useMemo(
     () => [
       { label: "최신순", value: "latest" },
       { label: "거리순", value: "distance" },
     ],
-    []
+    [],
   );
   const saveOptions = useMemo(
     () => [
@@ -57,7 +52,7 @@ export default function SavedPlacesTab() {
       { label: "인스타그램", value: "instagram" },
       { label: "직접 저장", value: "self" },
     ],
-    []
+    [],
   );
   const categoryOptions = useMemo(
     () => [
@@ -70,16 +65,16 @@ export default function SavedPlacesTab() {
       { label: "체험", value: "experience" },
       { label: "옷가게", value: "clothing_store" },
     ],
-    []
+    [],
   );
 
   const saveOptionsForModal = useMemo(
     () => saveOptions.filter((o) => o.value !== "all"),
-    [saveOptions]
+    [saveOptions],
   );
   const categoryOptionsForModal = useMemo(
     () => categoryOptions.filter((o) => o.value !== "all"),
-    [categoryOptions]
+    [categoryOptions],
   );
 
   const sortLabel =
@@ -93,7 +88,7 @@ export default function SavedPlacesTab() {
       ? categoryOptions.find((o) => o.value === category[0])?.label
       : "업종";
 
-  // /new에서 데이터 로드
+  // ✅ 최초 1회 로드(/new)
   const loadByNew = useCallback(async () => {
     if (lat == null || lng == null) return;
 
@@ -114,58 +109,23 @@ export default function SavedPlacesTab() {
     loadByNew();
   }, [loadByNew]);
 
-  // /distance에서 데이터 로드 (거리순)
-  const loadByDistance = useCallback(async () => {
-    if (lat == null || lng == null) return;
+  // ✅ sort는 이제 "클라 정렬"만: API 재호출 금지
+  const handleSelectSort = useCallback((next: string[]) => {
+    setSort(next);
+    setOpened(null);
+  }, []);
 
-    setSavedLoading(true);
-    setSavedError(null);
-
-    try {
-      const list = await fetchPlacesByDistance({ lat, lng });
-      setSavedList(list);
-    } catch (e: any) {
-      setSavedError(e?.message ?? "불러오기 실패");
-    } finally {
-      setSavedLoading(false);
-    }
-  }, [lat, lng, setSavedList, setSavedLoading, setSavedError]);
-
-  const handleSelectSort = useCallback(
-    (next: string[]) => {
-      setSort(next);
-      const value = next[0];
-
-      console.log("[SavedPlacesTab] sort selected", value);
-
-      if (value === "latest") {
-        // 최신순 → /new
-        loadByNew();
-      } else if (value === "distance") {
-        // 거리순 → /distance
-        loadByDistance();
-      }
-
-      setOpened(null);
-    },
-    [loadByNew, loadByDistance]
-  );
-
-  //  SavedPlacesTab 전용 북마크 토글
+  // ✅ 북마크 토글
   const handleToggleBookmark = useCallback(
     async (place: Place) => {
       if (place.placeId == null) {
         console.warn(
-          "[SavedPlacesTab] placeId is null, cannot toggle bookmark"
+          "[SavedPlacesTab] placeId is null, cannot toggle bookmark",
         );
         return;
       }
 
       const willBookmark = !place.isBookmarked;
-      console.log("[SavedPlacesTab] toggle bookmark", {
-        placeId: place.placeId,
-        willBookmark,
-      });
 
       // 1) 전역 store 낙관적 업데이트
       applyBookmarkFromPlace(place, willBookmark);
@@ -175,18 +135,52 @@ export default function SavedPlacesTab() {
         await toggleBookmarkApi(place.placeId, willBookmark);
       } catch (err) {
         console.error("[SavedPlacesTab] toggleBookmark failed:", err);
-        // 3) 실패 시 새로 불러오기(또는 나중에 refreshSavedPlaces 사용)
+        // 3) 실패 시 강제 동기화
         if (lat != null && lng != null) {
-          // 여기서 refreshSavedPlaces({ lat, lng }) 같은 걸 쓰게 설계해도 됨
           await loadByNew();
         }
       }
     },
-    [applyBookmarkFromPlace, lat, lng, loadByNew]
+    [applyBookmarkFromPlace, lat, lng, loadByNew],
   );
 
-  // 클라이언트 측 정렬/필터 (지금은 정렬만 적용)
-  const filteredItems = items;
+  // ✅ 클라이언트 필터/정렬 (옵션 바뀔 때마다 여기서만 반영)
+  // 전제:
+  // - categoryKey가 Place에 있으면: p.categoryKey === "cafe" 로 필터 가능
+  // - saveType은 Place에 sourceKey 같은 게 있어야 정확히 가능함
+  //   (없으면 아래처럼 any로 임시 접근하거나, Place에 saveTypeKey 추가하는 게 맞음)
+  const filteredItems = useMemo(() => {
+    let arr = items;
+
+    // 1) 저장 방식 필터
+    if (saveType.length > 0) {
+      const key = saveType[0]; // "instagram" | "self"
+
+      // ✅ 추천: Place에 sourceKey/saveTypeKey 같은 필드를 두고 그걸로 비교
+      // 임시로: 서버 응답에 source/list 같은 필드가 있으면 매퍼에서 보존해두고 쓰는 게 맞다.
+      arr = arr.filter((p) => (p as any).saveTypeKey === key);
+    }
+
+    // 2) 업종 필터
+    if (category.length > 0) {
+      const catKey = category[0]; // "cafe" | "restaurant" ...
+      arr = arr.filter((p) => (p as any).categoryKey === catKey);
+    }
+
+    // 3) 정렬
+    if (sort[0] === "distance") {
+      arr = [...arr].sort(
+        (a, b) =>
+          (a.distanceM ?? Number.MAX_SAFE_INTEGER) -
+          (b.distanceM ?? Number.MAX_SAFE_INTEGER),
+      );
+    } else {
+      // "latest": 서버(/new)에서 최신순이라고 가정하면 그대로 둔다.
+      // 필요하면 여기서 createdAt 같은 필드 기준 정렬 추가
+    }
+
+    return arr;
+  }, [items, saveType, category, sort]);
 
   if (loading && items.length === 0) {
     return <ActivityIndicator style={{ marginVertical: 12 }} />;
@@ -204,7 +198,7 @@ export default function SavedPlacesTab() {
       />
 
       <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
-        {/* 목록 없음 */}
+        {/* 목록 없음: 필터 결과 기준 */}
         {filteredItems.length === 0 && !loading && (
           <View style={{ flex: 1, alignItems: "center", paddingTop: 150 }}>
             <Text
@@ -221,7 +215,7 @@ export default function SavedPlacesTab() {
           </View>
         )}
 
-        {/* 리스트 */}
+        {/* 리스트: 필터 결과 기준 */}
         {filteredItems.map((p) => (
           <PlaceCard
             key={p.id}
@@ -263,7 +257,10 @@ export default function SavedPlacesTab() {
         title="저장 방식"
         options={saveOptionsForModal}
         selected={saveType}
-        onSelect={(next) => setSaveType(next)}
+        onSelect={(next) => {
+          setSaveType(next);
+          setOpened(null);
+        }}
         onClose={() => setOpened(null)}
       />
       <OptionModal
@@ -271,7 +268,10 @@ export default function SavedPlacesTab() {
         title="업종"
         options={categoryOptionsForModal}
         selected={category}
-        onSelect={(next) => setCategory(next)}
+        onSelect={(next) => {
+          setCategory(next);
+          setOpened(null);
+        }}
         onClose={() => setOpened(null)}
       />
     </View>
