@@ -1,43 +1,50 @@
-import React, { useMemo, useState } from "react";
-import { View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, View, Text } from "react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+
 import PlaceCard from "@/src/components/PlaceCard";
 import FilterBar from "@/src/components/bottomSheet/FilterBar";
 import OptionModal from "@/src/components/OptionModal";
 
-const dummyData = new Array(4).fill(0).map((_, i) => ({
-  name: `장소 이름${i + 1}`,
-  category: "카페 / 베이커리",
-  address: `서울 주소구 주소동 ${123 + i}-1`,
-  images: [
-    require("@/assets/images/example.png"),
-    require("@/assets/images/react-logo.png"),
-    require("@/assets/images/spot-icon-orange.png"),
-  ],
-  savedUsers: [
-    require("@/assets/images/spot-icon-orange.png"),
-    require("@/assets/images/react-logo.png"),
-  ],
-  savedCount: 4 + i,
-  rating: 4.5,
-  reviewCount: 199,
-  showBookmark: true,
-  isBookmarked: true,
-}));
+import type { Place } from "@/src/types/place";
+
+import { Colors } from "@/src/styles/Colors";
+import { TextStyles } from "@/src/styles/TextStyles";
+
+import { useLocationStore } from "@/src/stores/useLocationStore";
+import { usePlaceMoreNavigation } from "@/src/hooks/usePlaceMoreNavigation";
+import { formatDistance } from "@/src/utils/format";
+
+import { toggleBookmarkApi } from "@/src/lib/api/bookmark";
+import { useHotPlacesStore } from "@/src/stores/useHotPlacesStore";
 
 export default function HotPlacesTab() {
-  const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
-    null
+  const { handlePressPlaceCard } = usePlaceMoreNavigation();
+
+  const lat = useLocationStore((s) => s.coords.lat);
+  const lng = useLocationStore((s) => s.coords.lng);
+
+  // ✅ store state
+  const items = useHotPlacesStore((s) => s.hotList);
+  const loading = useHotPlacesStore((s) => s.hotLoading);
+  const errorMsg = useHotPlacesStore((s) => s.hotError);
+  const refreshHotPlaces = useHotPlacesStore((s) => s.refreshHotPlaces);
+  const applyHotBookmarkFromPlace = useHotPlacesStore(
+    (s) => s.applyHotBookmarkFromPlace,
   );
-  const [category, setCategory] = useState<string[]>([]); // 비어있음 = 전체
-  const [sort, setSort] = useState<string[]>(["recent"]); // 기본 최신순
+
+  // UI 상태
+  const [opened, setOpened] = useState<"sort" | "category" | null>(null);
+  const [sort, setSort] = useState<string[]>(["hot"]); // 표시용
+  const [category, setCategory] = useState<string[]>([]);
 
   const sortOptions = useMemo(
     () => [
-      { label: "거리순", value: "latest" },
-      { label: "인기순", value: "distance" },
+      // ⚠️ 현재 API는 lat/lng만 받는다고 했으니 실제 정렬은 UI만
+      { label: "인기순", value: "hot" },
+      { label: "거리순", value: "distance" },
     ],
-    []
+    [],
   );
 
   const categoryOptions = useMemo(
@@ -51,27 +58,84 @@ export default function HotPlacesTab() {
       { label: "체험", value: "experience" },
       { label: "옷가게", value: "clothing_store" },
     ],
-    []
+    [],
   );
 
   const categoryOptionsForModal = useMemo(
     () => categoryOptions.filter((o) => o.value !== "all"),
-    [categoryOptions]
+    [categoryOptions],
   );
 
   const sortLabel =
-    sortOptions.find((o) => o.value === sort[0])?.label ?? "거리순";
+    sortOptions.find((o) => o.value === sort[0])?.label ?? "인기순";
   const categoryLabel =
     category.length > 0
-      ? categoryOptions.find((o) => o.value === category[0])?.label ?? "업종"
+      ? (categoryOptions.find((o) => o.value === category[0])?.label ?? "업종")
       : "업종";
 
-  // ⚠️ 지금은 더미 데이터라 필터 적용 로직은 생략.
-  // 실제 API 연동 시, sort/saveType/category 변경에 맞춰 refetch 또는 클라이언트 필터링을 수행하면 됨.
+  // ✅ 최초 로드: store refresh
+  useEffect(() => {
+    if (lat == null || lng == null) return;
+    refreshHotPlaces({ lat, lng });
+  }, [lat, lng, refreshHotPlaces]);
+
+  const handleSelectSort = useCallback(
+    (next: string[]) => {
+      setSort(next);
+      setOpened(null);
+
+      // 지금 API 스펙상 정렬 파라미터 없음 → 그냥 리프레시만
+      if (lat != null && lng != null) refreshHotPlaces({ lat, lng });
+    },
+    [lat, lng, refreshHotPlaces],
+  );
+
+  const handleSelectCategory = useCallback(
+    (next: string[]) => {
+      setCategory(next);
+      setOpened(null);
+
+      // 지금 API 스펙상 category 파라미터 없음 → 그냥 리프레시만
+      if (lat != null && lng != null) refreshHotPlaces({ lat, lng });
+    },
+    [lat, lng, refreshHotPlaces],
+  );
+
+  // ✅ 북마크 토글: store 낙관적 업데이트 + 실패 롤백
+  const handleToggleBookmark = useCallback(
+    async (place: Place) => {
+      if (place.placeId == null) {
+        console.warn("[HotPlacesTab] placeId is null, cannot toggle bookmark");
+        return;
+      }
+
+      const willBookmark = !place.isBookmarked;
+
+      // 1) store 낙관적 업데이트
+      applyHotBookmarkFromPlace(place, willBookmark);
+
+      // 2) API 호출
+      try {
+        await toggleBookmarkApi(place.placeId, willBookmark);
+      } catch (err) {
+        console.error("[HotPlacesTab] toggleBookmark failed:", err);
+
+        // 3) 실패 롤백
+        applyHotBookmarkFromPlace(place, !willBookmark);
+
+        // 원하면 refetch로 강제 동기화
+        // if (lat != null && lng != null) await refreshHotPlaces({ lat, lng });
+      }
+    },
+    [applyHotBookmarkFromPlace],
+  );
+
+  if (loading && items.length === 0) {
+    return <ActivityIndicator style={{ marginVertical: 12 }} />;
+  }
 
   return (
     <View style={{ flex: 1 }}>
-      {/* 필터 바 */}
       <FilterBar
         sortLabel={sortLabel}
         categoryLabel={categoryLabel}
@@ -82,21 +146,70 @@ export default function HotPlacesTab() {
 
       <BottomSheetScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 16 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
       >
-        {dummyData.map((item, index) => (
-          <PlaceCard key={index} {...item} showDirectionButton={true} />
+        {/* 에러 */}
+        {errorMsg && !loading && (
+          <View style={{ paddingTop: 16 }}>
+            <Text style={[TextStyles.Regular12, { color: Colors.gray_300 }]}>
+              {errorMsg}
+            </Text>
+          </View>
+        )}
+
+        {/* 목록 없음 */}
+        {items.length === 0 && !loading && !errorMsg && (
+          <View style={{ flex: 1, alignItems: "center", paddingTop: 150 }}>
+            <Text
+              style={[
+                TextStyles.SemiBold16,
+                { color: Colors.gray_300, fontSize: 20 },
+              ]}
+            >
+              인기 장소가 아직 없어요
+            </Text>
+            <Text style={[TextStyles.Regular12, { color: Colors.gray_300 }]}>
+              조금만 기다려 주세요!
+            </Text>
+          </View>
+        )}
+
+        {/* 리스트 */}
+        {items.map((p) => (
+          <PlaceCard
+            key={p.id}
+            name={p.name}
+            category={p.category ?? ""}
+            address={p.address}
+            images={
+              p.thumbnails.length > 0
+                ? p.thumbnails.map((u) => ({ uri: u }))
+                : [require("@/assets/images/example.png")]
+            }
+            savedUsers={p.savers}
+            savedCount={p.savers.length}
+            showDirectionButton={true}
+            rating={p.ratingAvg ?? 0}
+            reviewCount={p.ratingCount ?? 0}
+            showBookmark={true}
+            isBookmarked={p.isBookmarked}
+            onToggleBookmark={() => handleToggleBookmark(p)}
+            distanceText={
+              p.distanceM != null ? formatDistance(p.distanceM) : undefined
+            }
+            onPress={() => handlePressPlaceCard(p)}
+          />
         ))}
       </BottomSheetScrollView>
 
-      {/* ✅ 모달: 단일 선택 + 즉시 적용, '전체'는 모달에서 숨김 */}
+      {/* 모달 */}
       <OptionModal
         visible={opened === "sort"}
         title="정렬 기준"
         options={sortOptions}
         selected={sort}
-        onSelect={(next) => setSort(next)}
+        onSelect={handleSelectSort}
         onClose={() => setOpened(null)}
       />
       <OptionModal
@@ -104,7 +217,7 @@ export default function HotPlacesTab() {
         title="업종"
         options={categoryOptionsForModal}
         selected={category}
-        onSelect={(next) => setCategory(next)}
+        onSelect={handleSelectCategory}
         onClose={() => setOpened(null)}
       />
     </View>

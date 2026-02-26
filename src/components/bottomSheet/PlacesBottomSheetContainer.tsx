@@ -18,6 +18,7 @@ import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 
 import { useSavedPlacesStore } from "@/src/stores/useSavedPlacesStore"; // ← 추가
+import { useHotPlacesStore } from "@/src/stores/useHotPlacesStore";
 
 interface PlacesBottomSheetContainerProps {
   onPressMyLocation: () => void;
@@ -33,9 +34,7 @@ export default function PlacesBottomSheetContainer({
 
   // 🔥 저장한 장소 개수 가져오기
   const savedCount = useSavedPlacesStore((s) => s.savedList.length);
-
-  // Hot 탭 API가 아직 없다면 임시 0
-  const hotCount = 0;
+  const hotCount = useHotPlacesStore((s) => s.hotList.length);
 
   // 버튼 위치 애니메이션
   const animatedButtonStyle = useAnimatedStyle(() => {
@@ -62,7 +61,7 @@ export default function PlacesBottomSheetContainer({
     // 스케일: 1 → 0.92 → 1
     pressScale.value = withSequence(
       withTiming(0.92, { duration: 90 }),
-      withTiming(1, { duration: 90 })
+      withTiming(1, { duration: 90 }),
     );
 
     // 플래시: 살짝 커지면서 나타났다 빠르게 사라짐
@@ -70,11 +69,11 @@ export default function PlacesBottomSheetContainer({
     flashOpacity.value = 0;
     flashScale.value = withSequence(
       withTiming(1.12, { duration: 120 }),
-      withTiming(1.2, { duration: 120 })
+      withTiming(1.2, { duration: 120 }),
     );
     flashOpacity.value = withSequence(
       withTiming(0.22, { duration: 100 }),
-      withDelay(80, withTiming(0, { duration: 140 }))
+      withDelay(80, withTiming(0, { duration: 140 })),
     );
 
     // 실제 동작

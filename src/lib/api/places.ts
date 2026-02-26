@@ -41,6 +41,25 @@ export async function fetchMyNewSavedPlaces(params: {
   });
 }
 
+/** /new 저장한 장소 최신순 */
+export async function fetchHotPlaces(params: {
+  lat: number;
+  lng: number;
+}): Promise<Place[]> {
+  const { lat, lng } = params;
+
+  const res = await api8080.get<ApiPlace[]>("/popular", {
+    params: { lat, lng },
+  });
+
+  // console.log("/new API 응답:", res.data);
+
+  return mapApiPlacesToPlaces(res.data, {
+    currentLat: lat,
+    currentLng: lng,
+  });
+}
+
 /** /distance 거리순 */
 export async function fetchPlacesByDistance(params: {
   lat: number;
