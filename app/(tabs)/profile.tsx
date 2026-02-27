@@ -44,7 +44,7 @@ export default function ProfileScreen() {
   );
 
   // ✅ UI 매핑 (camelCase만)
-  const nickname = profile?.nickname ?? "닉네임 없음";
+  const nickname = profile?.spotNickname ?? "닉네임 없음";
   const userid = profile?.spotId ?? "-"; // 보통 spot_id를 아이디처럼 표시
   const bio = profile?.oneLine ?? "한 줄 소개를 추가해보세요";
 
