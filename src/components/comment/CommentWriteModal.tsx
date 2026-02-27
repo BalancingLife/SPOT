@@ -1,3 +1,4 @@
+// src/components/comment/CommentWriteModal.tsx
 import React, {
   forwardRef,
   useImperativeHandle,
@@ -23,6 +24,8 @@ import {
 
 import { TextStyles } from "../../styles/TextStyles";
 import { Colors } from "../../styles/Colors";
+import RatingModal from "./RatingModal";
+import CommentActionBar from "./CommentActionBar";
 
 export type CommentWriteModalRef = {
   open: () => void;
@@ -34,25 +37,28 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   const inputRef = useRef<TextInput>(null);
   const textRef = useRef("");
 
-  const [text, setText] = useState("");
+  // 서버로 보낼 값(일단 하단바에 필요한 것만)
+  const [visibility, setVisibility] = useState<"PUBLIC" | "FRIENDS">("PUBLIC");
+  const [rating, setRating] = useState<number | null>(null);
+
+  // 렌더 최소화: length만 state로
   const [length, setLength] = useState(0);
+
+  const [isRatingOpen, setIsRatingOpen] = useState(false);
 
   const onChangeText = useCallback((v: string) => {
     textRef.current = v;
-    // 길이 표시만 업데이트 (렌더 최소화)
     setLength(v.length);
   }, []);
 
-  // snap points (바텀시트 높이)
   const snapPoints = useMemo(() => ["40%", "85%"], []);
 
-  // 시트 열렸을 때 TextsInput에 자동 포커스, 키보드 자동 오픈
   const handleAnimate = useCallback((fromIndex: number, toIndex: number) => {
     if (toIndex === 1) {
       requestAnimationFrame(() => {
         setTimeout(() => {
           inputRef.current?.focus();
-        }, 60); // 기기/감성에 맞춰 0~120 사이에서 튜닝
+        }, 60);
       });
     }
     if (fromIndex === 1 && (toIndex === 0 || toIndex === -1)) {
@@ -65,32 +71,51 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   };
 
   const handleSubmit = () => {
-    const trimmed = text.trim();
+    const trimmed = textRef.current.trim();
     if (!trimmed) return;
 
-    // TODO: API 호출 or 상위 콜백으로 전달
-    console.log("submit comment:", trimmed);
+    const payload = {
+      content: trimmed,
+      rating, // 1~5 or null
+      // visibility는 나중에 붙이면 됨
+    };
 
-    setText("");
+    console.log("submit comment payload:", payload);
+
+    textRef.current = "";
+    setLength(0);
     bottomSheetRef.current?.dismiss();
   };
 
-  const isSubmitDisabled = text.trim().length === 0;
+  const isSubmitDisabled = textRef.current.trim().length === 0;
+  const visibilityLabel = visibility === "PUBLIC" ? "전체공개" : "친구만";
+  const visibilityIcon =
+    visibility === "PUBLIC"
+      ? require("@/assets/images/earth-logo.png")
+      : require("@/assets/images/friends-icon-orange.png");
 
-  // 바깥(어두운 영역) 탭 시 닫히는 백드롭
+  const onPressVisibility = () => {
+    // TODO: 여기서 팝오버/모달 열기
+    // 임시: 토글로 동작 확인
+    setVisibility((prev) => (prev === "PUBLIC" ? "FRIENDS" : "PUBLIC"));
+  };
+
+  const onPressRating = () => {
+    setIsRatingOpen(true);
+  };
+
   const renderBackdrop = useCallback(
     (backdropProps: any) => (
       <BottomSheetBackdrop
         {...backdropProps}
-        appearsOnIndex={0} // index 0에서 보이기 시작
-        disappearsOnIndex={-1} // 닫힐 때 사라짐
-        pressBehavior="close" // 배경 탭 → close
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        pressBehavior="close"
       />
     ),
     [],
   );
 
-  // 부모에서 .open(), .close()로 제어할 수 있게 expose
   useImperativeHandle(ref, () => ({
     open: () => {
       bottomSheetRef.current?.present();
@@ -102,10 +127,10 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
     <BottomSheetModal
       ref={bottomSheetRef}
       snapPoints={snapPoints}
-      enableDynamicSizing={false} // 콘텐츠 사이즈 만큼 동적 사이징 금지
+      enableDynamicSizing={false}
       index={1}
-      enablePanDownToClose // 아래로 스와이프 시 닫힘
-      backdropComponent={renderBackdrop} // 밖 탭 시 닫힘
+      enablePanDownToClose
+      backdropComponent={renderBackdrop}
       backgroundStyle={{ borderRadius: 24 }}
       onAnimate={handleAnimate}
       keyboardBehavior="extend"
@@ -114,7 +139,6 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
       <BottomSheetView style={styles.container}>
         {/* 헤더 */}
         <View style={styles.headerRow}>
-          {/* 나의 코멘트 가운데 정렬을 위한 더미 View */}
           <View>
             <Text style={styles.dummyText}>더미</Text>
           </View>
@@ -132,7 +156,6 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
           </View>
           <Text style={styles.nickname}>CoolDog</Text>
 
-          {/* 사진 추가 버튼 */}
           <Pressable style={styles.photoButton} hitSlop={8}>
             <Image
               source={require("@/assets/images/image-add.png")}
@@ -151,46 +174,29 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
             multiline
             defaultValue=""
             onChangeText={onChangeText}
-            maxLength={200} // 이건 iOS면 보통 괜찮음. 문제면 slice로 대체
+            maxLength={200}
           />
         </View>
 
-        {/* 하단 바 */}
-        <View style={styles.bottomRow}>
-          <Pressable style={styles.leftChip}>
-            <Image
-              source={require("@/assets/images/earth-logo.png")}
-              style={{ width: 20, height: 20 }}
-            />
-            <Text style={styles.leftChipText}>전체공개</Text>
-          </Pressable>
+        {/* 하단 바 (컴포넌트화) */}
+        <CommentActionBar
+          visibilityLabel={visibilityLabel}
+          visibilityIcon={visibilityIcon}
+          onPressVisibility={onPressVisibility}
+          ratingLabel={rating == null ? "별점" : `별점 ${rating}`}
+          onPressRating={onPressRating}
+          length={length}
+          maxLength={200}
+          submitDisabled={isSubmitDisabled}
+          onSubmit={handleSubmit}
+        />
 
-          <Pressable style={styles.leftChip}>
-            <Image
-              source={require("@/assets/images/star-orange.png")}
-              style={{ width: 20, height: 20 }}
-            />
-            <Text style={styles.leftChipText}>별점</Text>
-          </Pressable>
-
-          <View style={{ flex: 1 }} />
-
-          <Text style={styles.lengthText}>
-            {length}
-            <Text style={styles.lengthMaxText}> / 200</Text>
-          </Text>
-
-          <Pressable
-            style={[
-              styles.submitButton,
-              isSubmitDisabled && styles.submitButtonDisabled,
-            ]}
-            disabled={isSubmitDisabled}
-            onPress={handleSubmit}
-          >
-            <Text style={styles.submitButtonText}>게시</Text>
-          </Pressable>
-        </View>
+        <RatingModal
+          visible={isRatingOpen}
+          value={rating}
+          onClose={() => setIsRatingOpen(false)}
+          onSelect={(r) => setRating(r)}
+        />
       </BottomSheetView>
     </BottomSheetModal>
   );
@@ -256,7 +262,7 @@ const styles = StyleSheet.create({
     ...TextStyles.Regular14,
     flex: 1,
     paddingTop: 8,
-    paddingRight: 40, // 우측 사진 버튼 공간
+    paddingRight: 40,
     paddingBottom: 8,
     fontSize: 14,
     lineHeight: 20,
@@ -266,44 +272,5 @@ const styles = StyleSheet.create({
     right: 0,
     width: 24,
     height: 24,
-  },
-  bottomRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 8,
-  },
-  leftChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    marginRight: 8,
-  },
-  leftChipText: {
-    ...TextStyles.Medium14,
-    color: Colors.gray_800,
-  },
-  lengthText: {
-    ...TextStyles.Bold12,
-    paddingRight: 17,
-  },
-  lengthMaxText: {
-    ...TextStyles.Regular12,
-    color: Colors.gray_300,
-  },
-  submitButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
-    backgroundColor: "#FF6A00",
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#D3D3D3",
-  },
-  submitButtonText: {
-    ...TextStyles.Medium14,
-    color: Colors.white,
   },
 });
