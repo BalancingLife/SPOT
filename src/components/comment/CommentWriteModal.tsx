@@ -21,8 +21,8 @@ import {
   BottomSheetBackdrop,
 } from "@gorhom/bottom-sheet";
 
-import { TextStyles } from "../styles/TextStyles";
-import { Colors } from "../styles/Colors";
+import { TextStyles } from "../../styles/TextStyles";
+import { Colors } from "../../styles/Colors";
 
 export type CommentWriteModalRef = {
   open: () => void;

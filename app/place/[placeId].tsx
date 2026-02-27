@@ -17,10 +17,10 @@ import PlaceCard from "@/src/components/PlaceCard";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 import Pagination from "@/src/components/Pagination";
-import CommentWriteButton from "@/src/components/CommentWriteButton";
+import CommentWriteButton from "@/src/components/comment/CommentWriteButton";
 import CommentWriteModal, {
   CommentWriteModalRef,
-} from "@/src/components/CommentWriteModal";
+} from "@/src/components/comment/CommentWriteModal";
 
 import SpotButton from "@/src/components/SpotButton";
 
@@ -56,7 +56,7 @@ export default function PlaceDetailScreen() {
       require("@/assets/images/example.png"),
       require("@/assets/images/SPOT.png"),
     ],
-    []
+    [],
   );
 
   // 상단 캐러셀 이미지: /more → basePlace → fallback

@@ -31,7 +31,7 @@ import type { SelectedUser as StorySelectedUser } from "@/src/components/home/St
 
 import CommentBottomSheet, {
   type CommentBottomSheetHandle,
-} from "@/src/components/bottomSheet/CommentBottomSheet";
+} from "@/src/components/comment/CommentBottomSheet";
 
 import { fetchPlaceMore } from "@/src/lib/api/places";
 

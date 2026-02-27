@@ -17,10 +17,10 @@ import { Colors } from "@/src/styles/Colors";
 import Pagination from "@/src/components/Pagination";
 import { useState, useRef } from "react";
 import { SCREEN_WIDTH } from "@gorhom/bottom-sheet";
-import CommentWriteButton from "@/src/components/CommentWriteButton";
+import CommentWriteButton from "@/src/components/comment/CommentWriteButton";
 import CommentWriteModal, {
   CommentWriteModalRef,
-} from "@/src/components/CommentWriteModal";
+} from "@/src/components/comment/CommentWriteModal";
 
 export default function PlaceDetailScreen() {
   const { width: SCREEN_WIDTH } = Dimensions.get("window");
