@@ -183,7 +183,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
           visibilityLabel={visibilityLabel}
           visibilityIcon={visibilityIcon}
           onPressVisibility={onPressVisibility}
-          ratingLabel={rating == null ? "별점" : `별점 ${rating}`}
+          ratingLabel={rating == null ? "별점" : `${rating}`}
           onPressRating={onPressRating}
           length={length}
           maxLength={200}
