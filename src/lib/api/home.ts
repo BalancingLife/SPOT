@@ -1,6 +1,9 @@
 // src/lib/api/home.ts
 import { api8080 } from "@/src/lib/api/client";
-
+import {
+  type HomePlaceItem,
+  type HomeCommentItem,
+} from "@/src/components/home/types";
 /** -----------------------------
  *  MAP 탭 (/main, /main/me, /main/{userId})
  *  ----------------------------- */
@@ -76,28 +79,6 @@ export async function fetchHomeUser(params: {
  *  friend:  /main/place/{userId}
  *  (placeId param 제거했다고 가정)
  *  ----------------------------- */
-export type HomePlaceItem = {
-  id: number;
-  gid: string;
-  photos: string[];
-  name: string;
-  address: string;
-  rating: number;
-  ratingCount: number;
-  list: string; // restaurant | cafe | ...
-  savedCount: number;
-  searchCount: number;
-  score: number;
-  distance: number;
-  lat: number;
-  lng: number;
-  memPhotos: string[];
-  comment: string;
-  commentCount: number;
-  memId: number;
-  commentPhoto: string;
-  marked: boolean;
-};
 
 // /main/place
 export async function fetchHomePlacesMain(params: {
@@ -134,21 +115,6 @@ export async function fetchHomePlacesUser(params: {
  *  friend:  /main/comment/{userId}
  *  (placeId param 제거했다고 가정)
  *  ----------------------------- */
-export type HomeCommentItem = {
-  id: number;
-  placeId: number;
-  gid: string;
-  photos: string[];
-  name: string;
-  address: string;
-  score: number;
-  comment: string;
-  memId: number;
-  memEmail: string;
-  commentPhoto: string;
-  createdAt: string;
-  marked: boolean;
-};
 
 export async function fetchHomeCommentsMain(params: {
   lat: number;
