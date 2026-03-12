@@ -45,7 +45,6 @@ export const HomeHeader = ({
           </TouchableOpacity>
         </View>
       </View>
-
       {/* 스토리 */}
       <StoryList
         myNickname={"내 닉네임"}
@@ -54,6 +53,7 @@ export const HomeHeader = ({
         onSelectStory={onSelectStory}
       />
 
+      {/* UserCard */}
       {selectedUser ? (
         <View style={{ paddingRight: 16, paddingTop: 12 }}>
           <UserCard

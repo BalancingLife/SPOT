@@ -14,21 +14,18 @@ import {
 import { useFocusEffect } from "expo-router";
 
 // Map
-import {
-  NaverMapMarkerOverlay,
-  NaverMapView,
-} from "@mj-studio/react-native-naver-map";
+
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
 
 // Components
 import { HomeHeader } from "@/src/components/home/HomeHeader";
+import { MapTabSection } from "@/src/components/home/MapTabSection";
 import FilterBar from "@/src/components/bottomSheet/FilterBar";
 import CommentBottomSheet, {
   type CommentBottomSheetHandle,
 } from "@/src/components/comment/CommentBottomSheet";
 import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
-import MyLocationButton from "@/src/components/map/MyLocationButton";
-import UserLocationMarker from "@/src/components/map/UserLocationMarker";
+
 import OptionModal from "@/src/components/OptionModal";
 import PlaceCard from "@/src/components/PlaceCard";
 
@@ -73,7 +70,7 @@ type HomeScope =
   | { type: "friends" }
   | { type: "friend"; userId: number };
 
-type HomeMarker = {
+export type HomeMarker = {
   key: string;
   lat: number;
   lng: number;
@@ -95,7 +92,6 @@ export default function Home() {
 
   // 홈 화면 기본 상수
   const HOME_DISTANCE = 1000;
-  const HOME_PIN = require("@/assets/images/spot-icon-orange.png");
 
   // 홈 화면 범위(전체 / 나 / 친구 등) 상태
   const [scope, setScope] = useState<HomeScope>({ type: "friends" });
@@ -256,25 +252,38 @@ export default function Home() {
         : s.type === "me"
           ? "me"
           : `friend-${s.userId}`;
+
     const offset =
       s.type === "friends" ? 0.0012 : s.type === "me" ? 0.0022 : 0.0032;
+
+    const basePlaceId =
+      s.type === "friends" ? 10000 : s.type === "me" ? 20000 : 30000;
 
     return [
       {
         key: `dummy-${tag}-1`,
         lat: baseLat + offset,
         lng: baseLng + offset,
-        raw: { dummy: true, tag, idx: 1 },
+        raw: {
+          placeId: basePlaceId + 1,
+          dummy: true,
+          tag,
+          idx: 1,
+        },
       },
       {
         key: `dummy-${tag}-2`,
         lat: baseLat - offset,
         lng: baseLng - offset,
-        raw: { dummy: true, tag, idx: 2 },
+        raw: {
+          placeId: basePlaceId + 2,
+          dummy: true,
+          tag,
+          idx: 2,
+        },
       },
     ] as HomeMarker[];
   };
-
   const makeDummyPlaces = (s: HomeScope): HomePlaceItem[] => {
     const tag =
       s.type === "friends"
@@ -597,6 +606,7 @@ export default function Home() {
     }
   };
 
+  // HomeHeader
   const handleSelectStory = (user: StorySelectedUser | null) => {
     // 유저 정보가 없다면 전체 친구들 스코프
     if (!user) {
@@ -616,6 +626,15 @@ export default function Home() {
       setScope({ type: "friend", userId: user.userId });
     }
   };
+
+  // MapTabSection
+  const handlePressMapMarker = (placeId: number) => {
+    console.log("hihhihihi");
+    setSelectedPlaceId(placeId);
+    commentSheetRef.current?.open(0);
+    loadMore(placeId);
+  };
+
   /** -----------------------------
    *  UI
    *  ----------------------------- */
@@ -659,52 +678,13 @@ export default function Home() {
         <View style={styles.tabContent}>
           {/* MAP */}
           {activeTab === "map" && (
-            <View style={styles.mapContainer}>
-              <NaverMapView
-                ref={mapRef}
-                isShowLocationButton={false}
-                style={[styles.map, StyleSheet.absoluteFillObject]}
-                onInitialized={() => {
-                  mapRef.current?.setLocationTrackingMode("None" as any);
-                }}
-              >
-                <UserLocationMarker enableRotation />
-
-                {markers.map((m) => {
-                  const markerImage = m.imageUrl
-                    ? ({ httpUri: m.imageUrl } as const)
-                    : HOME_PIN;
-
-                  return (
-                    <NaverMapMarkerOverlay
-                      key={m.key}
-                      latitude={m.lat}
-                      longitude={m.lng}
-                      image={markerImage}
-                      width={44}
-                      height={44}
-                      anchor={{ x: 0.5, y: 1 }}
-                      onTap={() => {
-                        const pid = m?.raw?.placeId ?? m?.raw?.id ?? null;
-                        if (typeof pid !== "number") return;
-
-                        setSelectedPlaceId(pid);
-                        commentSheetRef.current?.open(0);
-                        loadMore(pid);
-                      }}
-                    />
-                  );
-                })}
-              </NaverMapView>
-
-              {!isCommentOpen && (
-                <MyLocationButton
-                  onPress={moveToCurrentLocation}
-                  bottom={40}
-                  left={15}
-                />
-              )}
-            </View>
+            <MapTabSection
+              mapRef={mapRef}
+              markers={markers}
+              isCommentOpen={isCommentOpen}
+              onPressCurrentLocation={moveToCurrentLocation}
+              onPressMarker={handlePressMapMarker}
+            />
           )}
 
           {/* PLACE */}
@@ -922,7 +902,7 @@ export default function Home() {
         </View>
       </View>
 
-      {/* ? */}
+      {/* 지도  탭 장소 누르면 나오는 코멘트 바텀 시트 */}
       <CommentBottomSheet
         ref={commentSheetRef}
         onOpen={() => setIsCommentOpen(true)}
@@ -968,9 +948,6 @@ const styles = StyleSheet.create({
   },
 
   tabContent: { flex: 1 },
-
-  mapContainer: { flex: 1, backgroundColor: Colors.gray_100 },
-  map: { flex: 1, zIndex: 0 },
 
   commentScroll: {
     flex: 1,
