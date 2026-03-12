@@ -1,61 +1,73 @@
-// app/(tabs)/index.tsx
+// React / React Native
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  View,
   Image,
   SafeAreaView,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import React, { useState, useMemo, useRef, useEffect } from "react";
-import { useFocusEffect, router } from "expo-router";
-import { useFriendsStore } from "@/src/stores/useFriendsStore";
-import { useAuthStore } from "@/src/stores/useAuthStore";
-import { Colors } from "@/src/styles/Colors";
-import { TextStyles } from "@/src/styles/TextStyles";
-import FilterBar from "@/src/components/bottomSheet/FilterBar";
-import PlaceCard from "@/src/components/PlaceCard";
-import OptionModal from "@/src/components/OptionModal";
+
+// Routing
+import { router, useFocusEffect } from "expo-router";
+
+// Map
 import {
-  NaverMapView,
   NaverMapMarkerOverlay,
+  NaverMapView,
 } from "@mj-studio/react-native-naver-map";
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
-import MyLocationButton from "@/src/components/map/MyLocationButton";
-import UserLocationMarker from "@/src/components/map/UserLocationMarker";
-import { useLocationStore } from "@/src/stores/useLocationStore";
-import StoryList from "@/src/components/home/StoryList";
-import UserCard from "@/src/components/UserCard";
-import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
 
+// Components
+import FilterBar from "@/src/components/bottomSheet/FilterBar";
 import CommentBottomSheet, {
   type CommentBottomSheetHandle,
 } from "@/src/components/comment/CommentBottomSheet";
+import StoryList from "@/src/components/home/StoryList";
+import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
+import MyLocationButton from "@/src/components/map/MyLocationButton";
+import UserLocationMarker from "@/src/components/map/UserLocationMarker";
+import OptionModal from "@/src/components/OptionModal";
+import PlaceCard from "@/src/components/PlaceCard";
+import UserCard from "@/src/components/UserCard";
 
-import { fetchPlaceMore } from "@/src/lib/api/places";
-
+// API
 import {
-  fetchHomeMain,
-  fetchHomeMe,
-  fetchHomeUser,
-  fetchHomePlacesMain,
-  fetchHomePlacesMe,
-  fetchHomePlacesUser,
   fetchHomeCommentsMain,
   fetchHomeCommentsMe,
   fetchHomeCommentsUser,
-  type HomePlaceItem,
+  fetchHomeMain,
+  fetchHomeMe,
+  fetchHomePlacesMain,
+  fetchHomePlacesMe,
+  fetchHomePlacesUser,
+  fetchHomeUser,
   type HomeCommentItem,
+  type HomePlaceItem,
 } from "@/src/lib/api/home";
+import { fetchPlaceMore } from "@/src/lib/api/places";
 
-const TABS = [
+// Stores
+import { useAuthStore } from "@/src/stores/useAuthStore";
+import { useFriendsStore } from "@/src/stores/useFriendsStore";
+import { useLocationStore } from "@/src/stores/useLocationStore";
+
+// Styles
+import { Colors } from "@/src/styles/Colors";
+import { TextStyles } from "@/src/styles/TextStyles";
+
+const HOME_TABS = [
   { key: "map", label: "지도" },
   { key: "place", label: "장소" },
   { key: "comment", label: "코멘트" },
 ] as const;
+// as const를 쓰면 배열/객체의 값이 바뀌지 않는 상수로 취급되고,
+// "map" 같은 값도 string이 아니라 리터럴 타입으로 정확히 추론된다.
 
-type TabKey = (typeof TABS)[number]["key"];
+type HomeTab = (typeof HOME_TABS)[number];
+type HomeTabKey = HomeTab["key"];
 
 type HomeScope =
   | { type: "friends" }
@@ -77,36 +89,39 @@ const dummyCardFallbackImgs = [
 ];
 
 export default function Home() {
+  // 선택된 유저 상태
   const [selectedUser, setSelectedUser] = useState<StorySelectedUser | null>(
     null,
   );
 
+  // 홈 화면 기본 상수
   const HOME_DISTANCE = 1000;
   const HOME_PIN = require("@/assets/images/spot-icon-orange.png");
-
-  const [scope, setScope] = React.useState<HomeScope>({ type: "friends" });
-
-  // map markers
-  const [markers, setMarkers] = React.useState<HomeMarker[]>([]);
-
-  // place list
-  const [placeList, setPlaceList] = React.useState<HomePlaceItem[]>([]);
-
-  // comment list
-  const [commentList, setCommentList] = React.useState<HomeCommentItem[]>([]);
-
-  const token = useAuthStore((s) => s.token);
-  const hasHydrated = useAuthStore((s) => s.hasHydrated);
-
   const DEFAULT_MY_IMAGE = require("@/assets/images/dog.png");
+
+  // 홈 화면 범위(전체 / 나 / 친구 등) 상태
+  const [scope, setScope] = useState<HomeScope>({ type: "friends" });
+
+  // 현재 활성 탭 상태
+  const [activeTab, setActiveTab] = useState<HomeTabKey>("map");
+
+  // 필터 모달 열림 상태
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
     null,
   );
+
+  // 필터 선택 상태
   const [category, setCategory] = useState<string[]>([]);
   const [sort, setSort] = useState<string[]>(["recent"]);
 
-  const [activeTab, setActiveTab] = useState<TabKey>("map");
+  // 지도 마커 데이터
+  const [markers, setMarkers] = useState<HomeMarker[]>([]);
 
+  // 장소/코멘트 리스트 데이터
+  const [placeList, setPlaceList] = useState<HomePlaceItem[]>([]);
+  const [commentList, setCommentList] = useState<HomeCommentItem[]>([]);
+
+  // 정렬 옵션은 고정값이므로 메모이제이션해 불필요한 재생성을 막는다.
   const sortOptions = useMemo(
     () => [
       { label: "최신순", value: "latest" },
@@ -115,6 +130,7 @@ export default function Home() {
     [],
   );
 
+  // 카테고리 옵션도 고정값이므로 한 번만 생성되도록 관리한다.
   const categoryOptions = useMemo(
     () => [
       { label: "음식점", value: "restaurant" },
@@ -129,39 +145,57 @@ export default function Home() {
     [],
   );
 
+  // 현재 선택된 정렬값에 대응하는 라벨을 계산한다.
   const sortLabel =
-    sortOptions.find((o) => o.value === sort[0])?.label ?? "최신순";
+    sortOptions.find((option) => option.value === sort[0])?.label ?? "최신순";
+
+  // 현재 선택된 카테고리값에 대응하는 라벨을 계산한다.
+  // 선택값이 없으면 기본 문구인 "업종"을 보여준다.
   const categoryLabel =
     category.length > 0
-      ? (categoryOptions.find((o) => o.value === category[0])?.label ?? "업종")
+      ? (categoryOptions.find((option) => option.value === category[0])
+          ?.label ?? "업종")
       : "업종";
 
+  // 모달에서는 "all" 같은 전체 옵션을 제외한 카테고리만 노출한다.
   const categoryOptionsForModal = useMemo(
-    () => categoryOptions.filter((o) => o.value !== "all"),
+    () => categoryOptions.filter((option) => option.value !== "all"),
     [categoryOptions],
   );
 
-  const mapRef = useRef<NaverMapViewRef>(null);
+  // 인증 관련 전역 상태
+  const token = useAuthStore((state) => state.token);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
-  const refreshOnce = useLocationStore((s) => s.refreshOnce);
-  const coords = useLocationStore((s) => s.coords);
+  // 위치 관련 전역 상태
+  const refreshOnce = useLocationStore((state) => state.refreshOnce);
+  const coords = useLocationStore((state) => state.coords);
 
-  // coords에서 lat/lng만 뽑아서 deps 깔끔하게
+  // friends 데이터와 로딩 함수
+  const friends = useFriendsStore((state) => state.friends);
+  const loadFriends = useFriendsStore((state) => state.loadFriends);
+
+  // coords 객체에서 위도/경도만 꺼내 deps나 분기에서 쓰기 쉽게 정리한다.
   const lat = (coords as any)?.latitude ?? (coords as any)?.lat;
   const lng = (coords as any)?.longitude ?? (coords as any)?.lng;
 
+  // 지도 ref
+  const mapRef = useRef<NaverMapViewRef>(null);
+
+  // 댓글 바텀시트 ref
+  const commentSheetRef = useRef<CommentBottomSheetHandle>(null);
+
+  // 지도 카메라 최초 이동 여부를 관리한다.
   const [didInitCamera, setDidInitCamera] = useState(false);
 
-  const friends = useFriendsStore((s) => s.friends);
-  const loadFriends = useFriendsStore((s) => s.loadFriends);
-
-  const commentSheetRef = useRef<CommentBottomSheetHandle>(null);
+  // 선택된 장소와 추가 데이터 상태
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
   const [morePlace, setMorePlace] = useState<any>(null);
   const [moreComments, setMoreComments] = useState<any[]>([]);
   const [moreLoading, setMoreLoading] = useState(false);
   const [moreError, setMoreError] = useState<string | null>(null);
 
+  // 댓글 바텀시트 열림 여부
   const [isCommentOpen, setIsCommentOpen] = useState(false);
 
   // 탭 진입 시 1회 위치 갱신
@@ -570,6 +604,7 @@ export default function Home() {
    *  ----------------------------- */
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* header */}
       <View style={styles.headerContainer}>
         {/* top bar */}
         <View style={styles.topBar}>
@@ -640,7 +675,7 @@ export default function Home() {
       <View style={styles.bodyContainer}>
         {/* tab bar */}
         <View style={styles.tabBar}>
-          {TABS.map((tab) => {
+          {HOME_TABS.map((tab) => {
             const isActive = activeTab === tab.key;
             return (
               <TouchableOpacity
@@ -930,6 +965,7 @@ export default function Home() {
         </View>
       </View>
 
+      {/* ? */}
       <CommentBottomSheet
         ref={commentSheetRef}
         onOpen={() => setIsCommentOpen(true)}
