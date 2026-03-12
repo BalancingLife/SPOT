@@ -1,5 +1,5 @@
 // React / React Native
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { SafeAreaView, StyleSheet, View } from "react-native";
 
 // Routing
@@ -14,6 +14,7 @@ import {
   HomeTabKey,
 } from "@/src/components/home/types";
 import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
+import { HOME_DISTANCE } from "@/src/components/home/constants";
 
 // Map
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
@@ -56,54 +57,40 @@ export default function Home() {
     null,
   );
 
-  // 홈 화면 기본 상수
-  const HOME_DISTANCE = 1000;
-
   // 홈 화면 범위(전체 / 나 / 친구 등) 상태
   const [scope, setScope] = useState<HomeScope>({ type: "friends" });
-
   // 현재 활성 탭 상태
   const [activeTab, setActiveTab] = useState<HomeTabKey>("map");
-
   // 지도 마커 데이터
   const [markers, setMarkers] = useState<HomeMarker[]>([]);
-
   // 장소/코멘트 리스트 데이터
   const [placeList, setPlaceList] = useState<HomePlaceItem[]>([]);
   const [commentList, setCommentList] = useState<HomeCommentItem[]>([]);
-
   // 인증 관련 전역 상태
   const token = useAuthStore((state) => state.token);
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
-
   // 위치 관련 전역 상태
   const refreshOnce = useLocationStore((state) => state.refreshOnce);
   const coords = useLocationStore((state) => state.coords);
-
   // friends 데이터와 로딩 함수
   const friends = useFriendsStore((state) => state.friends);
   const loadFriends = useFriendsStore((state) => state.loadFriends);
 
-  // coords 객체에서 위도/경도만 꺼내 deps나 분기에서 쓰기 쉽게 정리한다.
-  const lat = (coords as any)?.latitude ?? (coords as any)?.lat;
-  const lng = (coords as any)?.longitude ?? (coords as any)?.lng;
+  const lat = coords?.lat;
+  const lng = coords?.lng;
 
   // 지도 ref
   const mapRef = useRef<NaverMapViewRef>(null);
-
   // 댓글 바텀시트 ref
   const commentSheetRef = useRef<CommentBottomSheetHandle>(null);
-
   // 지도 카메라 최초 이동 여부를 관리한다.
   const [didInitCamera, setDidInitCamera] = useState(false);
-
   // 선택된 장소와 추가 데이터 상태
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
   const [morePlace, setMorePlace] = useState<any>(null);
   const [moreComments, setMoreComments] = useState<any[]>([]);
   const [moreLoading, setMoreLoading] = useState(false);
   const [moreError, setMoreError] = useState<string | null>(null);
-
   // 댓글 바텀시트 열림 여부
   const [isCommentOpen, setIsCommentOpen] = useState(false);
 
@@ -130,28 +117,12 @@ export default function Home() {
     setDidInitCamera(true);
   }, [activeTab, lat, lng, didInitCamera]);
 
-  const moveToCurrentLocation = async () => {
-    const next = await refreshOnce?.();
-    const c = next ?? coords ?? (useLocationStore as any).getState?.().coords;
-
-    if (!c) return;
-
-    const nextLat = (c as any).latitude ?? (c as any).lat;
-    const nextLng = (c as any).longitude ?? (c as any).lng;
-    if (nextLat == null || nextLng == null) return;
-
-    mapRef.current?.animateCameraTo?.({
-      latitude: nextLat,
-      longitude: nextLng,
-      zoom: 16,
-      duration: 400,
-    });
-  };
-
+  // 화면 다시 보일때마다, 친구 목록 불러오기
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       if (!hasHydrated) return;
       if (!token) return;
+
       loadFriends();
     }, [hasHydrated, token, loadFriends]),
   );
@@ -245,7 +216,6 @@ export default function Home() {
       marked: false,
     }));
   };
-
   const makeDummyComments = (s: HomeScope): HomeCommentItem[] => {
     const tag =
       s.type === "friends"
@@ -272,7 +242,7 @@ export default function Home() {
   };
 
   /** -----------------------------
-   *  MAP 탭: scope별 마커 데이터 로드 (+ 비면 더미 마커)
+   *  MAP 탭: scope별 장소 리스트 로드 (+ 비면 더미 리스트)
    *  ----------------------------- */
   useEffect(() => {
     if (activeTab !== "map") return;
@@ -282,8 +252,6 @@ export default function Home() {
 
     (async () => {
       try {
-        console.log("[home-map] fetch start:", { scope, lat, lng });
-
         const toMarkerKey = (prefix: string, p: any, fallbackIdx: number) => {
           const id = p?.placeId ?? p?.id ?? p?.gid ?? p?.num ?? fallbackIdx;
           return `${prefix}-${String(id)}`;
@@ -301,20 +269,16 @@ export default function Home() {
             key: toMarkerKey("main", p, idx),
             lat: p.lat,
             lng: p.lng,
-            imageUrl: p.photo, // ✅ S3 URL을 마커 이미지로
+            imageUrl: p.photo,
             raw: p,
           }));
 
+          // 더미 마커 생성
           if (next.length === 0) {
             const dummy = makeDummyMarkers(lat, lng, scope);
             setMarkers(dummy);
-            console.log(
-              "[home-map] /main ok: EMPTY -> dummy",
-              dummy.map((d) => d.key),
-            );
           } else {
             setMarkers(next);
-            console.log("[home-map] /main ok:", next.length);
           }
           return;
         }
@@ -331,21 +295,17 @@ export default function Home() {
             raw: p,
           }));
 
+          // 더미 생성
           if (next.length === 0) {
             const dummy = makeDummyMarkers(lat, lng, scope);
             setMarkers(dummy);
-            console.log(
-              "[home-map] /main/me ok: EMPTY -> dummy",
-              dummy.map((d) => d.key),
-            );
           } else {
             setMarkers(next);
-            console.log("[home-map] /main/me ok:", next.length);
           }
           return;
         }
 
-        // friend
+        // friends,me 둘다 아니면 'friend' 스코프
         const data = await fetchHomeUser({
           userId: scope.userId,
           lat,
@@ -366,16 +326,11 @@ export default function Home() {
         if (next.length === 0) {
           const dummy = makeDummyMarkers(lat, lng, scope);
           setMarkers(dummy);
-          console.log(
-            "[home-map] /main/{id} ok: EMPTY -> dummy",
-            dummy.map((d) => d.key),
-          );
         } else {
           setMarkers(next);
-          console.log("[home-map] /main/{id} ok:", next.length);
         }
       } catch (e: any) {
-        console.log("[home-map] fetch error:", {
+        console.log("홈 화면 지도 탭 데이터 fetch 오류:", {
           message: e?.message,
           status: e?.response?.status,
           data: e?.response?.data,
@@ -400,8 +355,6 @@ export default function Home() {
 
     (async () => {
       try {
-        console.log("[home-place] fetch start:", { scope, lat, lng });
-
         let list: HomePlaceItem[] = [];
 
         if (scope.type === "friends") {
@@ -414,19 +367,15 @@ export default function Home() {
 
         if (cancelled) return;
 
+        // 결과 비었으면 더미
         if (!list || list.length === 0) {
           const dummy = makeDummyPlaces(scope);
           setPlaceList(dummy);
-          console.log(
-            "[home-place] EMPTY -> dummy",
-            dummy.map((d) => d.name),
-          );
         } else {
           setPlaceList(list);
-          console.log("[home-place] ok:", list.length);
         }
       } catch (e: any) {
-        console.log("[home-place] fetch error:", {
+        console.log("PLACE 탭 fetch error:", {
           message: e?.message,
           status: e?.response?.status,
           data: e?.response?.data,
@@ -451,8 +400,6 @@ export default function Home() {
 
     (async () => {
       try {
-        console.log("[home-comment] fetch start:", { scope, lat, lng });
-
         let list: HomeCommentItem[] = [];
 
         if (scope.type === "friends") {
@@ -465,7 +412,7 @@ export default function Home() {
             lat,
             lng,
             page: 0,
-            size: 10,
+            size: 10, // TODO : 페이지 하드코딩 수정
           });
         }
 
@@ -474,13 +421,8 @@ export default function Home() {
         if (!list || list.length === 0) {
           const dummy = makeDummyComments(scope);
           setCommentList(dummy);
-          console.log(
-            "[home-comment] EMPTY -> dummy",
-            dummy.map((d) => d.comment),
-          );
         } else {
           setCommentList(list);
-          console.log("[home-comment] ok:", list.length);
         }
       } catch (e: any) {
         console.log("[home-comment] fetch error:", {
@@ -497,14 +439,15 @@ export default function Home() {
     };
   }, [activeTab, scope, lat, lng]);
 
-  const loadMore = async (placeId: number) => {
+  // 사용자 액션(마커 클릭)에 의해 실행되는 수동 상세 조회 함수
+  const loadPlaceDetail = async (placeId: number) => {
     if (lat == null || lng == null) return;
 
     setMoreLoading(true);
     setMoreError(null);
 
     try {
-      const data = await fetchPlaceMore({ lat, lng, placeId }); // ✅ 너가 준 함수 사용
+      const data = await fetchPlaceMore({ lat, lng, placeId });
       setMorePlace(data.places ?? null);
       setMoreComments(Array.isArray(data.comments) ? data.comments : []);
     } catch (e: any) {
@@ -538,16 +481,31 @@ export default function Home() {
   };
 
   // MapTabSection
+  const moveToCurrentLocation = async () => {
+    await refreshOnce?.();
+
+    const c = useLocationStore.getState().coords;
+    if (!c) return;
+
+    mapRef.current?.animateCameraTo?.({
+      latitude: c.lat,
+      longitude: c.lng,
+      zoom: 16,
+      duration: 400,
+    });
+  };
+
   const handlePressMapMarker = (placeId: number) => {
     setSelectedPlaceId(placeId);
     commentSheetRef.current?.open(0);
-    loadMore(placeId);
+    loadPlaceDetail(placeId);
   };
 
   // TabBar
   const handlePressTab = (tab: HomeTabKey) => {
     setActiveTab(tab);
   };
+
   /** -----------------------------
    *  UI
    *  ----------------------------- */
@@ -599,7 +557,7 @@ export default function Home() {
         loading={moreLoading}
         error={moreError}
         onRetry={() => {
-          if (selectedPlaceId != null) loadMore(selectedPlaceId);
+          if (selectedPlaceId != null) loadPlaceDetail(selectedPlaceId);
         }}
       />
     </SafeAreaView>

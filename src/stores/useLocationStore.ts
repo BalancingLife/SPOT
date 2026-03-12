@@ -2,11 +2,14 @@
 import { create } from "zustand";
 import * as Location from "expo-location";
 
-type Coords = { lat: number | null; lng: number | null };
+type Coords = {
+  lat: number;
+  lng: number;
+};
 type Permission = "unknown" | "granted" | "denied";
 
 type LocationState = {
-  coords: Coords;
+  coords: Coords | null;
   permission: Permission;
   setCoords: (c: Coords) => void;
   setPermission: (p: Permission) => void;
@@ -18,7 +21,7 @@ type LocationState = {
 };
 
 export const useLocationStore = create<LocationState>((set, get) => ({
-  coords: { lat: null, lng: null },
+  coords: null,
   permission: "unknown",
 
   setCoords: (c) => set({ coords: c }),
@@ -34,6 +37,7 @@ export const useLocationStore = create<LocationState>((set, get) => ({
     return next;
   },
 
+  // 현재 위치 가져와서 lat,lng에 저장하기
   refreshOnce: async () => {
     const p = await get().ensurePermission();
     if (p !== "granted") return;
