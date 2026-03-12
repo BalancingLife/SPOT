@@ -6,7 +6,7 @@ function attachInterceptors(client: AxiosInstance): AxiosInstance {
   client.interceptors.request.use((config) => {
     const token = useAuthStore.getState().token;
 
-    console.log("🔑 token:", token);
+    // console.log("🔑 token:", token);
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -17,7 +17,7 @@ function attachInterceptors(client: AxiosInstance): AxiosInstance {
     // ✅ baseURL + url + params 까지 합친 최종 URL
     const fullUrl = client.getUri(config);
 
-    console.log("👉 Authorization:", config.headers.Authorization);
+    // console.log("👉 Authorization:", config.headers.Authorization);
     console.log("🚀 API 요청:", method, fullUrl);
 
     // ✅ query params 확인
@@ -31,13 +31,16 @@ function attachInterceptors(client: AxiosInstance): AxiosInstance {
 
   client.interceptors.response.use(
     (res) => {
-      console.log("✅ API 응답:", res.config?.url, res.status);
-      console.log("📦 res.data:", res.data);
+      // console.log("✅ API 응답:", res.config?.url, res.status);
+      // console.log("📦 res.data:", res.data);
       return res;
     },
     (err) => {
-      console.log("❌ API 에러:", err.config?.url, err.response?.status);
-      console.log("📦 err.response.data:", err.response?.data);
+      // console.log("❌ API 에러:", err.config?.url, err.response?.status);
+      // console.log(
+      //   "📦 err.response.data:",
+      //   JSON.stringify(err.response?.data, null, 2),
+      // );
       return Promise.reject(err);
     },
   );

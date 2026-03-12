@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { View, Text, Pressable, StyleSheet, Image, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
@@ -18,6 +18,8 @@ import { useLocationStore } from "@/src/stores/useLocationStore";
 import { useAuthStore } from "@/src/stores/useAuthStore";
 import { useSearchStore } from "@/src/stores/useSearchStore";
 import { useSavedPlacesStore } from "@/src/stores/useSavedPlacesStore";
+import SavePlacesBottomSheet from "@/src/components/bottomSheet/SavePlacesBottomSheet";
+import { useAnalyzeResultStore } from "@/src/stores/useAnalyzeResultStore";
 
 import { fetchSearchDetails, fetchPlaceDetail } from "@/src/lib/api/search"; // ← 상세 함수 import
 import { fetchMyNewSavedPlaces, fetchMapPlaces } from "@/src/lib/api/places";
@@ -54,6 +56,30 @@ export default function Map() {
 
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
   const requestDetail = useSearchStore((s) => s.requestDetail);
+
+  const analyzeVisible = useAnalyzeResultStore((s) => s.visible);
+  const analyzePlaces = useAnalyzeResultStore((s) => s.places);
+  const clearAnalyze = useAnalyzeResultStore((s) => s.clear);
+  const closeAnalyze = useAnalyzeResultStore((s) => s.close);
+
+  const stableCoords = useMemo(() => {
+    if (coords.lat == null || coords.lng == null) {
+      return { lat: null, lng: null };
+    }
+
+    return {
+      lat: Number(coords.lat.toFixed(4)),
+      lng: Number(coords.lng.toFixed(4)),
+    };
+  }, [coords.lat, coords.lng]);
+
+  const lastSavedPlacesKeyRef = useRef<string | null>(null);
+  const lastMapPlacesKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    console.log("✅✅[map] analyzeVisible:", analyzeVisible);
+    console.log("✅✅[map] analyzePlaces length:", analyzePlaces.length);
+  }, [analyzeVisible, analyzePlaces.length]);
 
   useEffect(() => {
     hydrate();
@@ -212,28 +238,47 @@ export default function Map() {
       let cancelled = false;
 
       (async () => {
-        // 1) 포커스 시점에 위치부터 확보
-        await refreshOnce(); // <- 너 store/훅에 있는 위치 갱신 함수
+        await refreshOnce();
 
         if (cancelled) return;
 
-        // 2) 최신 coords로 saved 로드 (클로저 coords 쓰지 말고 getState로 최신 읽기)
-        const { coords } = useLocationStore.getState(); // <- 너가 쓰는 store 기준으로
+        const { coords } = useLocationStore.getState();
         if (coords.lat == null || coords.lng == null) return;
+
+        const roundedLat = Number(coords.lat.toFixed(4));
+        const roundedLng = Number(coords.lng.toFixed(4));
+        const requestKey = `${roundedLat},${roundedLng}`;
+
+        if (lastSavedPlacesKeyRef.current === requestKey) {
+          console.log("[map] /new skip - same coords:", requestKey);
+          return;
+        }
+
+        lastSavedPlacesKeyRef.current = requestKey;
 
         setSavedLoading(true);
         setSavedError(null);
 
         try {
+          console.log("[map] /new fetch start:", requestKey);
+
           const list = await fetchMyNewSavedPlaces({
-            lat: coords.lat,
-            lng: coords.lng,
+            lat: roundedLat,
+            lng: roundedLng,
           });
-          if (!cancelled) setSavedList(list);
+
+          if (!cancelled) {
+            setSavedList(list);
+          }
         } catch (e: any) {
-          if (!cancelled) setSavedError(e?.message ?? "failed to load");
+          if (!cancelled) {
+            setSavedError(e?.message ?? "failed to load");
+            lastSavedPlacesKeyRef.current = null;
+          }
         } finally {
-          if (!cancelled) setSavedLoading(false);
+          if (!cancelled) {
+            setSavedLoading(false);
+          }
         }
       })();
 
@@ -245,20 +290,32 @@ export default function Map() {
   // /main/map 호출
   useEffect(() => {
     async function loadMap() {
-      if (coords.lat == null || coords.lng == null) {
-        console.log("[map] 위치 정보 없음 → API 호출 스킵");
+      if (stableCoords.lat == null || stableCoords.lng == null) {
+        console.log("[map] 위치 정보 없음 → /main/map 스킵");
         return;
       }
 
+      const requestKey = `${stableCoords.lat},${stableCoords.lng},10`;
+
+      if (lastMapPlacesKeyRef.current === requestKey) {
+        console.log("[map] /main/map skip - same coords:", requestKey);
+        return;
+      }
+
+      lastMapPlacesKeyRef.current = requestKey;
+
       try {
+        console.log("[map] /main/map fetch start:", requestKey);
+
         const list = await fetchMapPlaces({
-          latitude: coords.lat,
-          longitude: coords.lng,
-          radius: 10, // 반경 10km
+          latitude: stableCoords.lat,
+          longitude: stableCoords.lng,
+          radius: 10,
         });
 
         setMyPlaces(list);
       } catch (err: any) {
+        lastMapPlacesKeyRef.current = null;
         console.log(
           "[/main/map] 에러:",
           err?.response?.status,
@@ -268,15 +325,15 @@ export default function Map() {
     }
 
     loadMap();
-  }, [coords.lat, coords.lng]);
+  }, [stableCoords.lat, stableCoords.lng]);
 
   //  바텀 시트 표시 규칙:
   // - idle: 기존 PlacesBottomSheetContainer
   // - loading/success/empty/error: SearchDetailsBottomSheet
   // - focused 가 있으면 SearchDetailBottomSheet(단일 상세)
-  const showPlacesSheet = phase === "idle" && !focused;
-  const showSearchListSheet = phase !== "idle" && !focused;
-  const showSearchDetailSheet = !!focused;
+  const showPlacesSheet = phase === "idle" && !focused && !analyzeVisible;
+  const showSearchListSheet = phase !== "idle" && !focused && !analyzeVisible;
+  const showSearchDetailSheet = !!focused && !analyzeVisible;
 
   const PIN_W = 52;
   const PIN_H = 58;
@@ -321,7 +378,6 @@ export default function Map() {
           );
         })}
       </NaverMapView>
-
       {/* 검색창 */}
       <Pressable
         style={styles.searchInput}
@@ -336,27 +392,46 @@ export default function Map() {
         </Text>
       </Pressable>
 
-      {/* 바텀시트 - 교대 렌더 */}
-      {/* 기본 default 바텀시트 */}
-      {showPlacesSheet && (
-        <PlacesBottomSheetContainer onPressMyLocation={moveToCurrentLocation} />
-      )}
-
-      {/* 검색 페이지에서 돋보기 클릭 or 엔터 눌렀을 시 */}
-      {showSearchListSheet && (
-        <SearchDetailsBottomSheet
-          onClose={() => reset()} // 검색 모드 종료 → Places 시트 복귀
-          onPressItem={handlePressSearchItem} // 지도 이동
-        />
-      )}
-
-      {showSearchDetailSheet && (
-        <SearchDetailBottomSheet
+      {analyzeVisible ? (
+        <SavePlacesBottomSheet
+          visible={analyzeVisible}
+          places={analyzePlaces}
+          maxSelect={10}
+          initialSelectedIds={[]}
           onClose={() => {
-            setSelectedPlaceId(null); //  마커 작아짐
-            unfocus(); // 상세 시트 조건(focused) 꺼짐
+            if (!useAnalyzeResultStore.getState().visible) return;
+            closeAnalyze();
+          }}
+          onChangeSelection={() => {}}
+          onConfirm={(ids) => {
+            console.log("✅ analyze 선택 확정 ids:", ids);
+            clearAnalyze();
           }}
         />
+      ) : (
+        <>
+          {showPlacesSheet && (
+            <PlacesBottomSheetContainer
+              onPressMyLocation={moveToCurrentLocation}
+            />
+          )}
+
+          {showSearchListSheet && (
+            <SearchDetailsBottomSheet
+              onClose={() => reset()}
+              onPressItem={handlePressSearchItem}
+            />
+          )}
+
+          {showSearchDetailSheet && (
+            <SearchDetailBottomSheet
+              onClose={() => {
+                setSelectedPlaceId(null);
+                unfocus();
+              }}
+            />
+          )}
+        </>
       )}
     </View>
   );

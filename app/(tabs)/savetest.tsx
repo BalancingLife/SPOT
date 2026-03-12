@@ -72,7 +72,7 @@ export default function Journey() {
         address: "서울 주소구 주소동 999-1",
       },
     ],
-    []
+    [],
   );
 
   return (

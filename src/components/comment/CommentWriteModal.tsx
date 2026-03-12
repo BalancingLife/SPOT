@@ -26,6 +26,7 @@ import { TextStyles } from "../../styles/TextStyles";
 import { Colors } from "../../styles/Colors";
 import RatingModal from "./RatingModal";
 import CommentActionBar from "./CommentActionBar";
+import { createComment } from "@/src/lib/api/comment";
 
 export type CommentWriteModalRef = {
   open: () => void;
@@ -36,6 +37,8 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const inputRef = useRef<TextInput>(null);
   const textRef = useRef("");
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 서버로 보낼 값(일단 하단바에 필요한 것만)
   const [visibility, setVisibility] = useState<"PUBLIC" | "FRIENDS">("PUBLIC");
@@ -70,24 +73,45 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
     bottomSheetRef.current?.dismiss();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const trimmed = textRef.current.trim();
     if (!trimmed) return;
+    if (isSubmitting) return;
 
-    const payload = {
-      content: trimmed,
-      rating, // 1~5 or null
-      // visibility는 나중에 붙이면 됨
-    };
+    try {
+      setIsSubmitting(true);
 
-    console.log("submit comment payload:", payload);
+      // TODO: placeId는 실제 화면에서 받아와야 함 (props로 받거나 store에서)
+      const placeId = 1; // 임시. 반드시 실제 place_id로 교체
 
-    textRef.current = "";
-    setLength(0);
-    bottomSheetRef.current?.dismiss();
+      const payload = {
+        place_id: placeId,
+        content: trimmed,
+        visibility, // "PUBLIC" | "FRIENDS"
+        rating, // number | null
+        files: null as string[] | null,
+      };
+
+      const data = await createComment(payload);
+      console.log("createComment success:", data);
+
+      // reset
+      textRef.current = "";
+      setLength(0);
+      // rating/visibility도 초기화하고 싶으면 여기서
+      // setRating(null);
+      // setVisibility("PUBLIC");
+
+      bottomSheetRef.current?.dismiss();
+    } catch (e: any) {
+      console.log("createComment error:", e?.response?.data ?? e?.message ?? e);
+      // TODO: Alert/toast
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const isSubmitDisabled = textRef.current.trim().length === 0;
+  const isSubmitDisabled = textRef.current.trim().length === 0 || isSubmitting;
   const visibilityLabel = visibility === "PUBLIC" ? "전체공개" : "친구만";
   const visibilityIcon =
     visibility === "PUBLIC"

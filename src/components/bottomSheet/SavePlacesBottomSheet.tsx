@@ -55,7 +55,7 @@ function SavePlacesBottomSheet({
 
   // 선택 상태 (Set)
   const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(initialSelectedIds)
+    () => new Set(initialSelectedIds),
   );
 
   // 외부 visible 변화에 따라 열기
@@ -95,7 +95,7 @@ function SavePlacesBottomSheet({
         return next;
       });
     },
-    [maxSelect]
+    [maxSelect],
   );
 
   const isAllChecked = selected.size > 0 && selected.size === places.length;
@@ -105,7 +105,7 @@ function SavePlacesBottomSheet({
     setSelected(
       isAllChecked
         ? new Set()
-        : new Set(places.map((p) => p.id).slice(0, maxSelect))
+        : new Set(places.map((p) => p.id).slice(0, maxSelect)),
     );
   }, [isAllChecked, places, maxSelect]);
 
@@ -131,7 +131,7 @@ function SavePlacesBottomSheet({
         </View>
       </BottomSheetFooter>
     ),
-    [insets.bottom, selectedIds.length, handleConfirm]
+    [insets.bottom, selectedIds.length, handleConfirm],
   );
 
   return (
