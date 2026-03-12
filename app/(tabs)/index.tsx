@@ -11,7 +11,7 @@ import {
 } from "react-native";
 
 // Routing
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 
 // Map
 import {
@@ -21,17 +21,16 @@ import {
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
 
 // Components
+import { HomeHeader } from "@/src/components/home/HomeHeader";
 import FilterBar from "@/src/components/bottomSheet/FilterBar";
 import CommentBottomSheet, {
   type CommentBottomSheetHandle,
 } from "@/src/components/comment/CommentBottomSheet";
-import StoryList from "@/src/components/home/StoryList";
 import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
 import MyLocationButton from "@/src/components/map/MyLocationButton";
 import UserLocationMarker from "@/src/components/map/UserLocationMarker";
 import OptionModal from "@/src/components/OptionModal";
 import PlaceCard from "@/src/components/PlaceCard";
-import UserCard from "@/src/components/UserCard";
 
 // API
 import {
@@ -70,8 +69,8 @@ type HomeTab = (typeof HOME_TABS)[number];
 type HomeTabKey = HomeTab["key"];
 
 type HomeScope =
-  | { type: "friends" }
   | { type: "me" }
+  | { type: "friends" }
   | { type: "friend"; userId: number };
 
 type HomeMarker = {
@@ -97,7 +96,6 @@ export default function Home() {
   // 홈 화면 기본 상수
   const HOME_DISTANCE = 1000;
   const HOME_PIN = require("@/assets/images/spot-icon-orange.png");
-  const DEFAULT_MY_IMAGE = require("@/assets/images/dog.png");
 
   // 홈 화면 범위(전체 / 나 / 친구 등) 상태
   const [scope, setScope] = useState<HomeScope>({ type: "friends" });
@@ -599,77 +597,36 @@ export default function Home() {
     }
   };
 
+  const handleSelectStory = (user: StorySelectedUser | null) => {
+    // 유저 정보가 없다면 전체 친구들 스코프
+    if (!user) {
+      setSelectedUser(null);
+      setScope({ type: "friends" });
+      return;
+    }
+
+    setSelectedUser(user);
+
+    if (user.scope === "me") {
+      setScope({ type: "me" });
+      return;
+    }
+
+    if (user.scope === "friend" && typeof user.userId === "number") {
+      setScope({ type: "friend", userId: user.userId });
+    }
+  };
   /** -----------------------------
    *  UI
    *  ----------------------------- */
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* header */}
-      <View style={styles.headerContainer}>
-        {/* top bar */}
-        <View style={styles.topBar}>
-          <Image
-            source={require("@/assets/images/SPOT.png")}
-            style={styles.spotLogo}
-          />
-
-          <View style={styles.friendsIconContainer}>
-            <TouchableOpacity>
-              <Image
-                source={require("@/assets/images/friends-icon-black.png")}
-                style={styles.friendsIcon}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => router.push("/searchFriends")}>
-              <Image
-                source={require("@/assets/images/friends-add-icon-black.png")}
-                style={styles.friendsIcon}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* StoryList */}
-        <StoryList
-          myNickname={"내 닉네임"}
-          myAvatarSource={DEFAULT_MY_IMAGE}
-          friends={friends}
-          onPressItem={(u: StorySelectedUser) => {
-            setSelectedUser(u);
-
-            if (u.scope === "me") {
-              setScope({ type: "me" });
-              return;
-            }
-            if (u.scope === "friend" && typeof u.userId === "number") {
-              setScope({ type: "friend", userId: u.userId });
-            }
-          }}
-          onPressFriends={() => {
-            setSelectedUser(null);
-            setScope({ type: "friends" });
-          }}
-        />
-
-        {selectedUser ? (
-          <View style={{ paddingRight: 16, paddingTop: 12 }}>
-            <UserCard
-              variant="story"
-              profileImage={selectedUser.profileImage}
-              nickname={selectedUser.nickname}
-              userid={
-                selectedUser.scope === "friend"
-                  ? String(selectedUser.userId ?? "")
-                  : (selectedUser.email ?? "")
-              }
-              bio={selectedUser.bio ?? ""}
-              friendAvatars={[]}
-              friendCount={0}
-            />
-          </View>
-        ) : null}
-      </View>
+      <HomeHeader
+        friends={friends}
+        selectedUser={selectedUser}
+        onSelectStory={handleSelectStory}
+      />
 
       {/* body */}
       <View style={styles.bodyContainer}>

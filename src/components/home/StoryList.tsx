@@ -14,9 +14,9 @@ import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 
 type FriendStory = {
-  id: number; // ✅ friend_id -> id
+  id: number;
   nickname: string;
-  avatarUrl?: string | null; // ✅ profile_url -> avatarUrl
+  avatarUrl?: string | null;
   email?: string;
   comment?: string | null;
 };
@@ -34,8 +34,7 @@ type Props = {
   myNickname: string;
   myAvatarSource?: ImageSourcePropType;
   friends: FriendStory[];
-  onPressItem: (user: SelectedUser) => void;
-  onPressFriends: () => void;
+  onSelectStory: (user: SelectedUser | null) => void;
 };
 
 const friendsIcon = require("@/assets/images/friends-icon-black-filled.png");
@@ -67,8 +66,7 @@ export default function StoryList({
   myNickname,
   myAvatarSource,
   friends,
-  onPressItem,
-  onPressFriends,
+  onSelectStory,
 }: Props) {
   const items = useMemo<StoryItem[]>(() => {
     return [
@@ -131,10 +129,10 @@ export default function StoryList({
             style={styles.storyItem}
             onPress={() => {
               if (isFriends) {
-                onPressFriends();
+                onSelectStory(null);
                 return;
               }
-              if (isUserItem(item)) onPressItem(item.payload);
+              if (isUserItem(item)) onSelectStory(item.payload);
             }}
           >
             <View style={styles.storyAvatar}>
