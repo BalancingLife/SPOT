@@ -27,7 +27,6 @@ import CommentBottomSheet, {
 import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
 
 import OptionModal from "@/src/components/OptionModal";
-import PlaceCard from "@/src/components/PlaceCard";
 
 // API
 import {
@@ -53,6 +52,7 @@ import { useLocationStore } from "@/src/stores/useLocationStore";
 // Styles
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
+import { PlaceTabSection } from "@/src/components/home/PlaceTabSection";
 
 const HOME_TABS = [
   { key: "map", label: "지도" },
@@ -78,12 +78,6 @@ export type HomeMarker = {
   raw: any;
 };
 
-const dummyCardFallbackImgs = [
-  require("@/assets/images/example.png"),
-  require("@/assets/images/react-logo.png"),
-  require("@/assets/images/spot-icon-orange.png"),
-];
-
 export default function Home() {
   // 선택된 유저 상태
   const [selectedUser, setSelectedUser] = useState<StorySelectedUser | null>(
@@ -105,7 +99,6 @@ export default function Home() {
   );
 
   // 필터 선택 상태
-  const [category, setCategory] = useState<string[]>([]);
   const [sort, setSort] = useState<string[]>(["recent"]);
 
   // 지도 마커 데이터
@@ -124,38 +117,9 @@ export default function Home() {
     [],
   );
 
-  // 카테고리 옵션도 고정값이므로 한 번만 생성되도록 관리한다.
-  const categoryOptions = useMemo(
-    () => [
-      { label: "음식점", value: "restaurant" },
-      { label: "술집", value: "bar" },
-      { label: "전시회", value: "exhibition" },
-      { label: "카페", value: "cafe" },
-      { label: "디저트", value: "dessert" },
-      { label: "소품샵", value: "gift_shop" },
-      { label: "체험", value: "experience" },
-      { label: "옷가게", value: "clothing_store" },
-    ],
-    [],
-  );
-
   // 현재 선택된 정렬값에 대응하는 라벨을 계산한다.
   const sortLabel =
     sortOptions.find((option) => option.value === sort[0])?.label ?? "최신순";
-
-  // 현재 선택된 카테고리값에 대응하는 라벨을 계산한다.
-  // 선택값이 없으면 기본 문구인 "업종"을 보여준다.
-  const categoryLabel =
-    category.length > 0
-      ? (categoryOptions.find((option) => option.value === category[0])
-          ?.label ?? "업종")
-      : "업종";
-
-  // 모달에서는 "all" 같은 전체 옵션을 제외한 카테고리만 노출한다.
-  const categoryOptionsForModal = useMemo(
-    () => categoryOptions.filter((option) => option.value !== "all"),
-    [categoryOptions],
-  );
 
   // 인증 관련 전역 상태
   const token = useAuthStore((state) => state.token);
@@ -688,80 +652,7 @@ export default function Home() {
           )}
 
           {/* PLACE */}
-          {activeTab === "place" && (
-            <View style={{ flex: 1 }}>
-              <FilterBar
-                sortLabel={sortLabel}
-                categoryLabel={categoryLabel}
-                onPressSort={() => setOpened("sort")}
-                onPressCategory={() => setOpened("category")}
-                showSaveType={false}
-              />
-
-              <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{ paddingHorizontal: 16 }}
-                showsVerticalScrollIndicator={false}
-              >
-                {placeList.map((p) => {
-                  const imgs =
-                    Array.isArray(p.photos) && p.photos.length > 0
-                      ? p.photos.map((u) => ({ uri: u }))
-                      : dummyCardFallbackImgs;
-
-                  const savedUsers =
-                    Array.isArray(p.memPhotos) && p.memPhotos.length > 0
-                      ? p.memPhotos.slice(0, 3).map((u) => ({ uri: u }))
-                      : undefined;
-
-                  return (
-                    <PlaceCard
-                      key={String(p.id)}
-                      name={p.name}
-                      category={p.list}
-                      address={p.address}
-                      images={imgs as any[]}
-                      savedUsers={savedUsers as any[]}
-                      savedCount={p.savedCount}
-                      showDirectionButton={true}
-                      rating={p.rating}
-                      reviewCount={p.ratingCount}
-                      showBookmark={true}
-                      isBookmarked={p.marked}
-                      distanceText={
-                        typeof p.distance === "number"
-                          ? p.distance >= 1000
-                            ? `${(p.distance / 1000).toFixed(1)}km`
-                            : `${Math.round(p.distance)}m`
-                          : undefined
-                      }
-                      onToggleBookmark={() =>
-                        console.log("[home-place] bookmark:", p.id)
-                      }
-                      onPress={() => console.log("[home-place] press:", p.id)}
-                    />
-                  );
-                })}
-              </ScrollView>
-
-              <OptionModal
-                visible={opened === "sort"}
-                title="정렬 기준"
-                options={sortOptions}
-                selected={sort}
-                onSelect={(next) => setSort(next)}
-                onClose={() => setOpened(null)}
-              />
-              <OptionModal
-                visible={opened === "category"}
-                title="업종"
-                options={categoryOptionsForModal}
-                selected={category}
-                onSelect={(next) => setCategory(next)}
-                onClose={() => setOpened(null)}
-              />
-            </View>
-          )}
+          {activeTab === "place" && <PlaceTabSection placeList={placeList} />}
 
           {/* COMMENT */}
           {activeTab === "comment" && (

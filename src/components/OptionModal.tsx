@@ -16,7 +16,7 @@ type Option = { label: string; value: string };
 interface Props {
   visible: boolean;
   title: string;
-  options: Option[];
+  options: readonly Option[];
   selected: string[]; // 항상 길이 1 배열로 사용
   onSelect: (next: string[]) => void;
   onClose: () => void;
