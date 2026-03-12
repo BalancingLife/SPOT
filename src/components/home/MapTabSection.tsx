@@ -9,7 +9,7 @@ import UserLocationMarker from "@/src/components/map/UserLocationMarker";
 import { Colors } from "@/src/styles/Colors";
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
 
-import { type HomeMarker } from "@/app/(tabs)";
+import { type HomeMarker } from "./types";
 
 type MapTabSectionProps = {
   mapRef: React.RefObject<NaverMapViewRef | null>;

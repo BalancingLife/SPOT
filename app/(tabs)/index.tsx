@@ -1,32 +1,32 @@
 // React / React Native
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Image,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { SafeAreaView, StyleSheet, View } from "react-native";
 
 // Routing
 import { useFocusEffect } from "expo-router";
 
-// Map
+// types and constants
+import {
+  type HomeScope,
+  type HomeCommentItem,
+  type HomePlaceItem,
+  type HomeMarker,
+  HomeTabKey,
+} from "@/src/components/home/types";
+import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
 
+// Map
 import type { NaverMapViewRef } from "@mj-studio/react-native-naver-map";
 
 // Components
 import { HomeHeader } from "@/src/components/home/HomeHeader";
 import { MapTabSection } from "@/src/components/home/MapTabSection";
-import FilterBar from "@/src/components/bottomSheet/FilterBar";
+import { PlaceTabSection } from "@/src/components/home/PlaceTabSection";
+import { CommentTabSection } from "@/src/components/home/CommentTabSection";
+import { TabBar } from "@/src/components/home/TabBar";
 import CommentBottomSheet, {
   type CommentBottomSheetHandle,
 } from "@/src/components/comment/CommentBottomSheet";
-import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
-
-import OptionModal from "@/src/components/OptionModal";
 
 // API
 import {
@@ -39,8 +39,6 @@ import {
   fetchHomePlacesMe,
   fetchHomePlacesUser,
   fetchHomeUser,
-  type HomeCommentItem,
-  type HomePlaceItem,
 } from "@/src/lib/api/home";
 import { fetchPlaceMore } from "@/src/lib/api/places";
 
@@ -51,32 +49,6 @@ import { useLocationStore } from "@/src/stores/useLocationStore";
 
 // Styles
 import { Colors } from "@/src/styles/Colors";
-import { TextStyles } from "@/src/styles/TextStyles";
-import { PlaceTabSection } from "@/src/components/home/PlaceTabSection";
-
-const HOME_TABS = [
-  { key: "map", label: "지도" },
-  { key: "place", label: "장소" },
-  { key: "comment", label: "코멘트" },
-] as const;
-// as const를 쓰면 배열/객체의 값이 바뀌지 않는 상수로 취급되고,
-// "map" 같은 값도 string이 아니라 리터럴 타입으로 정확히 추론된다.
-
-type HomeTab = (typeof HOME_TABS)[number];
-type HomeTabKey = HomeTab["key"];
-
-type HomeScope =
-  | { type: "me" }
-  | { type: "friends" }
-  | { type: "friend"; userId: number };
-
-export type HomeMarker = {
-  key: string;
-  lat: number;
-  lng: number;
-  imageUrl?: string;
-  raw: any;
-};
 
 export default function Home() {
   // 선택된 유저 상태
@@ -93,33 +65,12 @@ export default function Home() {
   // 현재 활성 탭 상태
   const [activeTab, setActiveTab] = useState<HomeTabKey>("map");
 
-  // 필터 모달 열림 상태
-  const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
-    null,
-  );
-
-  // 필터 선택 상태
-  const [sort, setSort] = useState<string[]>(["recent"]);
-
   // 지도 마커 데이터
   const [markers, setMarkers] = useState<HomeMarker[]>([]);
 
   // 장소/코멘트 리스트 데이터
   const [placeList, setPlaceList] = useState<HomePlaceItem[]>([]);
   const [commentList, setCommentList] = useState<HomeCommentItem[]>([]);
-
-  // 정렬 옵션은 고정값이므로 메모이제이션해 불필요한 재생성을 막는다.
-  const sortOptions = useMemo(
-    () => [
-      { label: "최신순", value: "latest" },
-      { label: "거리순", value: "distance" },
-    ],
-    [],
-  );
-
-  // 현재 선택된 정렬값에 대응하는 라벨을 계산한다.
-  const sortLabel =
-    sortOptions.find((option) => option.value === sort[0])?.label ?? "최신순";
 
   // 인증 관련 전역 상태
   const token = useAuthStore((state) => state.token);
@@ -318,11 +269,6 @@ export default function Home() {
       createdAt: new Date().toISOString(),
       marked: false,
     }));
-  };
-
-  const formatYMD = (iso: string) => {
-    // "2026-01-18T..." -> "2026.01.18"
-    return String(iso).slice(0, 10).replaceAll("-", ".");
   };
 
   /** -----------------------------
@@ -593,12 +539,15 @@ export default function Home() {
 
   // MapTabSection
   const handlePressMapMarker = (placeId: number) => {
-    console.log("hihhihihi");
     setSelectedPlaceId(placeId);
     commentSheetRef.current?.open(0);
     loadMore(placeId);
   };
 
+  // TabBar
+  const handlePressTab = (tab: HomeTabKey) => {
+    setActiveTab(tab);
+  };
   /** -----------------------------
    *  UI
    *  ----------------------------- */
@@ -614,29 +563,7 @@ export default function Home() {
       {/* body */}
       <View style={styles.bodyContainer}>
         {/* tab bar */}
-        <View style={styles.tabBar}>
-          {HOME_TABS.map((tab) => {
-            const isActive = activeTab === tab.key;
-            return (
-              <TouchableOpacity
-                key={tab.key}
-                style={styles.tabItem}
-                onPress={() => setActiveTab(tab.key)}
-                activeOpacity={0.8}
-              >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    isActive ? styles.tabLabelActive : styles.tabLabelInactive,
-                  ]}
-                >
-                  {tab.label}
-                </Text>
-                {isActive && <View style={styles.tabUnderline} />}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <TabBar activeTab={activeTab} onPressTab={handlePressTab} />
 
         {/* tab content */}
         <View style={styles.tabContent}>
@@ -656,139 +583,7 @@ export default function Home() {
 
           {/* COMMENT */}
           {activeTab === "comment" && (
-            <View style={{ flex: 1 }}>
-              <FilterBar
-                sortLabel={sortLabel}
-                categoryLabel="" // 안 쓸 거라 빈 값
-                onPressSort={() => setOpened("sort")}
-                showSaveType={false}
-                showCategory={false}
-              />
-
-              <ScrollView
-                style={styles.commentScroll}
-                contentContainerStyle={styles.commentContent}
-                showsVerticalScrollIndicator={false}
-              >
-                {commentList.map((c) => {
-                  const avatarUrl = `https://placehold.co/100x100/png?text=${encodeURIComponent(
-                    (c.memEmail ?? "U").slice(0, 1).toUpperCase(),
-                  )}`;
-
-                  const tag =
-                    scope.type === "friends"
-                      ? "FRIENDS"
-                      : scope.type === "me"
-                        ? "ME"
-                        : `U${scope.userId}`;
-
-                  const photoUrls =
-                    Array.isArray(c.photos) && c.photos.length > 0
-                      ? c.photos
-                      : [
-                          `https://placehold.co/300x300/png?text=${encodeURIComponent(`${tag}-1`)}`,
-                          `https://placehold.co/300x300/png?text=${encodeURIComponent(`${tag}-2`)}`,
-                          `https://placehold.co/300x300/png?text=${encodeURIComponent(`${tag}-3`)}`,
-                        ];
-
-                  const topPhotos = photoUrls.slice(0, 3);
-
-                  const hasCommentPhoto =
-                    typeof c.commentPhoto === "string" &&
-                    c.commentPhoto.length > 0;
-
-                  return (
-                    <View key={String(c.id)} style={styles.commentItem}>
-                      {/* 작성자 Row */}
-                      <View style={styles.commentHeaderRow}>
-                        <Image
-                          source={{ uri: avatarUrl }}
-                          style={styles.commentAvatar}
-                        />
-
-                        <View style={styles.commentHeaderTextCol}>
-                          <Text
-                            style={styles.commentNickname}
-                            numberOfLines={1}
-                          >
-                            {c.memEmail?.split("@")[0] ?? "사용자"}
-                          </Text>
-                          <Text style={styles.commentEmail} numberOfLines={1}>
-                            {c.memEmail ?? ""}
-                          </Text>
-                        </View>
-
-                        {/*  날짜 */}
-                        <Text style={styles.commentDate}>
-                          {formatYMD(String(c.createdAt))}
-                        </Text>
-                      </View>
-
-                      {/* 코멘트 */}
-                      <Text style={styles.commentBodyText}>{c.comment}</Text>
-
-                      {/* 장소 사진 3장 */}
-                      {topPhotos.length > 0 && (
-                        <View style={styles.commentPhotoRow}>
-                          {topPhotos.map((url, idx) => (
-                            <Image
-                              key={`${c.id}-p-${idx}`}
-                              source={{ uri: url }}
-                              style={[
-                                styles.commentThumb,
-                                idx !== topPhotos.length - 1 &&
-                                  styles.commentThumbMr,
-                              ]}
-                            />
-                          ))}
-                        </View>
-                      )}
-
-                      {/* commentPhoto (하단 큰 이미지) */}
-                      {hasCommentPhoto && (
-                        <Image
-                          source={{ uri: c.commentPhoto }}
-                          style={styles.commentBigPhoto}
-                          resizeMode="cover"
-                        />
-                      )}
-
-                      {/* 장소 카드 */}
-                      <View style={styles.commentPlaceCard}>
-                        <View style={styles.commentPlaceTextCol}>
-                          <Text
-                            style={styles.commentPlaceName}
-                            numberOfLines={1}
-                          >
-                            {c.name}
-                          </Text>
-                          <Text
-                            style={styles.commentPlaceAddr}
-                            numberOfLines={1}
-                          >
-                            {c.address}
-                          </Text>
-                        </View>
-
-                        {/* marked는 일단 텍스트로만 */}
-                        <Text style={styles.commentMarkedText}>
-                          {c.marked ? "저장됨" : ""}
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                })}
-              </ScrollView>
-
-              <OptionModal
-                visible={opened === "sort"}
-                title="정렬 기준"
-                options={sortOptions}
-                selected={sort}
-                onSelect={(next) => setSort(next)}
-                onClose={() => setOpened(null)}
-              />
-            </View>
+            <CommentTabSection scope={scope} commentList={commentList} />
           )}
         </View>
       </View>
@@ -827,124 +622,5 @@ const styles = StyleSheet.create({
 
   bodyContainer: { flex: 1, backgroundColor: Colors.white, paddingTop: 20 },
 
-  tabBar: { justifyContent: "space-around", flexDirection: "row" },
-  tabItem: { alignItems: "center", paddingHorizontal: 20 },
-  tabLabel: { ...TextStyles.SemiBold16, marginBottom: 4 },
-  tabLabelActive: { color: Colors.primary_500, fontWeight: "600" },
-  tabLabelInactive: { color: Colors.gray_300 },
-  tabUnderline: {
-    width: "230%",
-    height: 4,
-    backgroundColor: Colors.primary_500,
-  },
-
   tabContent: { flex: 1 },
-
-  commentScroll: {
-    flex: 1,
-  },
-  commentContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-
-  commentItem: {
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.gray_100,
-  },
-
-  commentHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-
-  commentAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 8,
-  },
-
-  commentHeaderTextCol: {
-    flex: 1,
-  },
-
-  commentNickname: {
-    ...TextStyles.Bold12,
-    color: Colors.gray_900,
-  },
-
-  commentEmail: {
-    ...TextStyles.Regular10,
-    color: Colors.gray_400,
-  },
-
-  commentDate: {
-    ...TextStyles.Regular10,
-    color: Colors.gray_300,
-    marginRight: 8,
-  },
-
-  commentBodyText: {
-    ...TextStyles.Regular14,
-    color: Colors.gray_800,
-    marginTop: 10,
-    lineHeight: 18,
-  },
-
-  commentPhotoRow: {
-    flexDirection: "row",
-    marginTop: 12,
-    marginBottom: 4,
-  },
-
-  commentThumb: {
-    flex: 1,
-    aspectRatio: 1,
-    borderRadius: 14,
-  },
-
-  commentThumbMr: {
-    marginRight: 10,
-  },
-
-  commentBigPhoto: {
-    width: "100%",
-    height: 160,
-    borderRadius: 14,
-    marginTop: 12,
-  },
-
-  commentPlaceCard: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 14,
-    backgroundColor: Colors.gray_100,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  commentPlaceTextCol: {
-    flex: 1,
-    paddingRight: 10,
-  },
-
-  commentPlaceName: {
-    ...TextStyles.SemiBold16,
-    color: Colors.gray_800,
-  },
-
-  commentPlaceAddr: {
-    ...TextStyles.Regular12,
-    color: Colors.gray_400,
-    marginTop: 4,
-  },
-
-  commentMarkedText: {
-    ...TextStyles.Regular12,
-    color: Colors.gray_400,
-  },
 });

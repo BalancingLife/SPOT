@@ -3,7 +3,7 @@ import { View, ScrollView } from "react-native";
 import FilterBar from "../bottomSheet/FilterBar";
 import PlaceCard from "../PlaceCard";
 import OptionModal from "../OptionModal";
-import { type HomePlaceItem } from "@/src/lib/api/home";
+import { type HomePlaceItem } from "./types";
 
 const SORT_OPTIONS = [
   { label: "최신순", value: "latest" },
