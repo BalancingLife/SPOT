@@ -29,7 +29,6 @@ export type SavePlaceItem = {
 type Props = {
   visible: boolean;
   places: SavePlaceItem[];
-  maxSelect?: number;
   initialSelectedIds?: string[];
   onClose: () => void;
   onChangeSelection?: (ids: string[]) => void;
@@ -41,7 +40,6 @@ const FOOTER_HEIGHT = 72;
 function SavePlacesBottomSheet({
   visible,
   places,
-  maxSelect = 10,
   initialSelectedIds = [],
   onClose,
   onChangeSelection,
@@ -57,7 +55,7 @@ function SavePlacesBottomSheet({
   );
 
   const onChangeSelectionRef = useRef(onChangeSelection);
-
+  const maxSelect = places.length;
   useEffect(() => {
     onChangeSelectionRef.current = onChangeSelection;
   }, [onChangeSelection]);

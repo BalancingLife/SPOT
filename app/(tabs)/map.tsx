@@ -197,7 +197,6 @@ export default function Map() {
         <SavePlacesBottomSheet
           visible={analyzeVisible}
           places={analyzePlaces}
-          maxSelect={10}
           initialSelectedIds={[]}
           onClose={() => {
             if (!useAnalyzeResultStore.getState().visible) return;
