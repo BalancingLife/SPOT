@@ -48,10 +48,10 @@ export default function SearchPlaceScreen() {
 
   // 컴포넌트 진입 시 좌표가 없으면 한 번 갱신 시도(선택)
   useEffect(() => {
-    if (coords.lat === null || coords.lng === null) {
+    if (!coords) {
       refreshOnce().catch(() => {});
     }
-  }, [coords.lat, coords.lng, refreshOnce]);
+  }, [coords, refreshOnce]);
 
   // ---- 디바운싱 + 최신요청만 처리 ----
   const debounceMs = 400;
@@ -85,20 +85,23 @@ export default function SearchPlaceScreen() {
 
       const seq = ++reqSeqRef.current;
       try {
-        const params: SearchPayload = {
-          keyword,
-          lat: coords.lat,
-          lng: coords.lng,
-        };
+        const latestCoords = useLocationStore.getState().coords;
 
-        const res = await api8080.get<SearchItem[]>("/search", {
-          params,
-          signal: controller.signal,
-        });
+        if (latestCoords) {
+          const params: SearchPayload = {
+            keyword,
+            lat: latestCoords.lat,
+            lng: latestCoords.lng,
+          };
 
-        if (seq !== reqSeqRef.current) return;
-        setResults(res.data ?? []);
-        console.log("search API 검색 결과:", res.data);
+          const res = await api8080.get<SearchItem[]>("/search", {
+            params,
+            signal: controller.signal,
+          });
+
+          if (seq !== reqSeqRef.current) return;
+          setResults(res.data ?? []);
+        }
       } catch (err: any) {
         if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") {
           return;
@@ -118,7 +121,7 @@ export default function SearchPlaceScreen() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [searchInputText, coords.lat, coords.lng]);
+  }, [searchInputText, coords]);
 
   useEffect(() => {
     return () => {
