@@ -1,6 +1,6 @@
 import { api8000 } from "./client";
 
-export type CommentVisibility = "PUBLIC" | "FRIENDS";
+export type CommentVisibility = "public" | "friends";
 
 export type CreateCommentRequest = {
   place_id: number;

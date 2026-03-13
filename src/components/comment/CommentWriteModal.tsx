@@ -41,7 +41,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 서버로 보낼 값(일단 하단바에 필요한 것만)
-  const [visibility, setVisibility] = useState<"public" | "FRIENDS">("public");
+  const [visibility, setVisibility] = useState<"public" | "friends">("public");
   const [rating, setRating] = useState<number | null>(null);
 
   // 렌더 최소화: length만 state로
@@ -117,7 +117,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   const onPressVisibility = () => {
     // TODO: 여기서 팝오버/모달 열기
     // 임시: 토글로 동작 확인
-    setVisibility((prev) => (prev === "public" ? "FRIENDS" : "public"));
+    setVisibility((prev) => (prev === "public" ? "friends" : "public"));
   };
 
   const onPressRating = () => {

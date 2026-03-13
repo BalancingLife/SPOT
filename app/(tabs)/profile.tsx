@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { View, Pressable, StyleSheet, Image } from "react-native";
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -6,46 +6,26 @@ import { useFocusEffect } from "@react-navigation/native";
 import ProfileLayout from "@/src/components/profile/Layout";
 import ProfileUserCard from "@/src/components/UserCard";
 import SpotButton from "@/src/components/SpotButton";
-
-import { getMyProfile, type MyProfile } from "@/src/lib/api/profile";
+import { useMyProfileStore } from "@/src/stores/useMyProfileStore";
 
 export default function ProfileScreen() {
   const defaultProfileImg = require("@/assets/images/profile-example.png");
   const fallbackFriendImg = require("@/assets/images/profile-icon-gray.png");
 
-  const [profile, setProfile] = useState<MyProfile | null>(null);
-  const [friendCount, setFriendCount] = useState(0);
-  const [recentFriendPhotos, setRecentFriendPhotos] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const loadProfile = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await getMyProfile();
-      if (!data) {
-        setProfile(null);
-        setFriendCount(0);
-        setRecentFriendPhotos([]);
-        return;
-      }
-
-      setProfile(data.profile);
-      setFriendCount(data.friendCount);
-      setRecentFriendPhotos(data.recentFriendPhotos);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const profile = useMyProfileStore((s) => s.profile);
+  const friendCount = useMyProfileStore((s) => s.friendCount);
+  const recentFriendPhotos = useMyProfileStore((s) => s.recentFriendPhotos);
+  const loading = useMyProfileStore((s) => s.loading);
+  const fetchMyProfile = useMyProfileStore((s) => s.fetchMyProfile);
 
   useFocusEffect(
     useCallback(() => {
-      loadProfile();
-    }, [loadProfile]),
+      fetchMyProfile();
+    }, [fetchMyProfile]),
   );
 
-  // ✅ UI 매핑 (camelCase만)
   const nickname = profile?.spotNickname ?? "닉네임 없음";
-  const userid = profile?.spotId ?? "-"; // 보통 spot_id를 아이디처럼 표시
+  const userid = profile?.spotId ?? "-";
   const bio = profile?.oneLine ?? "한 줄 소개를 추가해보세요";
 
   const profileImageSource =
@@ -53,7 +33,6 @@ export default function ProfileScreen() {
       ? { uri: profile.photo }
       : defaultProfileImg;
 
-  // ✅ recentFriendPhotos(원격 URL) -> ImageSource로 매핑
   const friendAvatars =
     recentFriendPhotos.length > 0
       ? recentFriendPhotos
@@ -63,7 +42,6 @@ export default function ProfileScreen() {
 
   return (
     <ProfileLayout>
-      {/* 헤더 */}
       <View style={styles.header}>
         <View style={styles.left}>
           <Image
@@ -71,6 +49,7 @@ export default function ProfileScreen() {
             source={require("@/assets/images/SPOT.png")}
           />
         </View>
+
         <View style={styles.right}>
           <Pressable onPress={() => router.push("/profile/notifications")}>
             <Image
@@ -88,7 +67,6 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* 프로필 유저 카드 */}
       <ProfileUserCard
         variant="profile"
         nickname={loading ? "불러오는 중..." : nickname}
@@ -99,7 +77,6 @@ export default function ProfileScreen() {
         profileImage={profileImageSource}
       />
 
-      {/* 버튼 */}
       <View style={styles.twoButtonsContainer}>
         <SpotButton
           onPress={() => router.push("/profile/edit")}
@@ -118,7 +95,6 @@ export default function ProfileScreen() {
         />
       </View>
 
-      {/* 광고 */}
       <View style={styles.advertise}>
         <Image
           style={{ width: "100%", height: 72 }}
@@ -149,5 +125,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 16,
   },
-  advertise: { alignItems: "center" },
+  advertise: {
+    alignItems: "center",
+  },
 });

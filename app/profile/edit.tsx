@@ -19,26 +19,27 @@ import SpotButton from "@/src/components/SpotButton";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 
-import { getMyProfile, updateMyProfile } from "@/src/lib/api/profile";
+import { updateMyProfile } from "@/src/lib/api/profile";
+import { useMyProfileStore } from "@/src/stores/useMyProfileStore";
 
 const NICKNAME_MAX = 15;
 const ID_MAX = 15;
 const INTRO_MAX = 30;
 
-const VALID_COLOR = "#2EBD5C"; // 초록
-const ERROR_COLOR = "#FF5A3C"; // 주황
+const VALID_COLOR = "#2EBD5C";
+const ERROR_COLOR = "#FF5A3C";
 
 export default function EditScreen() {
-  // Photo
-  const [avatarUri, setAvatarUri] = useState<string | null>(null);
-  const [avatarChanged, setAvatarChanged] = useState(false); // 새로 고른 로컬 이미지인지
-  const [avatarRemoved, setAvatarRemoved] = useState(false); // 삭제 눌렀는지(서버 스펙 없으면 UI만)
+  const profile = useMyProfileStore((s) => s.profile);
+  const fetchMyProfile = useMyProfileStore((s) => s.fetchMyProfile);
 
-  // Menu + Saving
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [avatarChanged, setAvatarChanged] = useState(false);
+  const [avatarRemoved, setAvatarRemoved] = useState(false);
+
   const [photoMenuVisible, setPhotoMenuVisible] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Fields
   const [nickname, setNickname] = useState("");
   const [userId, setUserId] = useState("");
   const [intro, setIntro] = useState("");
@@ -47,33 +48,23 @@ export default function EditScreen() {
   const [focusUserId, setFocusUserId] = useState(false);
   const [focusIntro, setFocusIntro] = useState(false);
 
-  // Prefill
   useEffect(() => {
-    let alive = true;
+    if (!profile) return;
 
-    (async () => {
-      const data = await getMyProfile();
-      if (!alive) return;
+    setNickname(profile.spotNickname ?? "");
+    setUserId(profile.spotId ?? "");
+    setIntro(profile.oneLine ?? "");
+    setAvatarUri(profile.photo ?? null);
 
-      const p = data?.profile;
-      if (!p) return;
+    setAvatarChanged(false);
+    setAvatarRemoved(false);
+  }, [profile]);
 
-      setNickname(p.spotNickname ?? "");
-      setUserId(p.spotId ?? "");
-      setIntro(p.oneLine ?? "");
+  useEffect(() => {
+    if (profile) return;
+    fetchMyProfile();
+  }, [profile, fetchMyProfile]);
 
-      if (p.photo) setAvatarUri(p.photo);
-
-      setAvatarChanged(false);
-      setAvatarRemoved(false);
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  // Photo Menu
   const openPhotoMenu = () => setPhotoMenuVisible(true);
   const closePhotoMenu = () => setPhotoMenuVisible(false);
 
@@ -83,6 +74,7 @@ export default function EditScreen() {
 
       const permission =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
+
       if (!permission.granted) {
         Alert.alert("갤러리 접근 권한을 허용해 주세요.");
         return;
@@ -107,8 +99,9 @@ export default function EditScreen() {
     try {
       closePhotoMenu();
 
-      const perm = await ImagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+      if (!permission.granted) {
         Alert.alert("카메라 접근 권한을 허용해 주세요.");
         return;
       }
@@ -134,7 +127,6 @@ export default function EditScreen() {
     closePhotoMenu();
   };
 
-  // ---- 닉네임 상태
   const nicknameLen = nickname.length;
   const nicknameStatus =
     nicknameLen === 0
@@ -142,20 +134,23 @@ export default function EditScreen() {
       : nicknameLen <= NICKNAME_MAX
         ? "valid"
         : "tooLong";
+
   const nicknameIsError = nicknameStatus === "tooLong";
+
   const nicknameHelperColor =
     nicknameStatus === "valid"
       ? VALID_COLOR
       : nicknameStatus === "tooLong"
         ? ERROR_COLOR
         : Colors.gray_400;
+
   const nicknameHelperText =
     nicknameStatus === "tooLong"
       ? "15자를 초과했어요"
       : "15자 이내로 입력해 주세요";
 
-  // ---- 아이디 상태
   const idLen = userId.length;
+
   let idStatus:
     | "empty"
     | "valid"
@@ -206,17 +201,19 @@ export default function EditScreen() {
             ? "영문과 숫자를 모두 포함해야 해요"
             : "영문자와 숫자 조합으로 4-15자 입력해 주세요";
 
-  // ---- 한 줄 소개 상태
   const introLen = intro.length;
   const introStatus =
     introLen === 0 ? "empty" : introLen <= INTRO_MAX ? "valid" : "tooLong";
+
   const introIsError = introStatus === "tooLong";
+
   const introHelperColor =
     introStatus === "valid"
       ? VALID_COLOR
       : introStatus === "tooLong"
         ? ERROR_COLOR
         : Colors.gray_400;
+
   const introHelperText =
     introStatus === "tooLong"
       ? "30자를 초과했어요"
@@ -234,13 +231,13 @@ export default function EditScreen() {
     const spotId = userId.trim();
     const oneLine = intro.trim();
 
-    // file은 "새로 고른 로컬 이미지"일 때만 첨부
     const shouldUploadFile =
       avatarChanged &&
       !!avatarUri &&
       (avatarUri.startsWith("file:") || avatarUri.startsWith("content:"));
 
     setSaving(true);
+
     try {
       const result = await updateMyProfile({
         spotId,
@@ -248,7 +245,7 @@ export default function EditScreen() {
         oneLine: oneLine.length ? oneLine : null,
         file: shouldUploadFile
           ? {
-              uri: avatarUri!,
+              uri: avatarUri,
               name: `profile-${Date.now()}.jpg`,
               type: "image/jpeg",
             }
@@ -256,22 +253,24 @@ export default function EditScreen() {
       });
 
       if (!result) {
-        Alert.alert("실패", "프로필 업데이트에 실패했어.");
+        Alert.alert("실패", "프로필 업데이트에 실패했습니다");
         return;
       }
 
+      await fetchMyProfile();
+
       if (avatarRemoved) {
-        Alert.alert(
-          "완료",
-          "프로필이 업데이트됐어.\n(사진 삭제는 서버 스펙이 없으면 실제 반영이 안 될 수 있어)",
-        );
-      } else {
-        Alert.alert("완료", "프로필이 업데이트됐어.");
+        Alert.alert("완료", "업데이트에 성공했습니다.", [
+          { text: "확인", onPress: () => router.back() },
+        ]);
+        return;
       }
 
-      router.back();
+      Alert.alert("완료", "업데이트에 성공했습니다.", [
+        { text: "확인", onPress: () => router.back() },
+      ]);
     } catch {
-      Alert.alert("실패", "프로필 업데이트에 실패했어.");
+      Alert.alert("실패", "프로필 업데이트에 실패했습니다.");
     } finally {
       setSaving(false);
     }
@@ -286,7 +285,6 @@ export default function EditScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          {/* 프로필 이미지 영역 */}
           <Pressable onPress={openPhotoMenu}>
             <View style={styles.avatarSection}>
               <View style={styles.avatarWrapper}>
@@ -303,6 +301,7 @@ export default function EditScreen() {
                     />
                   )}
                 </View>
+
                 <Pressable style={styles.cameraButton} onPress={openPhotoMenu}>
                   <Image
                     style={{ width: 24, height: 24 }}
@@ -325,12 +324,14 @@ export default function EditScreen() {
                 >
                   <Text style={styles.cameraMenuText}>갤러리에서 선택</Text>
                 </Pressable>
+
                 <Pressable
                   style={styles.cameraMenuItem}
                   onPress={handleTakePhoto}
                 >
                   <Text style={styles.cameraMenuText}>사진 찍기</Text>
                 </Pressable>
+
                 <Pressable
                   style={styles.cameraMenuItem}
                   onPress={handleRemovePhoto}
@@ -341,9 +342,7 @@ export default function EditScreen() {
             </Pressable>
           )}
 
-          {/* 폼 섹션 */}
           <View style={styles.sectionContainer}>
-            {/* 닉네임 */}
             <View
               style={[
                 styles.fieldBlock,
@@ -378,6 +377,7 @@ export default function EditScreen() {
                 placeholderTextColor={Colors.gray_400}
               />
             </View>
+
             <View style={styles.helperRow}>
               <Text style={[styles.helperIcon, { color: nicknameHelperColor }]}>
                 {nicknameIsError ? "✗" : "✓"}
@@ -387,7 +387,6 @@ export default function EditScreen() {
               </Text>
             </View>
 
-            {/* 아이디 */}
             <View
               style={[
                 styles.fieldBlock,
@@ -426,6 +425,7 @@ export default function EditScreen() {
                 </Pressable>
               </View>
             </View>
+
             <View style={styles.helperRow}>
               <Text style={[styles.helperIcon, { color: idHelperColor }]}>
                 {idIsError ? "✗" : "✓"}
@@ -435,7 +435,6 @@ export default function EditScreen() {
               </Text>
             </View>
 
-            {/* 한 줄 소개 */}
             <View
               style={[
                 styles.fieldBlock,
@@ -459,6 +458,7 @@ export default function EditScreen() {
                   {introLen}/{INTRO_MAX}
                 </Text>
               </View>
+
               <TextInput
                 style={styles.input}
                 value={intro}
@@ -470,6 +470,7 @@ export default function EditScreen() {
                 multiline
               />
             </View>
+
             <View style={styles.helperRow}>
               <Text style={[styles.helperIcon, { color: introHelperColor }]}>
                 {introIsError ? "✗" : "✓"}
@@ -533,7 +534,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
   cameraMenuOverlay: {
     zIndex: 10,
     position: "absolute",
@@ -568,9 +568,7 @@ const styles = StyleSheet.create({
     ...TextStyles.Medium14,
     color: Colors.gray_800,
   },
-
   sectionContainer: {},
-
   fieldBlock: {
     paddingVertical: 8,
     marginBottom: 7,
@@ -595,7 +593,6 @@ const styles = StyleSheet.create({
     ...TextStyles.Medium16,
     color: Colors.gray_800,
   },
-
   idRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -611,7 +608,6 @@ const styles = StyleSheet.create({
     ...TextStyles.Medium12,
     color: Colors.white,
   },
-
   helperRow: {
     flexDirection: "row",
     alignItems: "center",
