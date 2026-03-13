@@ -1,5 +1,5 @@
 // src/lib/api/profile.ts
-import { api8000 } from "@/src/lib/api/client";
+import { api8000, api8001 } from "@/src/lib/api/client";
 
 export type ApiEnvelope<T> = {
   success: boolean;
@@ -172,6 +172,26 @@ export async function updateMyProfile(
     });
 
     return res.data?.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export type CheckSpotIdResponse = {
+  can_use_id: boolean;
+  message: string;
+  status: string;
+};
+
+export async function checkSpotId(
+  spotId: string,
+): Promise<CheckSpotIdResponse | null> {
+  try {
+    const res = await api8001.get<CheckSpotIdResponse>("/profile/id_check", {
+      params: { spot_id: spotId },
+    });
+
+    return res.data ?? null;
   } catch {
     return null;
   }

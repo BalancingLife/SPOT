@@ -19,7 +19,7 @@ import SpotButton from "@/src/components/SpotButton";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 
-import { updateMyProfile } from "@/src/lib/api/profile";
+import { updateMyProfile, checkSpotId } from "@/src/lib/api/profile";
 import { useMyProfileStore } from "@/src/stores/useMyProfileStore";
 
 const NICKNAME_MAX = 15;
@@ -48,6 +48,10 @@ export default function EditScreen() {
   const [focusUserId, setFocusUserId] = useState(false);
   const [focusIntro, setFocusIntro] = useState(false);
 
+  const [idCheckStatus, setIdCheckStatus] = useState<
+    "idle" | "checking" | "available" | "duplicated" | "error"
+  >("idle");
+  const [lastCheckedId, setLastCheckedId] = useState("");
   useEffect(() => {
     if (!profile) return;
 
@@ -185,10 +189,12 @@ export default function EditScreen() {
 
   const idHelperColor =
     idStatus === "valid"
-      ? VALID_COLOR
-      : idIsError
-        ? ERROR_COLOR
-        : Colors.gray_400;
+      ? idCheckStatus === "available" || profile?.spotId === userId.trim()
+        ? VALID_COLOR
+        : idCheckStatus === "duplicated" || idCheckStatus === "error"
+          ? ERROR_COLOR
+          : Colors.gray_400
+      : ERROR_COLOR;
 
   const idHelperText =
     idStatus === "invalidChar"
@@ -199,7 +205,17 @@ export default function EditScreen() {
           ? "4자 이상 입력해 주세요"
           : idStatus === "invalidCombo"
             ? "영문과 숫자를 모두 포함해야 해요"
-            : "영문자와 숫자 조합으로 4-15자 입력해 주세요";
+            : profile?.spotId === userId.trim()
+              ? "현재 사용 중인 아이디예요"
+              : idCheckStatus === "checking"
+                ? "아이디 중복 여부를 확인하고 있어요"
+                : idCheckStatus === "available"
+                  ? "사용 가능한 ID입니다."
+                  : idCheckStatus === "duplicated"
+                    ? "이미 사용 중인 ID입니다."
+                    : idCheckStatus === "error"
+                      ? "중복확인에 실패했어요"
+                      : "중복확인을 진행해 주세요";
 
   const introLen = intro.length;
   const introStatus =
@@ -273,6 +289,48 @@ export default function EditScreen() {
       Alert.alert("실패", "프로필 업데이트에 실패했습니다.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCheckDuplicate = async () => {
+    const trimmedId = userId.trim();
+
+    if (idStatus !== "valid") {
+      Alert.alert("안내", "아이디 형식을 먼저 맞춰주세요.");
+      return;
+    }
+
+    if (profile?.spotId === trimmedId) {
+      setIdCheckStatus("available");
+      setLastCheckedId(trimmedId);
+      Alert.alert("안내", "현재 사용 중인 아이디입니다.");
+      return;
+    }
+
+    try {
+      setIdCheckStatus("checking");
+
+      const result = await checkSpotId(trimmedId);
+
+      if (!result) {
+        setIdCheckStatus("error");
+        Alert.alert("실패", "중복확인에 실패했어요.");
+        return;
+      }
+
+      setLastCheckedId(trimmedId);
+
+      if (result.can_use_id) {
+        setIdCheckStatus("available");
+        Alert.alert("완료", result.message || "사용 가능한 ID입니다.");
+        return;
+      }
+
+      setIdCheckStatus("duplicated");
+      Alert.alert("안내", result.message || "이미 사용 중인 ID입니다.");
+    } catch {
+      setIdCheckStatus("error");
+      Alert.alert("실패", "중복확인에 실패했어요.");
     }
   };
 
@@ -414,14 +472,26 @@ export default function EditScreen() {
                   value={userId}
                   onFocus={() => setFocusUserId(true)}
                   onBlur={() => setFocusUserId(false)}
-                  onChangeText={setUserId}
+                  onChangeText={(value) => {
+                    setUserId(value);
+                    setIdCheckStatus("idle");
+                    setLastCheckedId("");
+                  }}
                   placeholder="아이디를 입력해 주세요"
                   placeholderTextColor={Colors.gray_400}
                   autoCapitalize="none"
                 />
 
-                <Pressable style={styles.dupButton}>
-                  <Text style={styles.dupButtonText}>중복확인</Text>
+                <Pressable
+                  style={styles.dupButton}
+                  onPress={handleCheckDuplicate}
+                  disabled={
+                    idStatus !== "valid" || idCheckStatus === "checking"
+                  }
+                >
+                  <Text style={styles.dupButtonText}>
+                    {idCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+                  </Text>
                 </Pressable>
               </View>
             </View>

@@ -41,7 +41,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
 
   const [text, setText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [visibility, setVisibility] = useState<"public" | "friends">("public");
+  const [visibility, setVisibility] = useState<"public" | "friend">("public");
   const [rating, setRating] = useState<number | null>(null);
   const [length, setLength] = useState(0);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
@@ -130,7 +130,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
       : require("@/assets/images/friends-icon-orange.png");
 
   const onPressVisibility = () => {
-    setVisibility((prev) => (prev === "public" ? "friends" : "public"));
+    setVisibility((prev) => (prev === "public" ? "friend" : "public"));
   };
 
   const onPressRating = () => {
