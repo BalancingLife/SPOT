@@ -32,8 +32,8 @@ type Props = {
   maxSelect?: number;
   initialSelectedIds?: string[];
   onClose: () => void;
-  onChangeSelection?: (ids: string[]) => void; // 부모에게 선택 변경 알려줌
-  onConfirm?: (ids: string[]) => void; // 저장하기
+  onChangeSelection?: (ids: string[]) => void;
+  onConfirm?: (ids: string[]) => void;
 };
 
 const FOOTER_HEIGHT = 72;
@@ -50,39 +50,29 @@ function SavePlacesBottomSheet({
   const sheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
 
-  // 고정 스냅포인트 (문자/퍼센트 혼용 가능)
   const snapPoints = useMemo(() => ["6.7%", "50%", "75%"], []);
 
-  // 선택 상태 (Set)
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(initialSelectedIds),
   );
 
-  // 외부 visible 변화에 따라 열기
-  useEffect(() => {
-    if (visible) sheetRef.current?.snapToIndex(2);
-  }, [visible]);
-
-  // ===== 무한 업데이트 방지용: 콜백을 ref로 관리 =====
   const onChangeSelectionRef = useRef(onChangeSelection);
+
   useEffect(() => {
     onChangeSelectionRef.current = onChangeSelection;
   }, [onChangeSelection]);
 
-  // 선택 배열 (selected가 바뀔 때만 새로 만듦)
   const selectedIds = useMemo(() => Array.from(selected), [selected]);
 
-  // 선택이 바뀔 때만 부모에 알려주기
   useEffect(() => {
     onChangeSelectionRef.current?.(selectedIds);
   }, [selectedIds]);
-
-  // (선택) 부모가 initialSelectedIds를 갱신해왔을 때 동기화하고 싶다면:
 
   const toggleOne = useCallback(
     (id: string) => {
       setSelected((prev) => {
         const next = new Set(prev);
+
         if (next.has(id)) {
           next.delete(id);
         } else {
@@ -92,6 +82,7 @@ function SavePlacesBottomSheet({
           }
           next.add(id);
         }
+
         return next;
       });
     },
@@ -102,6 +93,7 @@ function SavePlacesBottomSheet({
 
   const toggleAll = useCallback(() => {
     if (!places.length) return;
+
     setSelected(
       isAllChecked
         ? new Set()
@@ -114,7 +106,6 @@ function SavePlacesBottomSheet({
     sheetRef.current?.close();
   }, [onConfirm, selectedIds]);
 
-  // footer (메모)
   const renderFooter = useCallback(
     (props: BottomSheetFooterProps) => (
       <BottomSheetFooter {...props} bottomInset={insets.bottom}>
@@ -137,25 +128,23 @@ function SavePlacesBottomSheet({
   return (
     <BottomSheet
       ref={sheetRef}
-      index={-1}
+      index={2}
       snapPoints={snapPoints}
       enablePanDownToClose
       onClose={onClose}
       backgroundStyle={{ backgroundColor: Colors.white }}
       handleIndicatorStyle={{ backgroundColor: Colors.gray_300 }}
       footerComponent={renderFooter}
-      enableDynamicSizing={false} // 내용 높이 때문에 스냅 초과 상승 방지
+      enableDynamicSizing={false}
     >
-      {/* 헤더 + 리스트를 한 덩어리로 (겹침 방지) */}
       <BottomSheetScrollView
-        stickyHeaderIndices={[0]} // 헤더 고정하려면 유지
+        stickyHeaderIndices={[0]}
         contentContainerStyle={{
           paddingHorizontal: 16,
-          paddingBottom: FOOTER_HEIGHT + insets.bottom, // 푸터 가림 방지
+          paddingBottom: FOOTER_HEIGHT + insets.bottom,
         }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* 헤더 (이제 스크롤 내부의 첫 뷰) */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>장소 선택하기</Text>
           <Text style={styles.headerSubTitle}>
@@ -180,9 +169,9 @@ function SavePlacesBottomSheet({
           </View>
         </View>
 
-        {/* 리스트 아이템들 */}
         {places.map((item) => {
           const checked = selected.has(item.id);
+
           return (
             <View key={item.id} style={styles.card}>
               <Image
@@ -202,10 +191,11 @@ function SavePlacesBottomSheet({
                   <Image
                     style={styles.addressIcon}
                     source={require("@/assets/images/marker-gray.png")}
-                  ></Image>
+                  />
                   <Text style={styles.itemAddress}>{item.address}</Text>
                 </View>
               </View>
+
               <Pressable onPress={() => toggleOne(item.id)}>
                 <View
                   style={[
@@ -228,7 +218,7 @@ export default memo(SavePlacesBottomSheet);
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: Colors.white, // sticky 시 밑 내용 비침 방지
+    backgroundColor: Colors.white,
     paddingVertical: 16,
   },
   headerTitle: {
@@ -238,7 +228,6 @@ const styles = StyleSheet.create({
   },
   headerSubTitle: {
     textAlign: "center",
-
     ...TextStyles.Regular12,
     color: Colors.gray_400,
     marginTop: 4,
@@ -254,7 +243,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 8,
   },
-
   card: {
     flexDirection: "row",
     alignItems: "center",

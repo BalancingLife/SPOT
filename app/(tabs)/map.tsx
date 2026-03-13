@@ -75,6 +75,11 @@ export default function Map() {
     })();
   }, [refreshOnce]);
 
+  useEffect(() => {
+    console.log("[Map] analyzeVisible:", analyzeVisible);
+    console.log("[Map] analyzePlaces:", analyzePlaces.length);
+  }, [analyzeVisible, analyzePlaces]);
+
   const moveToCurrentLocation = async () => {
     try {
       await refreshOnce();

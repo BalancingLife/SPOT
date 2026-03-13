@@ -35,13 +35,8 @@ function mapAnalyzeJsonToItems(json: string): SavePlaceItem[] {
   const parsed = JSON.parse(json) as AnalyzeApiResponse;
   const normalized = normalizeResults(parsed?.results);
 
-  const mapped = normalized
-    .filter((item) => {
-      const ok = !!item.name && !!item.address;
-      if (!ok) {
-      }
-      return ok;
-    })
+  return normalized
+    .filter((item) => !!item.name && !!item.address)
     .map((item, index) => {
       const lat = item.latitude ?? 0;
       const lng = item.longitude ?? 0;
@@ -58,8 +53,6 @@ function mapAnalyzeJsonToItems(json: string): SavePlaceItem[] {
         thumbUrl: item.photo,
       };
     });
-
-  return mapped;
 }
 
 export default function AnalyzeResultPage() {
@@ -86,7 +79,6 @@ export default function AnalyzeResultPage() {
           useAnalyzeResultStore.getState().openWithPlaces(items, {
             receivedAt: Date.now(),
           });
-        } else {
         }
 
         if (SharedStore?.clearLatestAnalyzeResult) {
@@ -94,8 +86,7 @@ export default function AnalyzeResultPage() {
         }
 
         router.replace("/(tabs)/map");
-      } catch (error) {
-        console.log("[analyze-result] 처리 실패:", error);
+      } catch {
         router.replace("/(tabs)/map");
       }
     };
