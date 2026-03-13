@@ -5,19 +5,44 @@ export type CommentVisibility = "PUBLIC" | "FRIENDS";
 export type CreateCommentRequest = {
   place_id: number;
   content: string;
-  visibility?: CommentVisibility; // optional이면 서버가 default 처리할 수도
+  visibility?: CommentVisibility;
   rating?: number | null;
-  files?: string[] | null;
+  files?: Array<{
+    uri: string;
+    name: string;
+    type: string;
+  }>;
 };
 
 export async function createComment(body: CreateCommentRequest) {
+  const formData = new FormData();
+
+  formData.append("place_id", String(body.place_id));
+  formData.append("content", body.content);
+
+  if (body.visibility) {
+    formData.append("visibility", body.visibility);
+  }
+
+  if (body.rating != null) {
+    formData.append("rating", String(body.rating));
+  }
+
+  if (body.files && body.files.length > 0) {
+    body.files.forEach((file) => {
+      formData.append("files", {
+        uri: file.uri,
+        name: file.name,
+        type: file.type,
+      } as any);
+    });
+  }
+
   const res = await api8000.request({
     url: "/comments",
     method: "POST",
-    data: body,
-    headers: {
-      "Content-Type": "application/json",
-    },
+    data: formData,
   });
+
   return res.data;
 }

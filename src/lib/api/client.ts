@@ -26,12 +26,12 @@ function attachInterceptors(client: AxiosInstance): AxiosInstance {
     },
     (err) => {
       const method = (err.config?.method ?? "GET").toUpperCase();
-      const fullUrl = err.config ? client.getUri(err.config) : "unknown url";
       const status = err.response?.status ?? "NO_STATUS";
       const message =
         err.response?.data?.message ?? err.message ?? "Unknown error";
 
-      console.error(`❌ [${method}] ${fullUrl} ${status} - ${message}`);
+      console.error(`❌ [${method}] ${err.config.url} ${err.status}`);
+      console.error(`❌ ${message}`);
 
       return Promise.reject(err);
     },

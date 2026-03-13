@@ -41,7 +41,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 서버로 보낼 값(일단 하단바에 필요한 것만)
-  const [visibility, setVisibility] = useState<"PUBLIC" | "FRIENDS">("PUBLIC");
+  const [visibility, setVisibility] = useState<"public" | "FRIENDS">("public");
   const [rating, setRating] = useState<number | null>(null);
 
   // 렌더 최소화: length만 state로
@@ -81,46 +81,43 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
     try {
       setIsSubmitting(true);
 
-      // TODO: placeId는 실제 화면에서 받아와야 함 (props로 받거나 store에서)
-      const placeId = 1; // 임시. 반드시 실제 place_id로 교체
+      const placeId = 1; // TODO: 실제 place_id로 교체
 
       const payload = {
         place_id: placeId,
         content: trimmed,
-        visibility, // "PUBLIC" | "FRIENDS"
-        rating, // number | null
-        files: null as string[] | null,
+        visibility,
+        ...(rating != null ? { rating } : {}),
       };
 
       const data = await createComment(payload);
 
-      // reset
+      console.log("createComment success:", data);
+
       textRef.current = "";
       setLength(0);
-      // rating/visibility도 초기화하고 싶으면 여기서
-      // setRating(null);
-      // setVisibility("PUBLIC");
+      setRating(null);
+      setVisibility("public");
 
       bottomSheetRef.current?.dismiss();
     } catch (e: any) {
       console.log("createComment error:", e?.response?.data ?? e?.message ?? e);
-      // TODO: Alert/toast
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const isSubmitDisabled = textRef.current.trim().length === 0 || isSubmitting;
-  const visibilityLabel = visibility === "PUBLIC" ? "전체공개" : "친구만";
+  const visibilityLabel = visibility === "public" ? "전체공개" : "친구만";
   const visibilityIcon =
-    visibility === "PUBLIC"
+    visibility === "public"
       ? require("@/assets/images/earth-logo.png")
       : require("@/assets/images/friends-icon-orange.png");
 
   const onPressVisibility = () => {
     // TODO: 여기서 팝오버/모달 열기
     // 임시: 토글로 동작 확인
-    setVisibility((prev) => (prev === "PUBLIC" ? "FRIENDS" : "PUBLIC"));
+    setVisibility((prev) => (prev === "public" ? "FRIENDS" : "public"));
   };
 
   const onPressRating = () => {
