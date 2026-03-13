@@ -93,7 +93,6 @@ export default function PlaceCard({
           <Pressable
             style={styles.bookmarkPressable}
             onPress={() => {
-              console.log("[PlaceCard] bookmark pressed");
               onToggleBookmark?.();
             }}
             hitSlop={8}

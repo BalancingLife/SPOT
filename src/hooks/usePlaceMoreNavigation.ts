@@ -5,8 +5,7 @@ import { usePlaceMoreStore } from "@/src/stores/usePlaceMoreStore";
 import type { Place } from "@/src/types/place";
 
 export function usePlaceMoreNavigation() {
-  const lat = useLocationStore((s) => s.coords.lat);
-  const lng = useLocationStore((s) => s.coords.lng);
+  const coords = useLocationStore((s) => s.coords);
   const setBasePlace = usePlaceMoreStore((s) => s.setBasePlace);
 
   const handlePressPlaceCard = (place: Place) => {
@@ -14,7 +13,7 @@ export function usePlaceMoreNavigation() {
       console.warn("[usePlaceMoreNavigation] placeId 없음");
       return;
     }
-    if (lat == null || lng == null) {
+    if (!coords) {
       console.warn("[usePlaceMoreNavigation] 좌표 준비 안 됨");
       return;
     }
@@ -26,8 +25,8 @@ export function usePlaceMoreNavigation() {
       pathname: "/place/[placeId]",
       params: {
         placeId: String(place.placeId),
-        lat: String(lat),
-        lng: String(lng),
+        lat: coords.lat,
+        lng: coords.lng,
       },
     });
   };

@@ -93,7 +93,6 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
       };
 
       const data = await createComment(payload);
-      console.log("createComment success:", data);
 
       // reset
       textRef.current = "";

@@ -31,7 +31,6 @@ import { useSearchPlaces } from "@/src/hooks/map/useSearchPlaces";
 import { useLoadSavedPlacesOnFocus } from "@/src/hooks/map/useLoadSavedPlacesOnFocus";
 
 import { getRoundedCoords } from "@/src/utils/coords";
-
 export default function Map() {
   const mapRef = useRef<NaverMapViewRef>(null);
 
@@ -201,7 +200,6 @@ export default function Map() {
           }}
           onChangeSelection={() => {}}
           onConfirm={(ids) => {
-            console.log("✅ analyze 선택 확정 ids:", ids);
             clearAnalyze();
           }}
         />

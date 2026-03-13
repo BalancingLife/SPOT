@@ -49,8 +49,6 @@ export default function RootLayout() {
 
     await SharedStore?.clearLatestAnalyzeResult?.();
 
-    console.log("[share] analyze result:", json);
-
     // 일단 map으로 이동만 (다음 스텝에서 json 파싱 + openWithPlaces 붙일거임)
     router.replace("/(tabs)/map");
   };
@@ -96,8 +94,6 @@ export default function RootLayout() {
       if (!json) return;
 
       await SharedStore?.clearLatestAnalyzeResult?.();
-
-      console.log("[share] analyze result (appstate):", json);
 
       router.replace("/(tabs)/map");
     });

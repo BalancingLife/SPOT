@@ -18,9 +18,9 @@ import { formatDistance } from "@/src/utils/format";
 export default function SavedPlacesTab() {
   const { handlePressPlaceCard } = usePlaceMoreNavigation();
 
-  const lat = useLocationStore((s) => s.coords.lat);
-  const lng = useLocationStore((s) => s.coords.lng);
-
+  const coords = useLocationStore((s) => s.coords);
+  const lat = coords?.lat;
+  const lng = coords?.lng;
   const items = useSavedPlacesStore((s) => s.savedList);
   const setSavedList = useSavedPlacesStore((s) => s.setSavedList);
   const loading = useSavedPlacesStore((s) => s.savedLoading);
