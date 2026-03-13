@@ -5,6 +5,8 @@ import { fetchMyNewSavedPlaces } from "@/src/lib/api/places";
 import { useLocationStore } from "@/src/stores/useLocationStore";
 import { useSavedPlacesStore } from "@/src/stores/useSavedPlacesStore";
 
+import { getRoundedCoords, createCoordsKey } from "@/src/utils/coords";
+
 export function useLoadSavedPlacesOnFocus() {
   const lastSavedPlacesKeyRef = useRef<string | null>(null);
 
@@ -26,9 +28,8 @@ export function useLoadSavedPlacesOnFocus() {
         const { coords } = useLocationStore.getState();
         if (!coords) return;
 
-        const roundedLat = Number(coords.lat.toFixed(4));
-        const roundedLng = Number(coords.lng.toFixed(4));
-        const requestKey = `${roundedLat},${roundedLng}`;
+        const { lat, lng } = getRoundedCoords(coords);
+        const requestKey = createCoordsKey(lat, lng);
 
         if (lastSavedPlacesKeyRef.current === requestKey) {
           return;
@@ -41,8 +42,8 @@ export function useLoadSavedPlacesOnFocus() {
 
         try {
           const list = await fetchMyNewSavedPlaces({
-            lat: roundedLat,
-            lng: roundedLng,
+            lat,
+            lng,
           });
 
           if (!cancelled) {

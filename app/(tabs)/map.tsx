@@ -30,6 +30,8 @@ import { useLoadMapPlaces } from "@/src/hooks/map/useLoadMapPlaces";
 import { useSearchPlaces } from "@/src/hooks/map/useSearchPlaces";
 import { useLoadSavedPlacesOnFocus } from "@/src/hooks/map/useLoadSavedPlacesOnFocus";
 
+import { getRoundedCoords } from "@/src/utils/coords";
+
 export default function Map() {
   const mapRef = useRef<NaverMapViewRef>(null);
 
@@ -41,14 +43,9 @@ export default function Map() {
   const coords = useLocationStore((s) => s.coords);
 
   const stableCoords = useMemo(() => {
-    if (!coords) {
-      return { lat: null, lng: null };
-    }
+    if (!coords) return { lat: null, lng: null };
 
-    return {
-      lat: Number(coords.lat.toFixed(4)),
-      lng: Number(coords.lng.toFixed(4)),
-    };
+    return getRoundedCoords(coords);
   }, [coords]);
 
   const { myPlaces } = useLoadMapPlaces(stableCoords);
