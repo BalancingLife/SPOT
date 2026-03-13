@@ -38,10 +38,9 @@ export type CommentWriteModalRef = {
 const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const inputRef = useRef<TextInput>(null);
-  const textRef = useRef("");
 
+  const [text, setText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [visibility, setVisibility] = useState<"public" | "friends">("public");
   const [rating, setRating] = useState<number | null>(null);
   const [length, setLength] = useState(0);
@@ -59,9 +58,19 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   const profilePhoto = profile?.photo ?? null;
   const initial = nickname.trim().charAt(0).toUpperCase() || "?";
 
-  const onChangeText = useCallback((v: string) => {
-    textRef.current = v;
-    setLength(v.length);
+  const onChangeText = useCallback((value: string) => {
+    setText(value);
+    setLength(value.length);
+  }, []);
+
+  const resetForm = useCallback(() => {
+    setText("");
+    setLength(0);
+    setRating(null);
+    setVisibility("public");
+    setIsRatingOpen(false);
+    setIsSubmitting(false);
+    Keyboard.dismiss();
   }, []);
 
   const snapPoints = useMemo(() => ["40%", "85%"], []);
@@ -85,7 +94,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   };
 
   const handleSubmit = async () => {
-    const trimmed = textRef.current.trim();
+    const trimmed = text.trim();
     if (!trimmed) return;
     if (isSubmitting) return;
 
@@ -105,11 +114,6 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
 
       console.log("createComment success:", data);
 
-      textRef.current = "";
-      setLength(0);
-      setRating(null);
-      setVisibility("public");
-
       bottomSheetRef.current?.dismiss();
     } catch (e: any) {
       console.log("createComment error:", e?.response?.data ?? e?.message ?? e);
@@ -118,7 +122,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
     }
   };
 
-  const isSubmitDisabled = textRef.current.trim().length === 0 || isSubmitting;
+  const isSubmitDisabled = text.trim().length === 0 || isSubmitting;
   const visibilityLabel = visibility === "public" ? "전체공개" : "친구만";
   const visibilityIcon =
     visibility === "public"
@@ -162,6 +166,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
       backdropComponent={renderBackdrop}
       backgroundStyle={{ borderRadius: 24 }}
       onAnimate={handleAnimate}
+      onDismiss={resetForm}
       keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
     >
@@ -207,7 +212,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
             placeholder="방문하신 곳은 어떠셨나요?"
             placeholderTextColor={Colors.gray_300}
             multiline
-            defaultValue=""
+            value={text}
             onChangeText={onChangeText}
             maxLength={200}
           />
