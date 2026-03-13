@@ -50,8 +50,6 @@ export default function Login() {
         await useAuthStore.getState().setAuth({ token, email, nickname });
         SharedStore?.setAccessToken?.(token);
 
-        console.log("✅ 토큰 AppGroup 저장 완료");
-        console.log("✅ 카카오 로그인 성공");
         console.log("🔗 복귀 URL:", result.url);
         console.log("🛠 token:", token, "email:", email, "nickname:", nickname);
 

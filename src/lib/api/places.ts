@@ -100,8 +100,6 @@ export async function fetchPlaceMore(params: {
     const res = await api8080.get<ApiPlaceMoreResponse>("/more", {
       params: { lat, lng, placeId },
     });
-    console.log("final url:", res.request?.responseURL);
-    console.log("[/more] api res.data:", res.data);
     return res.data;
   } catch (err: any) {
     console.error("[/more] ERROR", {

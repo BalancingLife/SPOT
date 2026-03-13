@@ -32,18 +32,13 @@ function normalizeResults(
 }
 
 function mapAnalyzeJsonToItems(json: string): SavePlaceItem[] {
-  console.log("[analyze-result] mapAnalyzeJsonToItems raw:", json);
-
   const parsed = JSON.parse(json) as AnalyzeApiResponse;
   const normalized = normalizeResults(parsed?.results);
-
-  console.log("[analyze-result] normalized results:", normalized);
 
   const mapped = normalized
     .filter((item) => {
       const ok = !!item.name && !!item.address;
       if (!ok) {
-        console.log("[analyze-result] 필터 제외 item:", item);
       }
       return ok;
     })
@@ -64,63 +59,40 @@ function mapAnalyzeJsonToItems(json: string): SavePlaceItem[] {
       };
     });
 
-  console.log("[analyze-result] mapped items:", mapped);
-
   return mapped;
 }
 
 export default function AnalyzeResultPage() {
   useEffect(() => {
     const run = async () => {
-      console.log("[analyze-result] 진입");
-
       try {
         const { SharedStore } = NativeModules;
 
-        console.log("[analyze-result] NativeModules.SharedStore:", SharedStore);
-
         if (!SharedStore?.getLatestAnalyzeResult) {
-          console.log(
-            "[analyze-result] SharedStore.getLatestAnalyzeResult 없음",
-          );
           router.replace("/(tabs)/map");
           return;
         }
 
         const json = await SharedStore.getLatestAnalyzeResult();
-        console.log("[analyze-result] getLatestAnalyzeResult 결과:", json);
 
         if (!json) {
-          console.log("[analyze-result] 저장된 analyze 결과 없음");
           router.replace("/(tabs)/map");
           return;
         }
 
         const items = mapAnalyzeJsonToItems(json);
-        console.log("[analyze-result] 최종 items 길이:", items.length);
 
         if (items.length > 0) {
-          console.log("[analyze-result] openWithPlaces 호출 직전");
           useAnalyzeResultStore.getState().openWithPlaces(items, {
             receivedAt: Date.now(),
           });
-
-          const stateAfterOpen = useAnalyzeResultStore.getState();
-          console.log("[analyze-result] store after open:", {
-            visible: stateAfterOpen.visible,
-            places: stateAfterOpen.places,
-            meta: stateAfterOpen.meta,
-          });
         } else {
-          console.log("[analyze-result] items가 0개라 store open 안 함");
         }
 
         if (SharedStore?.clearLatestAnalyzeResult) {
           await SharedStore.clearLatestAnalyzeResult();
-          console.log("[analyze-result] clearLatestAnalyzeResult 완료");
         }
 
-        console.log("[analyze-result] /(tabs)/map 으로 이동");
         router.replace("/(tabs)/map");
       } catch (error) {
         console.log("[analyze-result] 처리 실패:", error);

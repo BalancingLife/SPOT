@@ -87,7 +87,6 @@ export default function Journey() {
         onClose={() => setVisible(false)}
         onChangeSelection={(ids) => setSelected(ids)}
         onConfirm={(ids) => {
-          console.log("최종 선택:", ids);
           setSelected(ids);
           setVisible(false);
         }}
