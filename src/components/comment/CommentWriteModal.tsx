@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useState,
   useCallback,
+  useEffect,
 } from "react";
 import {
   View,
@@ -27,6 +28,7 @@ import { Colors } from "../../styles/Colors";
 import RatingModal from "./RatingModal";
 import CommentActionBar from "./CommentActionBar";
 import { createComment } from "@/src/lib/api/comment";
+import { useMyProfileStore } from "@/src/stores/useMyProfileStore";
 
 export type CommentWriteModalRef = {
   open: () => void;
@@ -40,14 +42,22 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 서버로 보낼 값(일단 하단바에 필요한 것만)
   const [visibility, setVisibility] = useState<"public" | "friends">("public");
   const [rating, setRating] = useState<number | null>(null);
-
-  // 렌더 최소화: length만 state로
   const [length, setLength] = useState(0);
-
   const [isRatingOpen, setIsRatingOpen] = useState(false);
+
+  const profile = useMyProfileStore((s) => s.profile);
+  const fetchMyProfile = useMyProfileStore((s) => s.fetchMyProfile);
+
+  useEffect(() => {
+    if (profile) return;
+    fetchMyProfile();
+  }, [profile, fetchMyProfile]);
+
+  const nickname = profile?.spotNickname ?? "닉네임 없음";
+  const profilePhoto = profile?.photo ?? null;
+  const initial = nickname.trim().charAt(0).toUpperCase() || "?";
 
   const onChangeText = useCallback((v: string) => {
     textRef.current = v;
@@ -64,6 +74,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
         }, 60);
       });
     }
+
     if (fromIndex === 1 && (toIndex === 0 || toIndex === -1)) {
       Keyboard.dismiss();
     }
@@ -115,8 +126,6 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
       : require("@/assets/images/friends-icon-orange.png");
 
   const onPressVisibility = () => {
-    // TODO: 여기서 팝오버/모달 열기
-    // 임시: 토글로 동작 확인
     setVisibility((prev) => (prev === "public" ? "friends" : "public"));
   };
 
@@ -157,24 +166,31 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
       keyboardBlurBehavior="restore"
     >
       <BottomSheetView style={styles.container}>
-        {/* 헤더 */}
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.dummyText}>더미</Text>
           </View>
 
           <Text style={styles.headerTitle}>나의 코멘트</Text>
+
           <Pressable onPress={handleClose} hitSlop={8}>
             <Text style={styles.headerCancel}>취소</Text>
           </Pressable>
         </View>
 
-        {/* 프로필 영역 */}
         <View style={styles.profileRow}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarInitial}>C</Text>
+            {profilePhoto ? (
+              <Image
+                source={{ uri: profilePhoto }}
+                style={styles.avatarImage}
+              />
+            ) : (
+              <Text style={styles.avatarInitial}>{initial}</Text>
+            )}
           </View>
-          <Text style={styles.nickname}>CoolDog</Text>
+
+          <Text style={styles.nickname}>{nickname}</Text>
 
           <Pressable style={styles.photoButton} hitSlop={8}>
             <Image
@@ -184,7 +200,6 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
           </Pressable>
         </View>
 
-        {/* 입력 영역 */}
         <View style={styles.inputArea}>
           <TextInput
             ref={inputRef}
@@ -198,7 +213,6 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
           />
         </View>
 
-        {/* 하단 바 (컴포넌트화) */}
         <CommentActionBar
           visibilityLabel={visibilityLabel}
           visibilityIcon={visibilityIcon}
@@ -264,6 +278,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 8,
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: 32,
+    height: 32,
   },
   avatarInitial: {
     fontSize: 14,

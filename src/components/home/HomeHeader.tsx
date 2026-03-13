@@ -4,6 +4,7 @@ import StoryList from "@/src/components/home/StoryList";
 import UserCard from "@/src/components/UserCard";
 
 import { Colors } from "@/src/styles/Colors";
+import { useMyProfileStore } from "@/src/stores/useMyProfileStore";
 
 import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
 
@@ -20,9 +21,18 @@ export const HomeHeader = ({
 }: HomeHeaderProps) => {
   const DEFAULT_MY_IMAGE = require("@/assets/images/dog.png");
 
+  const profile = useMyProfileStore((s) => s.profile);
+
+  const myNickname = profile?.spotNickname ?? "내 닉네임";
+  const myUserId = profile?.spotId ?? "";
+  const myBio = profile?.oneLine ?? "";
+  const myAvatarSource =
+    profile?.photo && profile.photo.length > 0
+      ? { uri: profile.photo }
+      : DEFAULT_MY_IMAGE;
+
   return (
     <View style={styles.headerContainer}>
-      {/* 로고, 친구 리스트, 추가 아이콘 */}
       <View style={styles.topBar}>
         <Image
           source={require("@/assets/images/SPOT.png")}
@@ -45,15 +55,16 @@ export const HomeHeader = ({
           </TouchableOpacity>
         </View>
       </View>
-      {/* 스토리 */}
+
       <StoryList
-        myNickname={"내 닉네임"}
-        myAvatarSource={DEFAULT_MY_IMAGE}
+        myNickname={myNickname}
+        myUserId={myUserId}
+        myBio={myBio}
+        myAvatarSource={myAvatarSource}
         friends={friends}
         onSelectStory={onSelectStory}
       />
 
-      {/* UserCard */}
       {selectedUser ? (
         <View style={{ paddingRight: 16, paddingTop: 12 }}>
           <UserCard
@@ -63,7 +74,7 @@ export const HomeHeader = ({
             userid={
               selectedUser.scope === "friend"
                 ? String(selectedUser.userId ?? "")
-                : (selectedUser.email ?? "")
+                : (selectedUser.userIdText ?? "")
             }
             bio={selectedUser.bio ?? ""}
             friendAvatars={[]}

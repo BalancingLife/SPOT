@@ -1,5 +1,3 @@
-// src/components/home/StoryList.tsx
-
 import React, { useMemo } from "react";
 import {
   ScrollView,
@@ -24,6 +22,7 @@ type FriendStory = {
 export type SelectedUser = {
   scope: "me" | "friend";
   userId?: number;
+  userIdText?: string;
   nickname: string;
   email?: string;
   bio: string;
@@ -32,6 +31,8 @@ export type SelectedUser = {
 
 type Props = {
   myNickname: string;
+  myUserId: string;
+  myBio: string;
   myAvatarSource?: ImageSourcePropType;
   friends: FriendStory[];
   onSelectStory: (user: SelectedUser | null) => void;
@@ -64,6 +65,8 @@ function isUserItem(item: StoryItem): item is UserItem {
 
 export default function StoryList({
   myNickname,
+  myUserId,
+  myBio,
   myAvatarSource,
   friends,
   onSelectStory,
@@ -83,9 +86,9 @@ export default function StoryList({
         kind: "user",
         payload: {
           scope: "me",
+          userIdText: myUserId,
           nickname: myNickname,
-          email: "example@naver.com",
-          bio: "내 소개글",
+          bio: myBio,
           profileImage: (myAvatarSource ??
             fallbackProfile) as ImageSourcePropType,
         },
@@ -111,7 +114,7 @@ export default function StoryList({
         };
       }),
     ];
-  }, [myNickname, myAvatarSource, friends]);
+  }, [myNickname, myUserId, myBio, myAvatarSource, friends]);
 
   return (
     <ScrollView
@@ -132,7 +135,10 @@ export default function StoryList({
                 onSelectStory(null);
                 return;
               }
-              if (isUserItem(item)) onSelectStory(item.payload);
+
+              if (isUserItem(item)) {
+                onSelectStory(item.payload);
+              }
             }}
           >
             <View style={styles.storyAvatar}>
