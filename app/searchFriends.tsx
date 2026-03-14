@@ -13,24 +13,16 @@ import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 import RecentFriendSearch from "@/src/components/friends/RecentFriendSearch";
 import FriendSearchResult from "@/src/components/friends/FriendSearchResult";
-import { api8080 } from "@/src/lib/api/client";
+import { searchFriends, type FriendSearchItem } from "@/src/lib/api/friends";
 
-// ✅ 타입은 너희 서버 스펙에 맞춰 나중에 조정
-export type FriendItem = {
-  id: number;
-  nickname: string;
-  userId: string; // 또는 username
-  profileImageUrl: string | null;
-};
+export type FriendItem = FriendSearchItem;
 
 export type RecentFriendItem = {
   id: string;
-  keyword: string; // 닉네임/아이디 검색 문자열
-  profileImageUrl?: string | null; // 있으면 프사칩
+  keyword: string;
+  profileImageUrl?: string | null;
 };
 
-// ✅ 최근 검색은 장소 store랑 비슷한 형태로 "가짜 구현"해둠
-// 나중에 useRecentFriendSearchStore로 교체해
 function useRecentFriendSearchMock() {
   const [items, setItems] = useState<RecentFriendItem[]>([
     { id: "1", keyword: "김하늘" },
@@ -42,7 +34,6 @@ function useRecentFriendSearchMock() {
 
   const fetch = useCallback(async () => {
     setLoading(true);
-    // TODO: 서버 연동 시 여기에서 불러오기
     setLoading(false);
   }, []);
 
@@ -92,7 +83,6 @@ export default function SearchFriendScreen() {
     fetchRecent();
   }, [fetchRecent]);
 
-  // ---- 디바운싱 + 최신요청만 처리 ----
   const debounceMs = 400;
   const timerRef = useRef<number | null>(null);
   const reqSeqRef = useRef(0);
@@ -100,7 +90,8 @@ export default function SearchFriendScreen() {
 
   useEffect(() => {
     const keyword = searchInputText.trim();
-    if (!keyword || keyword.length < 1) {
+
+    if (!keyword) {
       if (abortRef.current) {
         abortRef.current.abort();
         abortRef.current = null;
@@ -123,25 +114,27 @@ export default function SearchFriendScreen() {
       const seq = ++reqSeqRef.current;
 
       try {
-        // ✅ 너희 서버에 맞춰 엔드포인트/params만 바꾸면 됨
-        // 예: GET /friends/search?keyword=...
-        const res = await api8080.get<FriendItem[]>("/friends/search", {
-          params: { keyword },
-          signal: controller.signal,
-        });
+        const data = await searchFriends(keyword, controller.signal);
 
         if (seq !== reqSeqRef.current) return;
-        setResults(res.data ?? []);
+        setResults(data);
       } catch (err: any) {
-        if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED")
+        if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") {
           return;
+        }
+
         console.warn(
           "친구 검색 요청 에러:",
           err?.response?.status,
-          err?.response?.data ?? err.message,
+          err?.response?.data ?? err?.message,
         );
+
+        if (seq !== reqSeqRef.current) return;
+        setResults([]);
       } finally {
-        if (abortRef.current === controller) abortRef.current = null;
+        if (abortRef.current === controller) {
+          abortRef.current = null;
+        }
       }
     }, debounceMs);
 
@@ -160,7 +153,6 @@ export default function SearchFriendScreen() {
     const keyword = searchInputText.trim();
     if (!keyword) return;
 
-    // “엔터 눌렀을 때”도 최근검색에 저장하고 싶으면 여기서 add
     add({
       id: String(Date.now()),
       keyword,
@@ -169,18 +161,12 @@ export default function SearchFriendScreen() {
 
   const onSelectFriend = useCallback(
     (friend: FriendItem) => {
-      // ✅ 최근검색 저장
       add({
         id: String(Date.now()),
         keyword: friend.nickname || friend.userId,
         profileImageUrl: friend.profileImageUrl,
       });
 
-      // ✅ 동작은 너희 플로우에 맞게:
-      // 1) 친구 상세로 이동
-      // router.push(`/friend/${friend.id}`);
-
-      // 2) or 이전 화면으로 돌아가서 선택값 반영
       router.back();
     },
     [add],
@@ -188,7 +174,6 @@ export default function SearchFriendScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 상단 바 */}
       <View style={styles.header}>
         <View style={styles.inputWrap}>
           <Pressable onPress={() => submitAndSearch()}>
@@ -233,7 +218,6 @@ export default function SearchFriendScreen() {
         </Pressable>
       </View>
 
-      {/* 바디 */}
       <View style={styles.body}>
         {showRecent && (
           <RecentFriendSearch
@@ -251,10 +235,9 @@ export default function SearchFriendScreen() {
 
         {showResults && (
           <FriendSearchResult
-            data={results!}
+            data={results}
             onPressItem={(friend) => onSelectFriend(friend)}
             onPressAction={(friend) => {
-              // ✅ 오른쪽 버튼 액션(예: 친구요청) 자리
               onSelectFriend(friend);
             }}
           />
