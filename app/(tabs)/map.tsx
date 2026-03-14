@@ -24,6 +24,8 @@ import { useLocationStore } from "@/src/stores/useLocationStore";
 import { useSearchStore } from "@/src/stores/useSearchStore";
 
 import { fetchPlaceDetail } from "@/src/lib/api/search";
+import { savePlaces } from "@/src/lib/api/places";
+
 import { MapSearchBar } from "@/src/components/map/MapSearchBar";
 
 import { useLoadMapPlaces } from "@/src/hooks/map/useLoadMapPlaces";
@@ -154,6 +156,36 @@ export default function Map() {
     }
   };
 
+  const savePlacesRequest = async (placeIds: number[]) => {
+    try {
+      await savePlaces({
+        placeIds,
+        saveType: "instagram",
+      });
+
+      clearAnalyze();
+    } catch (err) {
+      Alert.alert("오류", "장소 저장에 실패했습니다.");
+    }
+  };
+
+  const handleConfirmSavedPlaces = (ids: string[]) => {
+    if (!ids.length) {
+      Alert.alert("알림", "저장할 장소를 선택해주세요.");
+      return;
+    }
+
+    const placeIds = ids
+      .map((id) => Number(id))
+      .filter((id) => !Number.isNaN(id));
+
+    if (!placeIds.length) {
+      Alert.alert("오류", "유효한 장소 ID가 없습니다.");
+      return;
+    }
+
+    savePlacesRequest(placeIds);
+  };
   return (
     <View style={styles.container}>
       {/* 검색창 */}
@@ -203,9 +235,7 @@ export default function Map() {
             closeAnalyze();
           }}
           onChangeSelection={() => {}}
-          onConfirm={(ids) => {
-            clearAnalyze();
-          }}
+          onConfirm={handleConfirmSavedPlaces}
         />
       ) : (
         <>

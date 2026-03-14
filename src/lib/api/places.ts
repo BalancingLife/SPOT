@@ -1,5 +1,4 @@
-// src/lib/api/places.ts
-import { api8080 } from "@/src/lib/api/client";
+import { api8080, api8001 } from "@/src/lib/api/client";
 import type {
   ApiPlace,
   ApiMapPlace,
@@ -33,15 +32,13 @@ export async function fetchMyNewSavedPlaces(params: {
     params: { lat, lng },
   });
 
-  // console.log("/new API 응답:", res.data);
-
   return mapApiPlacesToPlaces(res.data, {
     currentLat: lat,
     currentLng: lng,
   });
 }
 
-/** /new 저장한 장소 최신순 */
+/** /popular 인기 장소 */
 export async function fetchHotPlaces(params: {
   lat: number;
   lng: number;
@@ -51,8 +48,6 @@ export async function fetchHotPlaces(params: {
   const res = await api8080.get<ApiPlace[]>("/popular", {
     params: { lat, lng },
   });
-
-  // console.log("/new API 응답:", res.data);
 
   return mapApiPlacesToPlaces(res.data, {
     currentLat: lat,
@@ -84,7 +79,7 @@ export async function fetchPlacesByDistance(params: {
       status: err?.response?.status,
       data: err?.response?.data,
     });
-    throw err; // 위로 다시 던져서 SavedPlacesTab의 try/catch로 올라가게
+    throw err;
   }
 }
 
@@ -103,6 +98,28 @@ export async function fetchPlaceMore(params: {
     return res.data;
   } catch (err: any) {
     console.error("[/more] ERROR", {
+      message: err?.message,
+      status: err?.response?.status,
+      data: err?.response?.data,
+    });
+    throw err;
+  }
+}
+
+/** 8001 /places/ 장소 저장 */
+export async function savePlaces(params: {
+  placeIds: number[];
+  saveType?: "instagram";
+}): Promise<void> {
+  const { placeIds, saveType = "instagram" } = params;
+
+  try {
+    await api8001.post("/places/", {
+      place_ids: placeIds,
+      save_type: saveType,
+    });
+  } catch (err: any) {
+    console.error("[POST /places/] ERROR", {
       message: err?.message,
       status: err?.response?.status,
       data: err?.response?.data,
