@@ -11,6 +11,8 @@ import {
   ScrollView,
   Image,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 
 import ProfileLayout from "@/src/components/profile/Layout";
@@ -336,230 +338,247 @@ export default function EditScreen() {
 
   return (
     <ProfileLayout>
-      <ProfileHeader title="프로필 수정" showBack={true} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ProfileHeader title="프로필 수정" showBack={true} />
 
-      <View style={styles.content}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Pressable onPress={openPhotoMenu}>
-            <View style={styles.avatarSection}>
-              <View style={styles.avatarWrapper}>
-                <View style={styles.avatarCircle}>
-                  {avatarUri ? (
+        <View style={styles.content}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Pressable onPress={openPhotoMenu}>
+              <View style={styles.avatarSection}>
+                <View style={styles.avatarWrapper}>
+                  <View style={styles.avatarCircle}>
+                    {avatarUri ? (
+                      <Image
+                        source={{ uri: avatarUri }}
+                        style={styles.avatarImage}
+                      />
+                    ) : (
+                      <Image
+                        style={{ width: 60, height: 60 }}
+                        source={require("@/assets/images/profile-icon-gray.png")}
+                      />
+                    )}
+                  </View>
+
+                  <Pressable
+                    style={styles.cameraButton}
+                    onPress={openPhotoMenu}
+                  >
                     <Image
-                      source={{ uri: avatarUri }}
-                      style={styles.avatarImage}
+                      style={{ width: 24, height: 24 }}
+                      source={require("@/assets/images/camera-icon.png")}
                     />
-                  ) : (
-                    <Image
-                      style={{ width: 60, height: 60 }}
-                      source={require("@/assets/images/profile-icon-gray.png")}
-                    />
-                  )}
+                  </Pressable>
                 </View>
-
-                <Pressable style={styles.cameraButton} onPress={openPhotoMenu}>
-                  <Image
-                    style={{ width: 24, height: 24 }}
-                    source={require("@/assets/images/camera-icon.png")}
-                  />
-                </Pressable>
-              </View>
-            </View>
-          </Pressable>
-
-          {photoMenuVisible && (
-            <Pressable
-              style={styles.cameraMenuOverlay}
-              onPress={closePhotoMenu}
-            >
-              <View style={styles.cameraMenuContainer}>
-                <Pressable
-                  style={styles.cameraMenuItem}
-                  onPress={handlePickFromGallery}
-                >
-                  <Text style={styles.cameraMenuText}>갤러리에서 선택</Text>
-                </Pressable>
-
-                <Pressable
-                  style={styles.cameraMenuItem}
-                  onPress={handleTakePhoto}
-                >
-                  <Text style={styles.cameraMenuText}>사진 찍기</Text>
-                </Pressable>
-
-                <Pressable
-                  style={styles.cameraMenuItem}
-                  onPress={handleRemovePhoto}
-                >
-                  <Text style={styles.cameraMenuText}>현재 사진 삭제</Text>
-                </Pressable>
               </View>
             </Pressable>
-          )}
 
-          <View style={styles.sectionContainer}>
-            <View
-              style={[
-                styles.fieldBlock,
-                {
-                  borderBottomColor: nicknameIsError
-                    ? ERROR_COLOR
-                    : focusNickname
-                      ? Colors.gray_800
-                      : Colors.gray_100,
-                },
-              ]}
-            >
-              <View style={styles.fieldHeader}>
-                <Text style={styles.label}>닉네임</Text>
-                <Text
-                  style={[
-                    styles.counter,
-                    nicknameIsError && { color: ERROR_COLOR },
-                  ]}
-                >
-                  {nicknameLen}/{NICKNAME_MAX}
-                </Text>
-              </View>
+            {photoMenuVisible && (
+              <Pressable
+                style={styles.cameraMenuOverlay}
+                onPress={closePhotoMenu}
+              >
+                <View style={styles.cameraMenuContainer}>
+                  <Pressable
+                    style={styles.cameraMenuItem}
+                    onPress={handlePickFromGallery}
+                  >
+                    <Text style={styles.cameraMenuText}>갤러리에서 선택</Text>
+                  </Pressable>
 
-              <TextInput
-                style={styles.input}
-                value={nickname}
-                onFocus={() => setFocusNickname(true)}
-                onBlur={() => setFocusNickname(false)}
-                onChangeText={setNickname}
-                placeholder="닉네임을 입력해 주세요"
-                placeholderTextColor={Colors.gray_400}
-              />
-            </View>
+                  <Pressable
+                    style={styles.cameraMenuItem}
+                    onPress={handleTakePhoto}
+                  >
+                    <Text style={styles.cameraMenuText}>사진 찍기</Text>
+                  </Pressable>
 
-            <View style={styles.helperRow}>
-              <Text style={[styles.helperIcon, { color: nicknameHelperColor }]}>
-                {nicknameIsError ? "✗" : "✓"}
-              </Text>
-              <Text style={[styles.helperText, { color: nicknameHelperColor }]}>
-                {nicknameHelperText}
-              </Text>
-            </View>
+                  <Pressable
+                    style={styles.cameraMenuItem}
+                    onPress={handleRemovePhoto}
+                  >
+                    <Text style={styles.cameraMenuText}>현재 사진 삭제</Text>
+                  </Pressable>
+                </View>
+              </Pressable>
+            )}
 
-            <View
-              style={[
-                styles.fieldBlock,
-                {
-                  borderBottomColor: idIsError
-                    ? ERROR_COLOR
-                    : focusUserId
-                      ? Colors.gray_800
-                      : Colors.gray_100,
-                },
-              ]}
-            >
-              <View style={styles.fieldHeader}>
-                <Text style={styles.label}>아이디</Text>
-                <Text
-                  style={[styles.counter, idIsError && { color: ERROR_COLOR }]}
-                >
-                  {idLen}/{ID_MAX}
-                </Text>
-              </View>
-
-              <View style={styles.idRow}>
-                <TextInput
-                  style={[styles.input, { flex: 1 }]}
-                  value={userId}
-                  onFocus={() => setFocusUserId(true)}
-                  onBlur={() => setFocusUserId(false)}
-                  onChangeText={(value) => {
-                    setUserId(value);
-                    setIdCheckStatus("idle");
-                    setLastCheckedId("");
-                  }}
-                  placeholder="아이디를 입력해 주세요"
-                  placeholderTextColor={Colors.gray_400}
-                  autoCapitalize="none"
-                />
-
-                <Pressable
-                  style={styles.dupButton}
-                  onPress={handleCheckDuplicate}
-                  disabled={
-                    idStatus !== "valid" || idCheckStatus === "checking"
-                  }
-                >
-                  <Text style={styles.dupButtonText}>
-                    {idCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+            <View style={styles.sectionContainer}>
+              <View
+                style={[
+                  styles.fieldBlock,
+                  {
+                    borderBottomColor: nicknameIsError
+                      ? ERROR_COLOR
+                      : focusNickname
+                        ? Colors.gray_800
+                        : Colors.gray_100,
+                  },
+                ]}
+              >
+                <View style={styles.fieldHeader}>
+                  <Text style={styles.label}>닉네임</Text>
+                  <Text
+                    style={[
+                      styles.counter,
+                      nicknameIsError && { color: ERROR_COLOR },
+                    ]}
+                  >
+                    {nicknameLen}/{NICKNAME_MAX}
                   </Text>
-                </Pressable>
+                </View>
+
+                <TextInput
+                  style={styles.input}
+                  value={nickname}
+                  onFocus={() => setFocusNickname(true)}
+                  onBlur={() => setFocusNickname(false)}
+                  onChangeText={setNickname}
+                  placeholder="닉네임을 입력해 주세요"
+                  placeholderTextColor={Colors.gray_400}
+                />
               </View>
-            </View>
 
-            <View style={styles.helperRow}>
-              <Text style={[styles.helperIcon, { color: idHelperColor }]}>
-                {idIsError ? "✗" : "✓"}
-              </Text>
-              <Text style={[styles.helperText, { color: idHelperColor }]}>
-                {idHelperText}
-              </Text>
-            </View>
-
-            <View
-              style={[
-                styles.fieldBlock,
-                {
-                  borderBottomColor: introIsError
-                    ? ERROR_COLOR
-                    : focusIntro
-                      ? Colors.gray_800
-                      : Colors.gray_100,
-                },
-              ]}
-            >
-              <View style={styles.fieldHeader}>
-                <Text style={styles.label}>한 줄 소개</Text>
+              <View style={styles.helperRow}>
                 <Text
-                  style={[
-                    styles.counter,
-                    introIsError && { color: ERROR_COLOR },
-                  ]}
+                  style={[styles.helperIcon, { color: nicknameHelperColor }]}
                 >
-                  {introLen}/{INTRO_MAX}
+                  {nicknameIsError ? "✗" : "✓"}
+                </Text>
+                <Text
+                  style={[styles.helperText, { color: nicknameHelperColor }]}
+                >
+                  {nicknameHelperText}
                 </Text>
               </View>
 
-              <TextInput
-                style={styles.input}
-                value={intro}
-                onFocus={() => setFocusIntro(true)}
-                onBlur={() => setFocusIntro(false)}
-                onChangeText={setIntro}
-                placeholder="나를 한 줄로 소개해 보세요"
-                placeholderTextColor={Colors.gray_300}
-                multiline
-              />
-            </View>
+              <View
+                style={[
+                  styles.fieldBlock,
+                  {
+                    borderBottomColor: idIsError
+                      ? ERROR_COLOR
+                      : focusUserId
+                        ? Colors.gray_800
+                        : Colors.gray_100,
+                  },
+                ]}
+              >
+                <View style={styles.fieldHeader}>
+                  <Text style={styles.label}>아이디</Text>
+                  <Text
+                    style={[
+                      styles.counter,
+                      idIsError && { color: ERROR_COLOR },
+                    ]}
+                  >
+                    {idLen}/{ID_MAX}
+                  </Text>
+                </View>
 
-            <View style={styles.helperRow}>
-              <Text style={[styles.helperIcon, { color: introHelperColor }]}>
-                {introIsError ? "✗" : "✓"}
-              </Text>
-              <Text style={[styles.helperText, { color: introHelperColor }]}>
-                {introHelperText}
-              </Text>
-            </View>
-          </View>
-        </ScrollView>
+                <View style={styles.idRow}>
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    value={userId}
+                    onFocus={() => setFocusUserId(true)}
+                    onBlur={() => setFocusUserId(false)}
+                    onChangeText={(value) => {
+                      setUserId(value);
+                      setIdCheckStatus("idle");
+                      setLastCheckedId("");
+                    }}
+                    placeholder="아이디를 입력해 주세요"
+                    placeholderTextColor={Colors.gray_400}
+                    autoCapitalize="none"
+                  />
 
-        <SpotButton
-          label={saving ? "저장 중..." : "확인"}
-          variant="primary"
-          size="large"
-          disabled={!isFormValid || saving}
-          onPress={handleSubmit}
-        />
-      </View>
+                  <Pressable
+                    style={styles.dupButton}
+                    onPress={handleCheckDuplicate}
+                    disabled={
+                      idStatus !== "valid" || idCheckStatus === "checking"
+                    }
+                  >
+                    <Text style={styles.dupButtonText}>
+                      {idCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.helperRow}>
+                <Text style={[styles.helperIcon, { color: idHelperColor }]}>
+                  {idIsError ? "✗" : "✓"}
+                </Text>
+                <Text style={[styles.helperText, { color: idHelperColor }]}>
+                  {idHelperText}
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.fieldBlock,
+                  {
+                    borderBottomColor: introIsError
+                      ? ERROR_COLOR
+                      : focusIntro
+                        ? Colors.gray_800
+                        : Colors.gray_100,
+                  },
+                ]}
+              >
+                <View style={styles.fieldHeader}>
+                  <Text style={styles.label}>한 줄 소개</Text>
+                  <Text
+                    style={[
+                      styles.counter,
+                      introIsError && { color: ERROR_COLOR },
+                    ]}
+                  >
+                    {introLen}/{INTRO_MAX}
+                  </Text>
+                </View>
+
+                <TextInput
+                  style={styles.input}
+                  value={intro}
+                  onFocus={() => setFocusIntro(true)}
+                  onBlur={() => setFocusIntro(false)}
+                  onChangeText={(value) => {
+                    const introWithoutLineBreaks = value.replace(/[\r\n]/g, "");
+                    setIntro(introWithoutLineBreaks);
+                  }}
+                  placeholder="나를 한 줄로 소개해 보세요"
+                  placeholderTextColor={Colors.gray_300}
+                />
+              </View>
+
+              <View style={styles.helperRow}>
+                <Text style={[styles.helperIcon, { color: introHelperColor }]}>
+                  {introIsError ? "✗" : "✓"}
+                </Text>
+                <Text style={[styles.helperText, { color: introHelperColor }]}>
+                  {introHelperText}
+                </Text>
+              </View>
+            </View>
+          </ScrollView>
+
+          <SpotButton
+            label={saving ? "저장 중..." : "확인"}
+            variant="primary"
+            size="large"
+            disabled={!isFormValid || saving}
+            onPress={handleSubmit}
+          />
+        </View>
+      </KeyboardAvoidingView>
     </ProfileLayout>
   );
 }
