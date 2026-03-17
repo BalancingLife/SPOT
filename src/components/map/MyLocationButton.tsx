@@ -88,8 +88,8 @@ const styles = StyleSheet.create({
     zIndex: 20, // 지도 위로
   },
   myLocationButton: {
-    width: 40,
-    height: 40,
+    width: 46,
+    height: 46,
     borderRadius: 100,
     backgroundColor: "#FFFFFF",
     justifyContent: "center",

@@ -168,8 +168,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   myLocationButton: {
-    width: 40,
-    height: 40,
+    width: 46,
+    height: 46,
     borderRadius: 100,
     backgroundColor: "#FFFFFF",
     justifyContent: "center",
