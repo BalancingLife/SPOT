@@ -46,11 +46,29 @@ export const HomeHeader = ({
   };
 
   const handlePressBlock = () => {
-    Alert.alert("차단하기", "이 사용자를 차단하시겠어요?");
+    Alert.alert("차단하기", "이 사용자를 차단하시겠어요?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "차단",
+        style: "destructive",
+        onPress: () => {
+          console.log("차단 실행");
+        },
+      },
+    ]);
   };
 
   const handlePressReport = () => {
-    Alert.alert("신고하기", "이 사용자를 신고하시겠어요?");
+    Alert.alert("신고하기", "이 사용자를 신고하시겠어요?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "신고",
+        style: "destructive",
+        onPress: () => {
+          console.log("신고 실행");
+        },
+      },
+    ]);
   };
 
   const isMySelectedCard = selectedUser?.scope === "me";
