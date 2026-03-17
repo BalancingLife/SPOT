@@ -39,9 +39,23 @@ export default function FriendSearchResult({
               <View style={styles.avatarFallback} />
             )}
 
-            <View style={styles.mid}>
-              <Text style={styles.nickname}>{item.nickname}</Text>
-              <Text style={styles.userId}>@{item.userId}</Text>
+            {/* content */}
+            <View style={styles.content}>
+              <View style={styles.header}>
+                <Text style={styles.nickname} numberOfLines={1}>
+                  {item.nickname}
+                </Text>
+
+                <Text style={styles.userId} numberOfLines={1}>
+                  @{item.userId}
+                </Text>
+              </View>
+
+              {!!item.oneLine && (
+                <Text style={styles.oneLine} numberOfLines={1}>
+                  {item.oneLine}
+                </Text>
+              )}
             </View>
 
             {onPressAction ? (
@@ -49,7 +63,7 @@ export default function FriendSearchResult({
                 onPress={() => onPressAction(item)}
                 style={styles.actionBtn}
               >
-                <Text style={styles.actionText}>추가</Text>
+                <Text style={styles.actionText}>팔로우</Text>
               </Pressable>
             ) : null}
           </Pressable>
@@ -64,27 +78,67 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 14,
+    paddingHorizontal: 16,
   },
-  sep: { height: 1, backgroundColor: Colors.gray_100 },
 
-  avatar: { width: 44, height: 44, borderRadius: 999, marginRight: 12 },
+  sep: {
+    height: 1,
+    backgroundColor: Colors.gray_100,
+  },
+
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 999,
+    marginRight: 12,
+  },
+
   avatarFallback: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: 999,
     marginRight: 12,
     backgroundColor: Colors.gray_300,
   },
 
-  mid: { flex: 1 },
-  nickname: { ...TextStyles.SemiBold16, color: Colors.gray_900 },
-  userId: { ...TextStyles.Medium14, color: Colors.gray_500, marginTop: 2 },
+  content: {
+    flex: 1,
+    marginRight: 10,
+  },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  nickname: {
+    ...TextStyles.Bold14,
+    color: Colors.gray_800,
+    marginRight: 6,
+  },
+
+  userId: {
+    ...TextStyles.Regular10,
+    color: Colors.gray_400,
+  },
+
+  oneLine: {
+    ...TextStyles.Regular12,
+    color: Colors.gray_500,
+    marginTop: 4,
+  },
 
   actionBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    width: 80,
+    height: 28,
     borderRadius: 999,
     backgroundColor: Colors.gray_900,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  actionText: { ...TextStyles.SemiBold14, color: Colors.white },
+
+  actionText: {
+    ...TextStyles.Bold12,
+    color: Colors.white,
+  },
 });

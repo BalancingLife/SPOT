@@ -4,8 +4,8 @@ import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 
 import ProfileLayout from "@/src/components/profile/Layout";
-import ProfileUserCard from "@/src/components/UserCard";
-import SpotButton from "@/src/components/SpotButton";
+import ProfileUserCard from "@/src/components/common/UserCard";
+import SpotButton from "@/src/components/common/SpotButton";
 import { useMyProfileStore } from "@/src/stores/useMyProfileStore";
 
 export default function ProfileScreen() {

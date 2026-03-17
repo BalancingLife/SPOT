@@ -3,10 +3,13 @@ import { api8000, api8001 } from "@/src/lib/api/client";
 
 export type ApiFriend = {
   comment: string | null;
-  email: string;
   friend_id: number;
+  mutual_count: number;
+  mutual_profiles: string | null;
   nickname: string;
   profile_url: string | null;
+  spot_id: string;
+  status: string;
   updated_at: string;
 };
 
@@ -17,10 +20,13 @@ export type FriendsListResponse = {
 export type Friend = {
   id: number;
   nickname: string;
+  userId: string;
   avatarUrl?: string | null;
   updatedAt?: string;
-  email?: string;
   comment?: string | null;
+  status?: string;
+  mutualCount?: number;
+  mutualProfiles?: string | null;
 };
 
 export type ApiSaver = {
@@ -130,4 +136,22 @@ export async function searchFriends(
   } catch (error) {
     throw error;
   }
+}
+
+export async function fetchFriendsList(): Promise<Friend[]> {
+  const res = await api8001.get<FriendsListResponse>("/friends/list");
+
+  const raw = Array.isArray(res.data?.friends) ? res.data.friends : [];
+
+  return raw.map((item) => ({
+    id: item.friend_id,
+    nickname: item.nickname,
+    userId: item.spot_id,
+    avatarUrl: item.profile_url,
+    updatedAt: item.updated_at,
+    comment: item.comment,
+    status: item.status,
+    mutualCount: item.mutual_count,
+    mutualProfiles: item.mutual_profiles,
+  }));
 }

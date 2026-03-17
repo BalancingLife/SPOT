@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { ActivityIndicator, View, Text } from "react-native";
-import PlaceCard from "@/src/components/PlaceCard";
+import PlaceCard from "@/src/components/common/PlaceCard";
 import type { Place } from "@/src/types/place";
 import { fetchMyNewSavedPlaces } from "@/src/lib/api/places";
 import { Colors } from "@/src/styles/Colors";
@@ -9,7 +9,7 @@ import { useLocationStore } from "@/src/stores/useLocationStore";
 import { useSavedPlacesStore } from "@/src/stores/useSavedPlacesStore";
 
 import FilterBar from "@/src/components/bottomSheet/FilterBar";
-import OptionModal from "@/src/components/OptionModal";
+import OptionModal from "@/src/components/common/OptionModal";
 
 import { toggleBookmarkApi } from "@/src/lib/api/bookmark";
 import { usePlaceMoreNavigation } from "@/src/hooks/usePlaceMoreNavigation";

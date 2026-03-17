@@ -4,7 +4,7 @@ import ProfileLayout from "@/src/components/profile/Layout";
 import ProfileHeader from "@/src/components/profile/Header";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
-import ConfirmModal from "@/src/components/ConfirmModal";
+import ConfirmModal from "@/src/components/common/ConfirmModal";
 
 export default function AccountSettingScreen() {
   const [logoutVisible, setLogoutVisible] = useState(false);

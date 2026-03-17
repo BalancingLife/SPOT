@@ -17,7 +17,7 @@ import {
 
 import ProfileLayout from "@/src/components/profile/Layout";
 import ProfileHeader from "@/src/components/profile/Header";
-import SpotButton from "@/src/components/SpotButton";
+import SpotButton from "@/src/components/common/SpotButton";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, Image, Pressable } from "react-native";
-import SpotButton from "@/src/components/SpotButton";
+import SpotButton from "@/src/components/common/SpotButton";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 

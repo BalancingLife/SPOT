@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, View, Text } from "react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 
-import PlaceCard from "@/src/components/PlaceCard";
+import PlaceCard from "@/src/components/common/PlaceCard";
 import FilterBar from "@/src/components/bottomSheet/FilterBar";
-import OptionModal from "@/src/components/OptionModal";
+import OptionModal from "@/src/components/common/OptionModal";
 
 import type { Place } from "@/src/types/place";
 

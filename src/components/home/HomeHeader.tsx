@@ -1,7 +1,7 @@
-import { View, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { View, StyleSheet, Image, TouchableOpacity, Alert } from "react-native";
 import { router } from "expo-router";
 import StoryList from "@/src/components/home/StoryList";
-import UserCard from "@/src/components/UserCard";
+import UserCard from "@/src/components/common/UserCard";
 
 import { Colors } from "@/src/styles/Colors";
 import { useMyProfileStore } from "@/src/stores/useMyProfileStore";
@@ -22,6 +22,8 @@ export const HomeHeader = ({
   const DEFAULT_MY_IMAGE = require("@/assets/images/dog.png");
 
   const profile = useMyProfileStore((s) => s.profile);
+  const friendCount = useMyProfileStore((s) => s.friendCount);
+  const recentFriendPhotos = useMyProfileStore((s) => s.recentFriendPhotos);
 
   const myNickname = profile?.spotNickname ?? "내 닉네임";
   const myUserId = profile?.spotId ?? "";
@@ -30,6 +32,47 @@ export const HomeHeader = ({
     profile?.photo && profile.photo.length > 0
       ? { uri: profile.photo }
       : DEFAULT_MY_IMAGE;
+
+  const myFriendAvatars = recentFriendPhotos.map((photo, index) =>
+    photo && photo.length > 0
+      ? { uri: photo }
+      : {
+          uri: `fallback-${index}`,
+        },
+  );
+
+  const handlePressEditProfile = () => {
+    router.push("/profile/edit");
+  };
+
+  const handlePressBlock = () => {
+    Alert.alert("차단하기", "이 사용자를 차단하시겠어요?");
+  };
+
+  const handlePressReport = () => {
+    Alert.alert("신고하기", "이 사용자를 신고하시겠어요?");
+  };
+
+  const isMySelectedCard = selectedUser?.scope === "me";
+
+  const selectedProfileImage = isMySelectedCard
+    ? myAvatarSource
+    : (selectedUser?.profileImage ?? DEFAULT_MY_IMAGE);
+
+  const selectedNickname = isMySelectedCard
+    ? myNickname
+    : (selectedUser?.nickname ?? "");
+
+  const selectedUserId = isMySelectedCard
+    ? myUserId
+    : selectedUser?.scope === "friend"
+      ? String(selectedUser.userId ?? "")
+      : (selectedUser?.userIdText ?? "");
+
+  const selectedBio = isMySelectedCard ? myBio : (selectedUser?.bio ?? "");
+
+  const selectedFriendCount = isMySelectedCard ? friendCount : 0;
+  const selectedFriendAvatars = isMySelectedCard ? myFriendAvatars : [];
 
   return (
     <View style={styles.headerContainer}>
@@ -66,19 +109,19 @@ export const HomeHeader = ({
       />
 
       {selectedUser ? (
-        <View style={{ paddingRight: 16, paddingTop: 12 }}>
+        <View style={styles.userCardWrapper}>
           <UserCard
             variant="story"
-            profileImage={selectedUser.profileImage}
-            nickname={selectedUser.nickname}
-            userid={
-              selectedUser.scope === "friend"
-                ? String(selectedUser.userId ?? "")
-                : (selectedUser.userIdText ?? "")
-            }
-            bio={selectedUser.bio ?? ""}
-            friendAvatars={[]}
-            friendCount={0}
+            profileImage={selectedProfileImage}
+            nickname={selectedNickname}
+            userid={selectedUserId}
+            bio={selectedBio}
+            friendAvatars={selectedFriendAvatars}
+            friendCount={selectedFriendCount}
+            isMyCard={isMySelectedCard}
+            onPressEditProfile={handlePressEditProfile}
+            onPressBlock={handlePressBlock}
+            onPressReport={handlePressReport}
           />
         </View>
       ) : null}
@@ -87,7 +130,10 @@ export const HomeHeader = ({
 };
 
 const styles = StyleSheet.create({
-  headerContainer: { backgroundColor: Colors.white, paddingLeft: 16 },
+  headerContainer: {
+    backgroundColor: Colors.white,
+    paddingLeft: 16,
+  },
 
   topBar: {
     flexDirection: "row",
@@ -95,7 +141,24 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingRight: 16,
   },
-  spotLogo: { width: 63, height: 29 },
-  friendsIconContainer: { flexDirection: "row", gap: 16 },
-  friendsIcon: { width: 24, height: 24 },
+
+  spotLogo: {
+    width: 63,
+    height: 29,
+  },
+
+  friendsIconContainer: {
+    flexDirection: "row",
+    gap: 16,
+  },
+
+  friendsIcon: {
+    width: 24,
+    height: 24,
+  },
+
+  userCardWrapper: {
+    paddingRight: 16,
+    paddingTop: 12,
+  },
 });

@@ -4,7 +4,7 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import ProfileLayout from "@/src/components/profile/Layout";
 import ProfileHeader from "@/src/components/profile/Header";
-import UserRow from "@/src/components/UserRow";
+import UserRow from "@/src/components/common/UserRow";
 
 import { fetchBlockList, type BlockItem } from "@/src/lib/api/settings";
 

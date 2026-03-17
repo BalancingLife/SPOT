@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { View, ScrollView, Image, StyleSheet, Text } from "react-native";
 
 import FilterBar from "../bottomSheet/FilterBar";
-import OptionModal from "../OptionModal";
+import OptionModal from "../common/OptionModal";
 
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";

@@ -16,7 +16,7 @@ import BottomSheet, {
 import { useSearchStore } from "@/src/stores/useSearchStore";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
-import PlaceCard from "@/src/components/PlaceCard";
+import PlaceCard from "@/src/components/common/PlaceCard";
 
 type Props = {
   onClose: () => void; // 검색 모드 종료(Places 시트로 복귀)
@@ -127,8 +127,8 @@ export default function SearchDetailsBottomSheet({
             p.thumbnails && p.thumbnails.length > 0
               ? p.thumbnails.slice(0, 5).map((uri: string) => ({ uri }))
               : p.photo
-              ? [{ uri: p.photo }]
-              : [];
+                ? [{ uri: p.photo }]
+                : [];
           const savedUsers =
             p.savers && p.savers.length > 0
               ? p.savers

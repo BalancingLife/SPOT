@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { View, ScrollView } from "react-native";
 import FilterBar from "../bottomSheet/FilterBar";
-import PlaceCard from "../PlaceCard";
-import OptionModal from "../OptionModal";
+import PlaceCard from "../common/PlaceCard";
+import OptionModal from "../common/OptionModal";
 import { type HomePlaceItem } from "./types";
 
 const SORT_OPTIONS = [

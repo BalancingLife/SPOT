@@ -11,10 +11,10 @@ import {
   NativeSyntheticEvent,
   Dimensions,
 } from "react-native";
-import PlaceCard from "@/src/components/PlaceCard";
+import PlaceCard from "@/src/components/common/PlaceCard";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
-import Pagination from "@/src/components/Pagination";
+import Pagination from "@/src/components/common/Pagination";
 import { useState, useRef } from "react";
 import { SCREEN_WIDTH } from "@gorhom/bottom-sheet";
 import CommentWriteButton from "@/src/components/comment/CommentWriteButton";

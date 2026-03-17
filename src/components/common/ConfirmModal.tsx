@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
-import SpotButton from "@/src/components/SpotButton";
+import SpotButton from "@/src/components/common/SpotButton";
 
 type ConfirmModalProps = {
   visible: boolean;

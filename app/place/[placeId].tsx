@@ -13,16 +13,16 @@ import {
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocalSearchParams } from "expo-router";
 
-import PlaceCard from "@/src/components/PlaceCard";
+import PlaceCard from "@/src/components/common/PlaceCard";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
-import Pagination from "@/src/components/Pagination";
+import Pagination from "@/src/components/common/Pagination";
 import CommentWriteButton from "@/src/components/comment/CommentWriteButton";
 import CommentWriteModal, {
   CommentWriteModalRef,
 } from "@/src/components/comment/CommentWriteModal";
 
-import SpotButton from "@/src/components/SpotButton";
+import SpotButton from "@/src/components/common/SpotButton";
 
 import { fetchPlaceMore } from "@/src/lib/api/places";
 import { usePlaceMoreStore } from "@/src/stores/usePlaceMoreStore";

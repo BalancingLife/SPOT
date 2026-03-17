@@ -8,8 +8,8 @@ import {
   Image,
 } from "react-native";
 
-import { TextStyles } from "../styles/TextStyles";
-import { Colors } from "../styles/Colors";
+import { TextStyles } from "../../styles/TextStyles";
+import { Colors } from "../../styles/Colors";
 
 type Option = { label: string; value: string };
 

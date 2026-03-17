@@ -5,7 +5,7 @@ import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 
 import { useSearchStore } from "@/src/stores/useSearchStore";
 import { Colors } from "@/src/styles/Colors";
-import PlaceCard from "@/src/components/PlaceCard";
+import PlaceCard from "@/src/components/common/PlaceCard";
 import { formatDistance } from "@/src/utils/format"; // ✅ 공통 util 사용
 
 type Props = { onClose: () => void };
@@ -22,8 +22,8 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
       focused.thumbnails && focused.thumbnails.length > 0
         ? focused.thumbnails
         : focused.photo
-        ? [focused.photo]
-        : [];
+          ? [focused.photo]
+          : [];
     return arr.slice(0, 5).map((uri) => ({ uri }));
   }, [focused]);
 
@@ -43,11 +43,11 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
     if (!isFinite(lat) || !isFinite(lng)) return;
 
     const url = `nmap://route/walk?dlat=${lat}&dlng=${lng}&dname=${encodeURIComponent(
-      name || "목적지"
+      name || "목적지",
     )}`;
     Linking.openURL(url).catch(() => {
       const web = `https://map.naver.com/v5/search/${encodeURIComponent(
-        name || ""
+        name || "",
       )}`;
       Linking.openURL(web);
     });
