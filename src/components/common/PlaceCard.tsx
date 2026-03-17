@@ -167,7 +167,7 @@ export default function PlaceCard({
               source={require("@/assets/images/naver-map-icon.png")}
               style={styles.NaverMapIcon}
             />
-            <Text style={TextStyles.Regular10}>네이버 지도 길찾기</Text>
+            <Text style={TextStyles.Medium12}>네이버 지도 길찾기</Text>
           </Pressable>
         )}
       </View>
@@ -293,9 +293,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   NaverMapIcon: {
-    width: 10.5,
-    height: 10.5,
-    marginRight: 1.25,
+    width: 13,
+    height: 13,
+    marginRight: 2,
   },
   mapText: {
     color: "#333",

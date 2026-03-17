@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   },
   itemCategory: {
     marginTop: 4,
-    ...TextStyles.Regular10,
+    ...TextStyles.Regular12,
     color: Colors.gray_300,
   },
   addressContainer: {

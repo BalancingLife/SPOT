@@ -22,13 +22,13 @@ export default function CommentWriteButton({ onPress }: Props) {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    bottom: 24,
+    bottom: 70,
     right: 24,
   },
   button: {
-    width: 44,
-    height: 44,
-    borderRadius: 44 / 2,
+    width: 48,
+    height: 48,
+    borderRadius: 50,
     backgroundColor: Colors.primary_500,
     justifyContent: "center",
     alignItems: "center",
