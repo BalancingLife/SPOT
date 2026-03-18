@@ -1,5 +1,6 @@
 // src/lib/api/friends.ts
 import { api8000, api8001 } from "@/src/lib/api/client";
+import { useAuthStore } from "@/src/stores/useAuthStore";
 
 export type ApiFriend = {
   comment: string | null;
@@ -29,65 +30,6 @@ export type Friend = {
   mutualProfiles?: string | null;
 };
 
-export type ApiSaver = {
-  nickname: string;
-  profileImageUrl: string;
-};
-
-export type ApiFriendPlace = {
-  address: string;
-  gId: string;
-  isMarked: boolean;
-  latitude: number;
-  list: string;
-  longitude: number;
-  myRating: number;
-  name: string;
-  photo: string;
-  placeId: number;
-  ratingAvg: number;
-  savers: ApiSaver[];
-};
-
-export type FriendPlace = {
-  placeId: number;
-  name: string;
-  address: string;
-  gId: string;
-  photo: string;
-  latitude: number;
-  longitude: number;
-  isMarked: boolean;
-  list: string;
-  myRating: number;
-  ratingAvg: number;
-  savers: ApiSaver[];
-};
-
-export type FriendPlacesQuery = {
-  sort?: "latest" | "star";
-  category?: string;
-};
-
-export type FriendActionResponse = {
-  friend_id?: number;
-  message: string;
-};
-
-export type FriendActionResult = {
-  friendId?: number;
-  message: string;
-};
-
-export type ReportFriendBody = {
-  reason: string;
-};
-
-/** =========================
- * 친구 검색 (8000번)
- * GET /friends/search?keyword=
- * ========================= */
-
 export type ApiFriendSearchItem = {
   highlighted_spot_id: string;
   highlighted_spot_nickname: string;
@@ -97,6 +39,24 @@ export type ApiFriendSearchItem = {
   spot_id: string;
   spot_nickname: string;
 };
+
+export async function fetchFriendsList(): Promise<Friend[]> {
+  const res = await api8001.get<FriendsListResponse>("/friends/list");
+
+  const raw = Array.isArray(res.data?.friends) ? res.data.friends : [];
+
+  return raw.map((item) => ({
+    id: item.friend_id,
+    nickname: item.nickname,
+    userId: item.spot_id,
+    avatarUrl: item.profile_url,
+    updatedAt: item.updated_at,
+    comment: item.comment,
+    status: item.status,
+    mutualCount: item.mutual_count,
+    mutualProfiles: item.mutual_profiles,
+  }));
+}
 
 export type ApiFriendSearchResponse = {
   results: ApiFriendSearchItem[];
@@ -138,20 +98,86 @@ export async function searchFriends(
   }
 }
 
-export async function fetchFriendsList(): Promise<Friend[]> {
-  const res = await api8001.get<FriendsListResponse>("/friends/list");
+// 팔로우 신청
+export const sendFollowRequest = async (friend_id: number): Promise<void> => {
+  const token = useAuthStore.getState().token;
 
-  const raw = Array.isArray(res.data?.friends) ? res.data.friends : [];
+  const res = await fetch(
+    `${process.env.EXPO_PUBLIC_API_BASE_URL_8080}/friends/follow/${friend_id}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  if (!res.ok) {
+    throw new Error("네트워크 응답이 ok가 아님");
+  }
+};
 
-  return raw.map((item) => ({
-    id: item.friend_id,
-    nickname: item.nickname,
-    userId: item.spot_id,
-    avatarUrl: item.profile_url,
-    updatedAt: item.updated_at,
-    comment: item.comment,
-    status: item.status,
-    mutualCount: item.mutual_count,
-    mutualProfiles: item.mutual_profiles,
-  }));
-}
+// 팔로우 수락
+export const acceptFollowRequest = async (friend_id: number): Promise<void> => {
+  const token = useAuthStore.getState().token;
+
+  const res = await fetch(
+    `${process.env.EXPO_PUBLIC_API_BASE_URL_8001}/friends/access_follow/${friend_id}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  if (!res.ok) {
+    throw new Error("네트워크 응답이 ok가 아님");
+  }
+};
+
+// 팔로우 거절
+export const declineFollowRequest = async (
+  friend_id: number,
+): Promise<void> => {
+  const token = useAuthStore.getState().token;
+
+  const res = await fetch(
+    `${process.env.EXPO_PUBLIC_API_BASE_URL_8001}/friends/decline_follow/${friend_id}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  if (!res.ok) {
+    throw new Error("네트워크 응답이 ok가 아님");
+  }
+};
+
+// 친구 삭제
+export const deleteFriend = async (friend_id: number): Promise<void> => {
+  const token = useAuthStore.getState().token;
+
+  const res = await fetch(
+    `${process.env.EXPO_PUBLIC_API_BASE_URL_8001}/friends/${friend_id}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  if (!res.ok) {
+    throw new Error("네트워크 응답이 ok가 아님");
+  }
+};
+
+// 친구 차단
+export const blockFriend = async (friend_id: number): Promise<void> => {
+  await api8001.post(`/friends/block/${friend_id}`);
+};
+
+// 친구 차단 해제
+export const unblockFriend = async (friend_id: number): Promise<void> => {
+  await api8001.post(`/friends/unblock/${friend_id}`);
+};
