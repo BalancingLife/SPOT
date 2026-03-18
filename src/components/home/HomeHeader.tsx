@@ -5,8 +5,10 @@ import UserCard from "@/src/components/common/UserCard";
 
 import { Colors } from "@/src/styles/Colors";
 import { useMyProfileStore } from "@/src/stores/useMyProfileStore";
+import { useFriendsStore } from "@/src/stores/useFriendsStore";
 
 import type { SelectedUser as StorySelectedUser } from "@/src/components/home/StoryList";
+import { blockFriend } from "@/src/lib/api/friends";
 
 type HomeHeaderProps = {
   friends: any[];
@@ -41,6 +43,7 @@ export const HomeHeader = ({
         },
   );
 
+  const loadFriends = useFriendsStore((s) => s.loadFriends);
   const handlePressEditProfile = () => {
     router.push("/profile/edit");
   };
@@ -51,8 +54,16 @@ export const HomeHeader = ({
       {
         text: "차단",
         style: "destructive",
-        onPress: () => {
-          console.log("차단 실행");
+        onPress: async () => {
+          if (!selectedUser?.userId) return;
+
+          try {
+            await blockFriend(selectedUser.userId);
+            loadFriends({ force: true });
+            onSelectStory(null);
+          } catch (e) {
+            Alert.alert("차단 실패", "다시 시도해주세요");
+          }
         },
       },
     ]);
