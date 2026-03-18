@@ -7,6 +7,7 @@ function attachInterceptors(client: AxiosInstance): AxiosInstance {
     const token = useAuthStore.getState().token;
 
     if (token) {
+      config.headers = config.headers ?? {};
       config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -26,11 +27,12 @@ function attachInterceptors(client: AxiosInstance): AxiosInstance {
     },
     (err) => {
       const method = (err.config?.method ?? "GET").toUpperCase();
-      const status = err.response?.status ?? "NO_STATUS";
       const message =
         err.response?.data?.message ?? err.message ?? "Unknown error";
 
-      console.error(`❌ [${method}] ${err.config.url} ${err.status}`);
+      console.error(
+        `❌ [${method}] ${err.config?.url ?? "unknown url"} ${err.response?.status}`,
+      );
       console.error(`❌ ${message}`);
 
       return Promise.reject(err);
