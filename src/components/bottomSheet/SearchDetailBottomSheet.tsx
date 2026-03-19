@@ -2,6 +2,7 @@
 import React, { useMemo, useRef } from "react";
 import { StyleSheet, Linking } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { router } from "expo-router";
 
 import { useSearchStore } from "@/src/stores/useSearchStore";
 import { Colors } from "@/src/styles/Colors";
@@ -13,7 +14,6 @@ type Props = { onClose: () => void };
 export default function SearchDetailBottomSheet({ onClose }: Props) {
   const sheetRef = useRef<BottomSheet>(null);
   const focused = useSearchStore((s) => s.focused);
-  const unfocus = useSearchStore((s) => s.unfocus);
   const toggleBookmark = useSearchStore((s) => s.toggleBookmark);
 
   const images = useMemo(() => {
@@ -54,7 +54,6 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
   };
 
   const handleClose = () => {
-    unfocus();
     onClose?.();
   };
 
@@ -103,6 +102,16 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
           distanceText={distanceText}
           onToggleBookmark={() => toggleBookmark(placeId)}
           onPressDirection={openNaverDirection}
+          onPress={() =>
+            router.push({
+              pathname: "/place/[placeId]",
+              params: {
+                placeId: String(placeId),
+                lat: String(focused.lat),
+                lng: String(focused.lng),
+              },
+            })
+          }
         />
       </BottomSheetScrollView>
     </BottomSheet>

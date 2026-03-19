@@ -12,7 +12,7 @@ import BottomSheet, {
   BottomSheetScrollView,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-
+import { router } from "expo-router";
 import { useSearchStore } from "@/src/stores/useSearchStore";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
@@ -158,6 +158,16 @@ export default function SearchDetailsBottomSheet({
                 reviewCount={p.ratingCount ?? undefined}
                 showBookmark={true}
                 isBookmarked={p.isBookmarked}
+                onPress={() =>
+                  router.push({
+                    pathname: "/place/[placeId]",
+                    params: {
+                      placeId: String(p.id),
+                      lat: String(p.lat),
+                      lng: String(p.lng),
+                    },
+                  })
+                }
               />
             </Pressable>
           );
