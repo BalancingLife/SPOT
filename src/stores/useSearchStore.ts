@@ -38,6 +38,8 @@ type State = {
 
   // 🔹 북마크 토글 액션
   toggleBookmark: (placeId: number | null) => Promise<void> | void;
+
+  syncBookmarkByPlaceId: (placeId: number, nextBookmarked: boolean) => void;
 };
 
 export const useSearchStore = create<State>((set, get) => ({
@@ -105,7 +107,7 @@ export const useSearchStore = create<State>((set, get) => ({
 
     if (!target) {
       console.warn(
-        "[searchStore] target not found in items/focused. ignore in search context."
+        "[searchStore] target not found in items/focused. ignore in search context.",
       );
       return;
     }
@@ -116,7 +118,7 @@ export const useSearchStore = create<State>((set, get) => ({
     set((state) => ({
       ...state,
       items: state.items.map((p) =>
-        p.placeId === placeId ? { ...p, isBookmarked: willBookmark } : p
+        p.placeId === placeId ? { ...p, isBookmarked: willBookmark } : p,
       ),
       focused:
         state.focused && state.focused.placeId === placeId
@@ -126,7 +128,7 @@ export const useSearchStore = create<State>((set, get) => ({
 
     // 2) API 호출
     try {
-      await toggleBookmarkApi(placeId, willBookmark);
+      await toggleBookmarkApi(placeId);
 
       // SavedPlacesStore에도 반영
       const { applyBookmarkFromPlace } = useSavedPlacesStore.getState();
@@ -142,4 +144,16 @@ export const useSearchStore = create<State>((set, get) => ({
       set({ items: prevItems, focused: prevFocused });
     }
   },
+
+  syncBookmarkByPlaceId: (placeId, nextBookmarked) =>
+    set((state) => ({
+      ...state,
+      items: state.items.map((p) =>
+        p.placeId === placeId ? { ...p, isBookmarked: nextBookmarked } : p,
+      ),
+      focused:
+        state.focused && state.focused.placeId === placeId
+          ? { ...state.focused, isBookmarked: nextBookmarked }
+          : state.focused,
+    })),
 }));

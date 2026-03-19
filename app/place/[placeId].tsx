@@ -25,9 +25,13 @@ import CommentWriteModal, {
 import SpotButton from "@/src/components/common/SpotButton";
 
 import { fetchPlaceMore } from "@/src/lib/api/places";
-import { usePlaceMoreStore } from "@/src/stores/usePlaceMoreStore";
+import { toggleBookmarkApi } from "@/src/lib/api/bookmark";
 import type { ApiPlace, ApiPlaceComment } from "@/src/types/place";
 import { formatDistance } from "@/src/utils/format";
+
+import { useSavedPlacesStore } from "@/src/stores/useSavedPlacesStore";
+import { useSearchStore } from "@/src/stores/useSearchStore";
+import { usePlaceMoreStore } from "@/src/stores/usePlaceMoreStore";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -38,7 +42,6 @@ export default function PlaceDetailScreen() {
     lng?: string;
   }>();
 
-  // 리스트에서 넘어온 기본 Place
   const basePlace = usePlaceMoreStore((s) => s.basePlace);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,10 +49,12 @@ export default function PlaceDetailScreen() {
   const [comments, setComments] = useState<ApiPlaceComment[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const [localBookmarked, setLocalBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
+
   const flatListRef = useRef<FlatList>(null);
   const commentModalRef = useRef<CommentWriteModalRef>(null);
 
-  // 사진 없을 때 더미
   const fallbackImages = useMemo(
     () => [
       require("@/assets/images/example2.png"),
@@ -59,24 +64,23 @@ export default function PlaceDetailScreen() {
     [],
   );
 
-  // 상단 캐러셀 이미지: /more → basePlace → fallback
   const topImages = useMemo(() => {
     if (place?.photo) return [{ uri: place.photo }];
     if (basePlace?.photo) return [{ uri: basePlace.photo }];
-    if (basePlace?.thumbnails?.length)
+    if (basePlace?.thumbnails?.length) {
       return basePlace.thumbnails.map((u) => ({ uri: u }));
+    }
     return fallbackImages;
   }, [place, basePlace, fallbackImages]);
 
-  // PlaceCard 안에 들어갈 썸네일들
   const cardImages = useMemo(() => {
-    if (basePlace?.thumbnails?.length)
+    if (basePlace?.thumbnails?.length) {
       return basePlace.thumbnails.map((u) => ({ uri: u }));
+    }
     if (place?.photo) return [{ uri: place.photo }];
     return [require("@/assets/images/example.png")];
   }, [place, basePlace]);
 
-  // 표시용 공통 데이터 (place 우선, 없으면 basePlace)
   const display = {
     name: place?.name ?? basePlace?.name ?? "알 수 없는 장소",
     category: place?.list ?? basePlace?.category ?? "",
@@ -96,7 +100,10 @@ export default function PlaceDetailScreen() {
       ? formatDistance(display.distance)
       : undefined;
 
-  // /more API 호출 (추가 정보용, 실패해도 화면은 basePlace로 렌더)
+  useEffect(() => {
+    setLocalBookmarked(display.isBookmarked);
+  }, [display.isBookmarked]);
+
   useEffect(() => {
     if (!placeId || !lat || !lng) return;
 
@@ -107,6 +114,7 @@ export default function PlaceDetailScreen() {
           lat: Number(lat),
           lng: Number(lng),
         });
+
         setPlace(data.places);
         setComments(data.comments ?? []);
         setError(null);
@@ -141,7 +149,39 @@ export default function PlaceDetailScreen() {
     commentModalRef.current?.open();
   };
 
-  // basePlace도 없고 /more도 없으면 진짜로 정보 없음
+  const handleToggleBookmark = async () => {
+    const numericPlaceId = Number(placeId);
+
+    if (!Number.isFinite(numericPlaceId) || bookmarkLoading) return;
+
+    const prev = localBookmarked;
+    const next = !prev;
+
+    setLocalBookmarked(next);
+    setBookmarkLoading(true);
+
+    try {
+      await toggleBookmarkApi(numericPlaceId);
+
+      const syncTarget =
+        basePlace && basePlace.placeId === numericPlaceId
+          ? { ...basePlace, isBookmarked: next }
+          : null;
+
+      if (syncTarget) {
+        useSavedPlacesStore.getState().applyBookmarkFromPlace(syncTarget, next);
+      }
+
+      useSearchStore.getState().syncBookmarkByPlaceId(numericPlaceId, next);
+      usePlaceMoreStore.getState().syncBookmarkByPlaceId(numericPlaceId, next);
+    } catch (e) {
+      console.error("[PlaceDetailScreen] bookmark toggle error:", e);
+      setLocalBookmarked(prev);
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
+
   if (!place && !basePlace) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -153,7 +193,6 @@ export default function PlaceDetailScreen() {
   return (
     <View style={styles.container}>
       <ScrollView>
-        {/* 상단 이미지 캐러셀 */}
         <View style={styles.topImageContainer}>
           <FlatList
             ref={flatListRef}
@@ -177,7 +216,6 @@ export default function PlaceDetailScreen() {
           </View>
         </View>
 
-        {/* 장소 정보 (PlaceCard 그대로 활용) */}
         <View style={styles.infoSection}>
           <PlaceCard
             name={display.name}
@@ -185,15 +223,15 @@ export default function PlaceDetailScreen() {
             address={display.address}
             images={cardImages}
             showBookmark={true}
-            isBookmarked={display.isBookmarked}
+            isBookmarked={localBookmarked}
             showDirectionButton={false}
             rating={display.ratingAvg ?? undefined}
             reviewCount={display.ratingCount ?? undefined}
             distanceText={distanceText}
+            onToggleBookmark={handleToggleBookmark}
           />
         </View>
 
-        {/* 지도 안내 텍스트 */}
         <Text
           style={[
             TextStyles.Medium14,
@@ -204,7 +242,6 @@ export default function PlaceDetailScreen() {
           필요)
         </Text>
 
-        {/* 지도 이미지 */}
         <Text
           style={[TextStyles.Bold16, { color: Colors.gray_900, padding: 16 }]}
         >
@@ -215,7 +252,6 @@ export default function PlaceDetailScreen() {
           style={styles.mapImage}
         />
 
-        {/* 길찾기 버튼 */}
         <SpotButton
           label="네이버 지도로 길 찾기"
           variant="primary"
@@ -223,7 +259,6 @@ export default function PlaceDetailScreen() {
           style={{ marginHorizontal: 16 }}
         />
 
-        {/* 저장한 사람들 안내 (지금은 예전 이미지 그대로 사용) */}
         <View style={styles.savedInfo}>
           <Image
             source={require("@/assets/images/example3.png")}
@@ -231,7 +266,6 @@ export default function PlaceDetailScreen() {
           />
         </View>
 
-        {/* 코멘트 */}
         <View style={styles.commentSection}>
           <Text
             style={[
@@ -275,7 +309,6 @@ export default function PlaceDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* 우하단 코멘트 쓰기 버튼 */}
       <CommentWriteButton onPress={handleOpenCommentSheet} />
       <CommentWriteModal ref={commentModalRef} />
     </View>

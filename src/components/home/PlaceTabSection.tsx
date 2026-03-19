@@ -4,7 +4,8 @@ import FilterBar from "../bottomSheet/FilterBar";
 import PlaceCard from "../common/PlaceCard";
 import OptionModal from "../common/OptionModal";
 import { type HomePlaceItem } from "./types";
-
+import { useSearchStore } from "@/src/stores/useSearchStore";
+import { router } from "expo-router";
 const SORT_OPTIONS = [
   { label: "최신순", value: "latest" },
   { label: "거리순", value: "distance" },
@@ -36,6 +37,8 @@ export const PlaceTabSection = ({ placeList }: PlaceTabSectionProps) => {
   const [opened, setOpened] = useState<"sort" | "save" | "category" | null>(
     null,
   );
+
+  const toggleBookmark = useSearchStore((s) => s.toggleBookmark);
 
   // 현재 선택된 정렬값에 대응하는 라벨을 계산한다.
   const sortLabel =
@@ -110,10 +113,17 @@ export const PlaceTabSection = ({ placeList }: PlaceTabSectionProps) => {
                     : `${Math.round(p.distance)}m`
                   : undefined
               }
-              onToggleBookmark={() =>
-                console.log("[home-place] bookmark:", p.id)
+              onToggleBookmark={() => toggleBookmark(p.id)}
+              onPress={() =>
+                router.push({
+                  pathname: "/place/[placeId]",
+                  params: {
+                    placeId: String(p.id),
+                    lat: p.lat,
+                    lng: p.lng,
+                  },
+                })
               }
-              onPress={() => console.log("[home-place] press:", p.id)}
             />
           );
         })}
