@@ -47,7 +47,7 @@ import { fetchPlaceMore } from "@/src/lib/api/places";
 import { useAuthStore } from "@/src/stores/useAuthStore";
 import { useFriendsStore } from "@/src/stores/useFriendsStore";
 import { useLocationStore } from "@/src/stores/useLocationStore";
-
+import { useMyProfileStore } from "@/src/stores/useMyProfileStore";
 // Styles
 import { Colors } from "@/src/styles/Colors";
 
@@ -75,6 +75,8 @@ export default function Home() {
   // friends 데이터와 로딩 함수
   const friends = useFriendsStore((state) => state.friends);
   const loadFriends = useFriendsStore((state) => state.loadFriends);
+
+  const fetchMyProfile = useMyProfileStore((state) => state.fetchMyProfile);
 
   const lat = coords?.lat;
   const lng = coords?.lng;
@@ -123,8 +125,9 @@ export default function Home() {
       if (!hasHydrated) return;
       if (!token) return;
 
+      fetchMyProfile();
       loadFriends();
-    }, [hasHydrated, token, loadFriends]),
+    }, [hasHydrated, token, loadFriends, fetchMyProfile]),
   );
 
   /** -----------------------------
@@ -511,7 +514,7 @@ export default function Home() {
    *  ----------------------------- */
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* header */}
+      {/* TopBar + StoryList + (UserCard) */}
       <HomeHeader
         friends={friends}
         selectedUser={selectedUser}
