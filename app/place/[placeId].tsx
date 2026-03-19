@@ -233,16 +233,6 @@ export default function PlaceDetailScreen() {
         </View>
 
         <Text
-          style={[
-            TextStyles.Medium14,
-            { color: Colors.gray_300, textAlign: "center" },
-          ]}
-        >
-          네이버 지도 api에서 받아올 수 있는{"\n"} 정보 나열 (*개발자와 상의
-          필요)
-        </Text>
-
-        <Text
           style={[TextStyles.Bold16, { color: Colors.gray_900, padding: 16 }]}
         >
           매장 위치
