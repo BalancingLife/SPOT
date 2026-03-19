@@ -571,16 +571,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.white },
   headerContainer: { backgroundColor: Colors.white, paddingLeft: 16 },
 
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    paddingRight: 16,
-  },
-  spotLogo: { width: 63, height: 29 },
-  friendsIconContainer: { flexDirection: "row", gap: 16 },
-  friendsIcon: { width: 24, height: 24 },
-
   bodyContainer: { flex: 1, backgroundColor: Colors.white, paddingTop: 20 },
 
   tabContent: { flex: 1 },

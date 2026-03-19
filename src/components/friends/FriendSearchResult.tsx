@@ -131,8 +131,9 @@ const styles = StyleSheet.create({
   actionBtn: {
     width: 80,
     height: 28,
-    borderRadius: 999,
-    backgroundColor: Colors.gray_900,
+    borderRadius: 7,
+
+    backgroundColor: "#303030",
     justifyContent: "center",
     alignItems: "center",
   },
