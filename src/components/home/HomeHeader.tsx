@@ -112,7 +112,7 @@ export const HomeHeader = ({
         />
 
         <View style={styles.friendsIconContainer}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/profile/friends")}>
             <Image
               source={require("@/assets/images/friends-icon-black.png")}
               style={styles.friendsIcon}
