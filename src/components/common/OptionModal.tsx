@@ -31,8 +31,9 @@ export default function OptionModal({
   onClose,
 }: Props) {
   const choose = (v: string) => {
-    onSelect([v]); // 즉시 적용
-    onClose(); // 즉시 닫기
+    const isSelected = selected.includes(v);
+    onSelect(isSelected ? [] : [v]);
+    onClose();
   };
 
   return (
