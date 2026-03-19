@@ -25,6 +25,8 @@ import { toggleBookmarkApi } from "@/src/lib/api/bookmark";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 
+import { CommentCard } from "./CommentCard";
+
 export type MorePlace = {
   placeId: number;
   gId: string;
@@ -56,6 +58,7 @@ export type MoreComment = {
   commentPhoto: string;
   createdAt: string;
   marked: boolean;
+  isLiked?: boolean;
 };
 
 export type CommentBottomSheetHandle = {
@@ -133,7 +136,7 @@ const CommentBottomSheet = forwardRef<CommentBottomSheetHandle, Props>(
       setBookmarkedUi(next);
 
       try {
-        await toggleBookmarkApi(place.placeId, next);
+        await toggleBookmarkApi(place.placeId);
       } catch {
         // ❌ 실패 시 롤백
         setBookmarkedUi(!next);
@@ -260,91 +263,13 @@ const CommentBottomSheet = forwardRef<CommentBottomSheetHandle, Props>(
               </View>
 
               {/* 댓글 리스트 */}
-              <View style={styles.commentsWrap}>
-                {comments.length === 0 ? (
-                  <View style={styles.stateBox}>
-                    <Text style={styles.stateText}>아직 코멘트가 없어요</Text>
-                  </View>
-                ) : (
-                  comments.map((c) => {
-                    const avatar = safeUri(c.commentPhoto); // 일단 commentPhoto를 아바타로 쓰는 건 애매하지만, 너네 스키마에 avatar가 없어서 임시
-                    const photos = Array.isArray(c.photos) ? c.photos : [];
-                    const top3 = photos.slice(0, 3);
-
-                    return (
-                      <View key={String(c.id)} style={styles.commentItem}>
-                        <View style={styles.commentHeader}>
-                          {avatar ? (
-                            <Image
-                              source={{ uri: avatar }}
-                              style={styles.avatar}
-                            />
-                          ) : (
-                            <View style={styles.avatarFallback} />
-                          )}
-
-                          <View style={styles.commentHeaderText}>
-                            <View style={styles.nameRow}>
-                              <Text style={styles.nickname}>
-                                {(c.memEmail ?? "user").split("@")[0]}
-                              </Text>
-                              <Text style={styles.email}>
-                                {" "}
-                                {c.memEmail ?? ""}
-                              </Text>
-                            </View>
-                          </View>
-
-                          <Text style={styles.date}>
-                            {formatYMD(c.createdAt)}
-                          </Text>
-                        </View>
-
-                        <Text style={styles.commentContent}>{c.comment}</Text>
-
-                        {top3.length > 0 ? (
-                          <View style={styles.photoRow}>
-                            {top3.map((p, idx) => (
-                              <Image
-                                key={`${c.id}-p-${idx}`}
-                                source={{ uri: p }}
-                                style={styles.photo}
-                              />
-                            ))}
-                          </View>
-                        ) : null}
-
-                        {/* 미니 장소 카드 */}
-                        {/* <View style={styles.miniPlaceCard}>
-                          {heroPhoto ? (
-                            <Image
-                              source={{ uri: heroPhoto }}
-                              style={styles.miniThumb}
-                            />
-                          ) : (
-                            <View
-                              style={[styles.miniThumb, styles.heroFallback]}
-                            />
-                          )}
-
-                          <View style={styles.miniText}>
-                            <Text style={styles.miniTitle}>{place.name}</Text>
-                            <Text style={styles.miniAddr}>{place.address}</Text>
-                          </View>
-
-                          <Text style={styles.miniMark}>
-                            {c.marked ? "저장됨" : ""}
-                          </Text>
-                        </View> */}
-
-                        <View style={styles.divider} />
-                      </View>
-                    );
-                  })
-                )}
-              </View>
-
-              <View style={{ height: 30 }} />
+              {comments.length === 0 ? (
+                <View style={styles.stateBox}>
+                  <Text style={styles.stateText}>아직 코멘트가 없어요</Text>
+                </View>
+              ) : (
+                <CommentCard commentList={comments} />
+              )}
             </>
           ) : null}
         </BottomSheetScrollView>
@@ -447,8 +372,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   bookmarkIcon: { fontSize: 16 },
-
-  commentsWrap: { paddingHorizontal: 16 },
 
   commentItem: { paddingTop: 6, paddingBottom: 6 },
 
