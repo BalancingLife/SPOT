@@ -14,12 +14,16 @@ type HomeHeaderProps = {
   friends: any[];
   selectedUser: StorySelectedUser | null;
   onSelectStory: (user: StorySelectedUser | null) => void;
+  showStoryList?: boolean;
+  showUserCard?: boolean;
 };
 
 export const HomeHeader = ({
   friends,
   selectedUser,
   onSelectStory,
+  showStoryList = true,
+  showUserCard = true,
 }: HomeHeaderProps) => {
   const DEFAULT_MY_IMAGE = require("@/assets/images/dog.png");
 
@@ -105,16 +109,18 @@ export const HomeHeader = ({
 
   return (
     <View style={styles.headerContainer}>
-      <StoryList
-        myNickname={myNickname}
-        myUserId={myUserId}
-        myBio={myBio}
-        myAvatarSource={myAvatarSource}
-        friends={friends}
-        onSelectStory={onSelectStory}
-      />
+      {showStoryList && (
+        <StoryList
+          myNickname={myNickname}
+          myUserId={myUserId}
+          myBio={myBio}
+          myAvatarSource={myAvatarSource}
+          friends={friends}
+          onSelectStory={onSelectStory}
+        />
+      )}
 
-      {selectedUser ? (
+      {showUserCard && selectedUser ? (
         <View style={styles.userCardWrapper}>
           <UserCard
             variant="story"

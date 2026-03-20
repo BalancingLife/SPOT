@@ -41,6 +41,15 @@ const dummyCardFallbackImgs = [
   require("@/assets/images/spot-icon-orange.png"),
 ];
 
+// 너무 작은 움직임은 방향 전환으로 보지 않음
+const SCROLL_THRESHOLD = 16;
+
+// 맨 아래에 거의 닿은 상태로 보는 범위
+const BOTTOM_EDGE_THRESHOLD = 24;
+
+// 맨 아래 bounce에서 생기는 작은 반등(up)은 무시
+const BOTTOM_BOUNCE_UP_IGNORE_THRESHOLD = 20;
+
 export const PlaceTabSection = ({
   placeList,
   onScrollDirection,
@@ -79,13 +88,37 @@ export const PlaceTabSection = ({
   }, [placeList, category, sort]);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const currentY = e.nativeEvent.contentOffset.y;
-    const diff = currentY - lastOffsetYRef.current;
+    const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
 
-    if (Math.abs(diff) < 16) return;
+    const currentY = contentOffset.y;
+    const prevY = lastOffsetYRef.current;
+    const diff = currentY - prevY;
 
+    const layoutHeight = layoutMeasurement.height;
+    const contentHeight = contentSize.height;
+
+    const distanceFromBottom = contentHeight - layoutHeight - currentY;
+    const isNearBottom = distanceFromBottom <= BOTTOM_EDGE_THRESHOLD;
+
+    // iOS bounce로 음수까지 갈 수 있음 -> 맨 위는 그냥 up 처리
     if (currentY <= 0) {
       onScrollDirection?.("up");
+      lastOffsetYRef.current = currentY;
+      return;
+    }
+
+    // 너무 작은 움직임은 무시
+    if (Math.abs(diff) < SCROLL_THRESHOLD) {
+      lastOffsetYRef.current = currentY;
+      return;
+    }
+
+    // 맨 아래 근처에서 bounce로 살짝 위로 튀는 경우(up) 무시
+    if (
+      isNearBottom &&
+      diff < 0 &&
+      Math.abs(diff) < BOTTOM_BOUNCE_UP_IGNORE_THRESHOLD
+    ) {
       lastOffsetYRef.current = currentY;
       return;
     }

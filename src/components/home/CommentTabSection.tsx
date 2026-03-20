@@ -21,6 +21,10 @@ type CommentTabSectionProps = {
   onScrollDirection?: (direction: "up" | "down") => void;
 };
 
+const SCROLL_THRESHOLD = 16;
+const BOTTOM_EDGE_THRESHOLD = 24;
+const BOTTOM_BOUNCE_UP_IGNORE_THRESHOLD = 20;
+
 export const CommentTabSection = ({
   scope,
   commentList,
@@ -45,13 +49,34 @@ export const CommentTabSection = ({
     sortOptions.find((option) => option.value === sort[0])?.label ?? "최신순";
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const currentY = e.nativeEvent.contentOffset.y;
-    const diff = currentY - lastOffsetYRef.current;
+    const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
 
-    if (Math.abs(diff) < 16) return;
+    const currentY = contentOffset.y;
+    const prevY = lastOffsetYRef.current;
+    const diff = currentY - prevY;
+
+    const layoutHeight = layoutMeasurement.height;
+    const contentHeight = contentSize.height;
+
+    const distanceFromBottom = contentHeight - layoutHeight - currentY;
+    const isNearBottom = distanceFromBottom <= BOTTOM_EDGE_THRESHOLD;
 
     if (currentY <= 0) {
       onScrollDirection?.("up");
+      lastOffsetYRef.current = currentY;
+      return;
+    }
+
+    if (Math.abs(diff) < SCROLL_THRESHOLD) {
+      lastOffsetYRef.current = currentY;
+      return;
+    }
+
+    if (
+      isNearBottom &&
+      diff < 0 &&
+      Math.abs(diff) < BOTTOM_BOUNCE_UP_IGNORE_THRESHOLD
+    ) {
       lastOffsetYRef.current = currentY;
       return;
     }

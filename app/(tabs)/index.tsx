@@ -57,30 +57,22 @@ import { useAutoHideHeader } from "@/src/hooks/useAutoHideHeader";
 import { Colors } from "@/src/styles/Colors";
 
 export default function Home() {
-  // 선택된 유저 상태
   const [selectedUser, setSelectedUser] = useState<StorySelectedUser | null>(
     null,
   );
 
-  // 홈 화면 범위(전체 / 나 / 친구 등) 상태
   const [scope, setScope] = useState<HomeScope>({ type: "friends" });
-  // 현재 활성 탭 상태
   const [activeTab, setActiveTab] = useState<HomeTabKey>("map");
-  // 지도 마커 데이터
   const [markers, setMarkers] = useState<HomeMarker[]>([]);
-  // 장소/코멘트 리스트 데이터
   const [placeList, setPlaceList] = useState<HomePlaceItem[]>([]);
   const [commentList, setCommentList] = useState<HomeCommentItem[]>([]);
 
-  // 인증 관련 전역 상태
   const token = useAuthStore((state) => state.token);
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
-  // 위치 관련 전역 상태
   const refreshOnce = useLocationStore((state) => state.refreshOnce);
   const coords = useLocationStore((state) => state.coords);
 
-  // friends 데이터와 로딩 함수
   const friends = useFriendsStore((state) => state.friends);
   const loadFriends = useFriendsStore((state) => state.loadFriends);
 
@@ -89,22 +81,17 @@ export default function Home() {
   const lat = coords?.lat;
   const lng = coords?.lng;
 
-  // 지도 ref
   const mapRef = useRef<NaverMapViewRef>(null);
-  // 댓글 바텀시트 ref
   const commentSheetRef = useRef<CommentBottomSheetHandle>(null);
-  // 지도 카메라 최초 이동 여부
+
   const [didInitCamera, setDidInitCamera] = useState(false);
-  // 선택된 장소와 추가 데이터 상태
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
   const [morePlace, setMorePlace] = useState<any>(null);
   const [moreComments, setMoreComments] = useState<any[]>([]);
   const [moreLoading, setMoreLoading] = useState(false);
   const [moreError, setMoreError] = useState<string | null>(null);
-  // 댓글 바텀시트 열림 여부
   const [isCommentOpen, setIsCommentOpen] = useState(false);
 
-  // 오토 하이드 헤더 훅
   const {
     isHeaderReady,
     animatedHeaderStyle,
@@ -113,19 +100,16 @@ export default function Home() {
     showHeader,
   } = useAutoHideHeader();
 
-  // 탭 바뀌면 헤더 다시 보여주기
   useEffect(() => {
     showHeader();
   }, [activeTab, showHeader]);
 
-  // 탭 진입 시 1회 위치 갱신
   useEffect(() => {
     if (activeTab !== "map") return;
     refreshOnce?.();
     setDidInitCamera(false);
   }, [activeTab, refreshOnce]);
 
-  // coords 잡히면 “내 위치에서 시작”
   useEffect(() => {
     if (activeTab !== "map") return;
     if (lat == null || lng == null) return;
@@ -141,7 +125,6 @@ export default function Home() {
     setDidInitCamera(true);
   }, [activeTab, lat, lng, didInitCamera]);
 
-  // 화면 다시 보일때마다, 친구 목록 불러오기
   useFocusEffect(
     useCallback(() => {
       if (!hasHydrated) return;
@@ -151,10 +134,6 @@ export default function Home() {
       loadFriends();
     }, [hasHydrated, token, loadFriends, fetchMyProfile]),
   );
-
-  /** -----------------------------
-   *  더미 생성기 (테스트용)
-   *  ----------------------------- */
 
   const makeDummyMarkers = (baseLat: number, baseLng: number, s: HomeScope) => {
     const tag =
@@ -229,7 +208,6 @@ export default function Home() {
         `https://placehold.co/100x100/png?text=B`,
         `https://placehold.co/100x100/png?text=C`,
       ],
-
       searchCount: 0,
       score: 0,
       distance: 0,
@@ -268,9 +246,6 @@ export default function Home() {
     }));
   };
 
-  /** -----------------------------
-   *  MAP 탭: scope별 장소 리스트 로드 (+ 비면 더미 리스트)
-   *  ----------------------------- */
   useEffect(() => {
     if (activeTab !== "map") return;
     if (lat == null || lng == null) return;
@@ -300,12 +275,9 @@ export default function Home() {
             raw: p,
           }));
 
-          if (next.length === 0) {
-            const dummy = makeDummyMarkers(lat, lng, scope);
-            setMarkers(dummy);
-          } else {
-            setMarkers(next);
-          }
+          setMarkers(
+            next.length === 0 ? makeDummyMarkers(lat, lng, scope) : next,
+          );
           return;
         }
 
@@ -321,16 +293,12 @@ export default function Home() {
             raw: p,
           }));
 
-          if (next.length === 0) {
-            const dummy = makeDummyMarkers(lat, lng, scope);
-            setMarkers(dummy);
-          } else {
-            setMarkers(next);
-          }
+          setMarkers(
+            next.length === 0 ? makeDummyMarkers(lat, lng, scope) : next,
+          );
           return;
         }
 
-        // friends, me 둘다 아니면 friend 스코프
         const data = await fetchHomeUser({
           userId: scope.userId,
           lat,
@@ -348,12 +316,9 @@ export default function Home() {
           raw: p,
         }));
 
-        if (next.length === 0) {
-          const dummy = makeDummyMarkers(lat, lng, scope);
-          setMarkers(dummy);
-        } else {
-          setMarkers(next);
-        }
+        setMarkers(
+          next.length === 0 ? makeDummyMarkers(lat, lng, scope) : next,
+        );
       } catch (e: any) {
         console.log("홈 화면 지도 탭 데이터 fetch 오류:", {
           message: e?.message,
@@ -369,9 +334,6 @@ export default function Home() {
     };
   }, [activeTab, scope, lat, lng]);
 
-  /** -----------------------------
-   *  PLACE 탭: scope별 장소 리스트 로드 (+ 비면 더미 리스트)
-   *  ----------------------------- */
   useEffect(() => {
     if (activeTab !== "place") return;
     if (lat == null || lng == null) return;
@@ -391,13 +353,9 @@ export default function Home() {
         }
 
         if (cancelled) return;
-
-        if (!list || list.length === 0) {
-          const dummy = makeDummyPlaces(scope);
-          setPlaceList(dummy);
-        } else {
-          setPlaceList(list);
-        }
+        setPlaceList(
+          !list || list.length === 0 ? makeDummyPlaces(scope) : list,
+        );
       } catch (e: any) {
         console.log("PLACE 탭 fetch error:", {
           message: e?.message,
@@ -413,9 +371,6 @@ export default function Home() {
     };
   }, [activeTab, scope, lat, lng]);
 
-  /** -----------------------------
-   *  COMMENT 탭: scope별 코멘트 리스트 로드 (+ 비면 더미 리스트)
-   *  ----------------------------- */
   useEffect(() => {
     if (activeTab !== "comment") return;
     if (lat == null || lng == null) return;
@@ -441,13 +396,9 @@ export default function Home() {
         }
 
         if (cancelled) return;
-
-        if (!list || list.length === 0) {
-          const dummy = makeDummyComments(scope);
-          setCommentList(dummy);
-        } else {
-          setCommentList(list);
-        }
+        setCommentList(
+          !list || list.length === 0 ? makeDummyComments(scope) : list,
+        );
       } catch (e: any) {
         console.log("[home-comment] fetch error:", {
           message: e?.message,
@@ -463,7 +414,6 @@ export default function Home() {
     };
   }, [activeTab, scope, lat, lng]);
 
-  // 사용자 액션(마커 클릭)에 의해 실행되는 수동 상세 조회 함수
   const loadPlaceDetail = async (placeId: number) => {
     if (lat == null || lng == null) return;
 
@@ -483,7 +433,6 @@ export default function Home() {
     }
   };
 
-  // HomeHeader
   const handleSelectStory = (user: StorySelectedUser | null) => {
     if (!user) {
       setSelectedUser(null);
@@ -503,7 +452,6 @@ export default function Home() {
     }
   };
 
-  // MapTabSection
   const moveToCurrentLocation = async () => {
     await refreshOnce?.();
 
@@ -524,26 +472,22 @@ export default function Home() {
     loadPlaceDetail(placeId);
   };
 
-  // TabBar
   const handlePressTab = (tab: HomeTabKey) => {
     setActiveTab(tab);
   };
 
-  /** -----------------------------
-   *  UI
-   *  ----------------------------- */
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* TopBar */}
       <TopBar />
 
-      {/* HomeHeader */}
+      {/* 오토하이드 대상: StoryList만 */}
       {!isHeaderReady ? (
         <View onLayout={handleHeaderLayout}>
           <HomeHeader
             friends={friends}
-            selectedUser={selectedUser}
+            selectedUser={null}
             onSelectStory={handleSelectStory}
+            showUserCard={false}
           />
         </View>
       ) : (
@@ -552,20 +496,29 @@ export default function Home() {
         >
           <HomeHeader
             friends={friends}
-            selectedUser={selectedUser}
+            selectedUser={null}
             onSelectStory={handleSelectStory}
+            showUserCard={false}
           />
         </Animated.View>
       )}
 
-      {/* body */}
+      {/* 고정 영역: UserCard만 */}
+      {selectedUser ? (
+        <View style={styles.userCardSection}>
+          <HomeHeader
+            friends={[]}
+            selectedUser={selectedUser}
+            onSelectStory={handleSelectStory}
+            showStoryList={false}
+          />
+        </View>
+      ) : null}
+
       <View style={styles.bodyContainer}>
-        {/* tab bar */}
         <TabBar activeTab={activeTab} onPressTab={handlePressTab} />
 
-        {/* tab content */}
         <View style={styles.tabContent}>
-          {/* MAP */}
           {activeTab === "map" && (
             <MapTabSection
               mapRef={mapRef}
@@ -576,7 +529,6 @@ export default function Home() {
             />
           )}
 
-          {/* PLACE */}
           {activeTab === "place" && (
             <PlaceTabSection
               placeList={placeList}
@@ -584,7 +536,6 @@ export default function Home() {
             />
           )}
 
-          {/* COMMENT */}
           {activeTab === "comment" && (
             <CommentTabSection
               scope={scope}
@@ -595,7 +546,6 @@ export default function Home() {
         </View>
       </View>
 
-      {/* 지도 탭 장소 누르면 나오는 코멘트 바텀 시트 */}
       <CommentBottomSheet
         ref={commentSheetRef}
         onOpen={() => setIsCommentOpen(true)}
@@ -614,11 +564,21 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.white },
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
 
   animatedHeaderContainer: {
     overflow: "hidden",
     backgroundColor: Colors.white,
+  },
+
+  userCardSection: {
+    backgroundColor: Colors.white,
+    paddingLeft: 16,
+    paddingRight: 16,
+    paddingTop: 12,
   },
 
   bodyContainer: {
@@ -627,5 +587,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
 
-  tabContent: { flex: 1 },
+  tabContent: {
+    flex: 1,
+  },
 });
