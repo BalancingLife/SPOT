@@ -82,9 +82,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const PHOTO_GAP = 10;
 const PHOTO_SIZE = Math.floor((SCREEN_WIDTH - 32 - PHOTO_GAP * 2) / 3);
 
-const formatYMD = (iso: string) =>
-  String(iso).slice(0, 10).replaceAll("-", ".");
-
 const safeUri = (u?: string) => {
   if (!u) return null;
   if (u.startsWith("http://") || u.startsWith("https://")) return u;

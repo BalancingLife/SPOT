@@ -1,4 +1,4 @@
-import { View, StyleSheet, Image, TouchableOpacity, Alert } from "react-native";
+import { View, StyleSheet, Alert } from "react-native";
 import { router } from "expo-router";
 import StoryList from "@/src/components/home/StoryList";
 import UserCard from "@/src/components/common/UserCard";
@@ -105,29 +105,6 @@ export const HomeHeader = ({
 
   return (
     <View style={styles.headerContainer}>
-      <View style={styles.topBar}>
-        <Image
-          source={require("@/assets/images/SPOT.png")}
-          style={styles.spotLogo}
-        />
-
-        <View style={styles.friendsIconContainer}>
-          <TouchableOpacity onPress={() => router.push("/profile/friends")}>
-            <Image
-              source={require("@/assets/images/friends-icon-black.png")}
-              style={styles.friendsIcon}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => router.push("/searchFriends")}>
-            <Image
-              source={require("@/assets/images/friends-add-icon-black.png")}
-              style={styles.friendsIcon}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <StoryList
         myNickname={myNickname}
         myUserId={myUserId}
@@ -162,28 +139,6 @@ const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: Colors.white,
     paddingLeft: 16,
-  },
-
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    paddingRight: 16,
-  },
-
-  spotLogo: {
-    width: 63,
-    height: 29,
-  },
-
-  friendsIconContainer: {
-    flexDirection: "row",
-    gap: 16,
-  },
-
-  friendsIcon: {
-    width: 24,
-    height: 24,
   },
 
   userCardWrapper: {
