@@ -11,7 +11,6 @@ import React, {
 import {
   View,
   Pressable,
-  TextInput,
   Keyboard,
   Text,
   Image,
@@ -21,6 +20,7 @@ import {
   BottomSheetModal,
   BottomSheetView,
   BottomSheetBackdrop,
+  BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 
 import { TextStyles } from "../../styles/TextStyles";
@@ -37,14 +37,14 @@ export type CommentWriteModalRef = {
 
 const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<React.ElementRef<typeof BottomSheetTextInput>>(null);
+  const textRef = useRef("");
 
-  const [text, setText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visibility, setVisibility] = useState<"public" | "friend">("public");
   const [rating, setRating] = useState<number | null>(null);
-  const [length, setLength] = useState(0);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
+  const [textLength, setTextLength] = useState(0);
 
   const profile = useMyProfileStore((s) => s.profile);
   const fetchMyProfile = useMyProfileStore((s) => s.fetchMyProfile);
@@ -59,13 +59,14 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   const initial = nickname.trim().charAt(0).toUpperCase() || "?";
 
   const onChangeText = useCallback((value: string) => {
-    setText(value);
-    setLength(value.length);
+    textRef.current = value;
+    setTextLength(value.length);
   }, []);
 
   const resetForm = useCallback(() => {
-    setText("");
-    setLength(0);
+    textRef.current = "";
+    inputRef.current?.clear();
+    setTextLength(0);
     setRating(null);
     setVisibility("public");
     setIsRatingOpen(false);
@@ -75,26 +76,12 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
 
   const snapPoints = useMemo(() => ["40%", "85%"], []);
 
-  const handleAnimate = useCallback((fromIndex: number, toIndex: number) => {
-    if (toIndex === 1) {
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 60);
-      });
-    }
-
-    if (fromIndex === 1 && (toIndex === 0 || toIndex === -1)) {
-      Keyboard.dismiss();
-    }
-  }, []);
-
   const handleClose = () => {
     bottomSheetRef.current?.dismiss();
   };
 
   const handleSubmit = async () => {
-    const trimmed = text.trim();
+    const trimmed = textRef.current.trim();
     if (!trimmed) return;
     if (isSubmitting) return;
 
@@ -122,7 +109,8 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
     }
   };
 
-  const isSubmitDisabled = text.trim().length === 0 || isSubmitting;
+  const isSubmitDisabled = textRef.current.trim().length === 0 || isSubmitting;
+
   const visibilityLabel = visibility === "public" ? "전체공개" : "친구만";
   const visibilityIcon =
     visibility === "public"
@@ -152,6 +140,10 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
   useImperativeHandle(ref, () => ({
     open: () => {
       bottomSheetRef.current?.present();
+
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 250);
     },
     close: () => bottomSheetRef.current?.dismiss(),
   }));
@@ -165,7 +157,6 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
       enablePanDownToClose
       backdropComponent={renderBackdrop}
       backgroundStyle={{ borderRadius: 24 }}
-      onAnimate={handleAnimate}
       onDismiss={resetForm}
       keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
@@ -206,15 +197,15 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
         </View>
 
         <View style={styles.inputArea}>
-          <TextInput
+          <BottomSheetTextInput
             ref={inputRef}
             style={styles.textInput}
             placeholder="방문하신 곳은 어떠셨나요?"
             placeholderTextColor={Colors.gray_300}
             multiline
-            value={text}
             onChangeText={onChangeText}
-            maxLength={200}
+            autoCorrect={false}
+            autoCapitalize="none"
           />
         </View>
 
@@ -224,7 +215,7 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
           onPressVisibility={onPressVisibility}
           ratingLabel={rating == null ? "별점" : `${rating}`}
           onPressRating={onPressRating}
-          length={length}
+          length={textLength}
           maxLength={200}
           submitDisabled={isSubmitDisabled}
           onSubmit={handleSubmit}
