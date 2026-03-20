@@ -101,7 +101,6 @@ export default function SearchDetailBottomSheet({ onClose }: Props) {
           isBookmarked={!!isBookmarked}
           distanceText={distanceText}
           onToggleBookmark={() => toggleBookmark(placeId)}
-          onPressDirection={openNaverDirection}
           onPress={() =>
             router.push({
               pathname: "/place/[placeId]",

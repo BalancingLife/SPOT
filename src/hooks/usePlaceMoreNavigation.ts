@@ -25,8 +25,8 @@ export function usePlaceMoreNavigation() {
       pathname: "/place/[placeId]",
       params: {
         placeId: String(place.placeId),
-        lat: coords.lat,
-        lng: coords.lng,
+        lat: String(place.lat),
+        lng: String(place.lng),
       },
     });
   };

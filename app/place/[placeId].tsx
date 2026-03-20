@@ -12,6 +12,10 @@ import {
 } from "react-native";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocalSearchParams } from "expo-router";
+import {
+  NaverMapView,
+  NaverMapMarkerOverlay,
+} from "@mj-studio/react-native-naver-map";
 
 import PlaceCard from "@/src/components/common/PlaceCard";
 import { TextStyles } from "@/src/styles/TextStyles";
@@ -32,6 +36,8 @@ import { formatDistance } from "@/src/utils/format";
 import { useSavedPlacesStore } from "@/src/stores/useSavedPlacesStore";
 import { useSearchStore } from "@/src/stores/useSearchStore";
 import { usePlaceMoreStore } from "@/src/stores/usePlaceMoreStore";
+
+import { openNaverMap } from "@/src/utils/openNaverMap";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -99,6 +105,18 @@ export default function PlaceDetailScreen() {
     typeof display.distance === "number"
       ? formatDistance(display.distance)
       : undefined;
+
+  const mapLat = useMemo(() => {
+    const parsed = Number(lat);
+    return Number.isFinite(parsed) ? parsed : null;
+  }, [lat]);
+
+  const mapLng = useMemo(() => {
+    const parsed = Number(lng);
+    return Number.isFinite(parsed) ? parsed : null;
+  }, [lng]);
+
+  const hasValidCoords = mapLat !== null && mapLng !== null;
 
   useEffect(() => {
     setLocalBookmarked(display.isBookmarked);
@@ -190,6 +208,10 @@ export default function PlaceDetailScreen() {
     );
   }
 
+  const handleOpenNaverMap = async () => {
+    await openNaverMap(display.name);
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -237,16 +259,40 @@ export default function PlaceDetailScreen() {
         >
           매장 위치
         </Text>
-        <Image
-          source={require("@/assets/images/example.png")}
-          style={styles.mapImage}
-        />
+
+        <View style={styles.mapContainer}>
+          {hasValidCoords ? (
+            <NaverMapView
+              style={styles.map}
+              camera={{
+                latitude: mapLat,
+                longitude: mapLng,
+                zoom: 17,
+              }}
+              isShowLocationButton={false}
+            >
+              <NaverMapMarkerOverlay
+                latitude={mapLat}
+                longitude={mapLng}
+                width={20}
+                height={25}
+              />
+            </NaverMapView>
+          ) : (
+            <View style={styles.mapFallback}>
+              <Text style={[TextStyles.Regular12, { color: Colors.gray_400 }]}>
+                위치 정보를 불러올 수 없어요.
+              </Text>
+            </View>
+          )}
+        </View>
 
         <SpotButton
           label="네이버 지도로 길 찾기"
           variant="primary"
           size="large"
           style={{ marginHorizontal: 16 }}
+          onPress={handleOpenNaverMap}
         />
 
         <View style={styles.savedInfo}>
@@ -333,59 +379,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  name: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  category: {
-    fontSize: 14,
-    color: "#777",
-    marginRight: 5,
-  },
-  star: {
-    color: "#f55",
-    fontSize: 14,
-  },
-  rating: {
-    fontSize: 14,
-    color: "#555",
-    marginLeft: 4,
-  },
-  address: {
-    fontSize: 13,
-    color: "#777",
-    marginTop: 4,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    paddingHorizontal: 16,
-    marginTop: 20,
-  },
-  imageRow: {
-    paddingHorizontal: 16,
-    marginTop: 8,
-  },
-  imageThumbnail: {
-    width: 100,
-    height: 100,
-    marginRight: 10,
-    borderRadius: 8,
-  },
-  mapImage: {
-    paddingHorizontal: 16,
-    width: "100%",
+  mapContainer: {
     height: 154,
-    alignSelf: "center",
-    borderRadius: 12,
+    marginHorizontal: 16,
     marginBottom: 10,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: Colors.gray_100,
   },
-
+  map: {
+    width: "100%",
+    height: "100%",
+  },
+  mapFallback: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   savedInfo: {
     marginTop: 16,
     padding: 16,
