@@ -11,6 +11,8 @@ import {
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 
+import { openNaverMap } from "@/src/utils/openNaverMap";
+
 interface PlaceCardProps {
   name: string;
   category: string;
@@ -25,7 +27,6 @@ interface PlaceCardProps {
   isBookmarked?: boolean; // 북마크 되어 있는지 여부
   distanceText?: string; // ex) "320m", "1.2km"
   onToggleBookmark?: () => void;
-  onPressDirection?: () => void;
   onPress?: () => void;
 }
 
@@ -43,7 +44,6 @@ export default function PlaceCard({
   isBookmarked,
   distanceText,
   onToggleBookmark,
-  onPressDirection,
   onPress,
 }: PlaceCardProps) {
   const [viewerVisible, setViewerVisible] = React.useState(false); // React.useState는 import useState를 하지 않아도 react에서 바로 꺼내쓸 수 있는 기술
@@ -54,6 +54,10 @@ export default function PlaceCard({
     setViewerVisible(true);
   };
 
+  const handlePressNaverMapButton = async () => {
+    await openNaverMap(name);
+    console.log("clicked");
+  };
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.header}>
@@ -162,7 +166,10 @@ export default function PlaceCard({
         </View>
 
         {showDirectionButton && (
-          <Pressable style={styles.NaverMapButton}>
+          <Pressable
+            style={styles.NaverMapButton}
+            onPress={handlePressNaverMapButton}
+          >
             <Image
               source={require("@/assets/images/naver-map-icon.png")}
               style={styles.NaverMapIcon}
