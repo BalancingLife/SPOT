@@ -38,6 +38,7 @@ import { useSearchStore } from "@/src/stores/useSearchStore";
 import { usePlaceMoreStore } from "@/src/stores/usePlaceMoreStore";
 
 import { openNaverMap } from "@/src/utils/openNaverMap";
+import { CommentCard } from "@/src/components/comment/CommentCard";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -302,47 +303,11 @@ export default function PlaceDetailScreen() {
           />
         </View>
 
-        <View style={styles.commentSection}>
-          <Text
-            style={[
-              TextStyles.Bold16,
-              { color: Colors.gray_900, marginBottom: 8 },
-            ]}
-          >
-            코멘트
-          </Text>
-
-          {error && (
-            <Text style={[TextStyles.Regular12, { color: Colors.gray_400 }]}>
-              코멘트를 불러오지 못했어요.
-            </Text>
-          )}
-
-          {comments.length === 0 && !error ? (
-            <Text style={[TextStyles.Regular12, { color: Colors.gray_400 }]}>
-              아직 코멘트가 없어요. 첫 코멘트를 남겨보세요!
-            </Text>
-          ) : (
-            comments.map((c) => (
-              <View key={c.id} style={styles.commentCard}>
-                <View style={styles.commentHeader}>
-                  <Text style={TextStyles.Medium12}>{c.memEmail}</Text>
-                  <Text style={TextStyles.Medium12}>
-                    ★ {c.score.toFixed(1)}
-                  </Text>
-                </View>
-                <Text
-                  style={[
-                    TextStyles.Regular12,
-                    { color: Colors.gray_900, marginTop: 2 },
-                  ]}
-                >
-                  {c.comment}
-                </Text>
-              </View>
-            ))
-          )}
+        <View style={styles.commentSectionHeader}>
+          <Text style={styles.commentText}>코멘트</Text>
+          <Text style={styles.commentCount}> {comments.length}</Text>
         </View>
+        <CommentCard commentList={comments} />
       </ScrollView>
 
       <CommentWriteButton onPress={handleOpenCommentSheet} />
@@ -398,22 +363,21 @@ const styles = StyleSheet.create({
   },
   savedInfo: {
     marginTop: 16,
-    padding: 16,
     borderColor: "#eee",
     marginBottom: 30,
     alignItems: "center",
   },
-  commentSection: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-  },
-  commentCard: {
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.gray_100,
-  },
-  commentHeader: {
+  commentSectionHeader: {
+    display: "flex",
     flexDirection: "row",
-    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  commentText: {
+    ...TextStyles.Bold16,
+  },
+  commentCount: {
+    ...TextStyles.Bold16,
+    color: Colors.gray_300,
   },
 });

@@ -50,7 +50,7 @@ export const CommentTabSection = ({
         showCategory={false}
       />
 
-      <CommentCard commentList={commentList} scope={scope} />
+      <CommentCard commentList={commentList} />
 
       <OptionModal
         visible={opened === "sort"}
