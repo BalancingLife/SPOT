@@ -65,7 +65,7 @@ export default function PlaceDetailScreen() {
   const fallbackImages = useMemo(
     () => [
       require("@/assets/images/example2.png"),
-      require("@/assets/images/example.png"),
+      require("@/assets/images/default-place.png"),
       require("@/assets/images/SPOT.png"),
     ],
     [],
@@ -85,7 +85,7 @@ export default function PlaceDetailScreen() {
       return basePlace.thumbnails.map((u) => ({ uri: u }));
     }
     if (place?.photo) return [{ uri: place.photo }];
-    return [require("@/assets/images/example.png")];
+    return [require("@/assets/images/default-place.png")];
   }, [place, basePlace]);
 
   const display = {

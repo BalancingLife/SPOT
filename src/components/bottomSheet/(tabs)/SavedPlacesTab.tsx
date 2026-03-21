@@ -225,7 +225,7 @@ export default function SavedPlacesTab() {
             images={
               p.thumbnails.length > 0
                 ? p.thumbnails.map((u) => ({ uri: u }))
-                : [require("@/assets/images/example.png")]
+                : [require("@/assets/images/default-place.png")]
             }
             savedUsers={p.savers}
             savedCount={p.savers.length}

@@ -175,77 +175,6 @@ export default function Home() {
     ] as HomeMarker[];
   };
 
-  const makeDummyPlaces = (s: HomeScope): HomePlaceItem[] => {
-    const tag =
-      s.type === "friends"
-        ? "friends"
-        : s.type === "me"
-          ? "me"
-          : `friend-${s.userId}`;
-
-    return new Array(3).fill(0).map((_, i) => ({
-      id: 9000 + i,
-      gid: `dummy-gid-${tag}-${i}`,
-      photos: [
-        `https://placehold.co/300x300/png?text=${encodeURIComponent(
-          `${tag}-P${i + 1}-1`,
-        )}`,
-        `https://placehold.co/300x300/png?text=${encodeURIComponent(
-          `${tag}-P${i + 1}-2`,
-        )}`,
-        `https://placehold.co/300x300/png?text=${encodeURIComponent(
-          `${tag}-P${i + 1}-3`,
-        )}`,
-      ],
-      name: `더미 장소(${tag}) #${i + 1}`,
-      address: `더미 주소 ${i + 1}`,
-      rating: 4.2,
-      ratingCount: 123,
-      list: "cafe",
-      savedCount: 10 + i,
-      memPhotos: [
-        `https://placehold.co/100x100/png?text=A`,
-        `https://placehold.co/100x100/png?text=B`,
-        `https://placehold.co/100x100/png?text=C`,
-      ],
-      searchCount: 0,
-      score: 0,
-      distance: 0,
-      lat: 37.5665 + 0.001 * i,
-      lng: 126.978 + 0.001 * i,
-      comment: "더미 코멘트",
-      commentCount: 1,
-      memId: 0,
-      commentPhoto: "",
-      marked: false,
-    }));
-  };
-
-  const makeDummyComments = (s: HomeScope): HomeCommentItem[] => {
-    const tag =
-      s.type === "friends"
-        ? "friends"
-        : s.type === "me"
-          ? "me"
-          : `friend-${s.userId}`;
-
-    return new Array(5).fill(0).map((_, i) => ({
-      id: 8000 + i,
-      placeId: 7000 + i,
-      gid: `dummy-gid-${tag}-${i}`,
-      photos: [],
-      name: `더미 장소명(${tag}) #${i + 1}`,
-      address: `더미 주소 ${i + 1}`,
-      score: 5,
-      comment: `더미 코멘트 더미 코멘트 더미 코멘트 더미 코멘트 더미 코멘트 더미 코멘트 더미 코멘트 더미 코멘트 더미 코멘트 더미 코멘트 더미 코멘트 더미 코멘트 더미 코멘트 (${tag}) - ${i + 1}`,
-      memId: 0,
-      memEmail: "dummy@spot.com",
-      commentPhoto: "",
-      createdAt: new Date().toISOString(),
-      marked: false,
-    }));
-  };
-
   useEffect(() => {
     if (activeTab !== "map") return;
     if (lat == null || lng == null) return;
@@ -353,16 +282,13 @@ export default function Home() {
         }
 
         if (cancelled) return;
-        setPlaceList(
-          !list || list.length === 0 ? makeDummyPlaces(scope) : list,
-        );
+        setPlaceList(list);
       } catch (e: any) {
         console.log("PLACE 탭 fetch error:", {
           message: e?.message,
           status: e?.response?.status,
           data: e?.response?.data,
         });
-        if (!cancelled) setPlaceList(makeDummyPlaces(scope));
       }
     })();
 
@@ -396,16 +322,13 @@ export default function Home() {
         }
 
         if (cancelled) return;
-        setCommentList(
-          !list || list.length === 0 ? makeDummyComments(scope) : list,
-        );
+        setCommentList(list);
       } catch (e: any) {
         console.log("[home-comment] fetch error:", {
           message: e?.message,
           status: e?.response?.status,
           data: e?.response?.data,
         });
-        if (!cancelled) setCommentList(makeDummyComments(scope));
       }
     })();
 

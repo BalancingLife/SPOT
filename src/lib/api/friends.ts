@@ -1,6 +1,7 @@
 // src/lib/api/friends.ts
 import { api8000, api8001 } from "@/src/lib/api/client";
 import { useAuthStore } from "@/src/stores/useAuthStore";
+import { type FriendStatus } from "@/src/types/friends";
 
 export type ApiFriend = {
   comment: string | null;
@@ -38,6 +39,7 @@ export type ApiFriendSearchItem = {
   profile_photo: string | null;
   spot_id: string;
   spot_nickname: string;
+  status: FriendStatus;
 };
 
 export async function fetchFriendsList(): Promise<Friend[]> {
@@ -70,6 +72,7 @@ export type FriendSearchItem = {
   oneLine: string;
   highlightedNickname?: string;
   highlightedUserId?: string;
+  status: FriendStatus;
 };
 
 export async function searchFriends(
@@ -83,7 +86,7 @@ export async function searchFriends(
     });
 
     const raw = Array.isArray(res.data?.results) ? res.data.results : [];
-
+    console.log(raw);
     return raw.map((item) => ({
       id: item.id,
       nickname: item.spot_nickname,
@@ -92,6 +95,7 @@ export async function searchFriends(
       oneLine: item.one_line,
       highlightedNickname: item.highlighted_spot_nickname,
       highlightedUserId: item.highlighted_spot_id,
+      status: item.status,
     }));
   } catch (error) {
     throw error;

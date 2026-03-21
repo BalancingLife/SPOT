@@ -7,15 +7,20 @@ import {
   Text,
   SafeAreaView,
   Image,
+  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import { Colors } from "@/src/styles/Colors";
 import { TextStyles } from "@/src/styles/TextStyles";
 import RecentFriendSearch from "@/src/components/friends/RecentFriendSearch";
 import FriendSearchResult from "@/src/components/friends/FriendSearchResult";
-import { searchFriends, type FriendSearchItem } from "@/src/lib/api/friends";
-
-export type FriendItem = FriendSearchItem;
+import {
+  searchFriends,
+  sendFollowRequest,
+  acceptFollowRequest,
+  deleteFriend,
+  type FriendSearchItem,
+} from "@/src/lib/api/friends";
 
 export type RecentFriendItem = {
   id: string;
@@ -57,7 +62,8 @@ function useRecentFriendSearchMock() {
 
 export default function SearchFriendScreen() {
   const [searchInputText, setSearchInputText] = useState("");
-  const [results, setResults] = useState<FriendItem[] | null>(null);
+  const [results, setResults] = useState<FriendSearchItem[] | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
   const showRecent = !searchInputText || results === null;
   const showResults = Array.isArray(results) && results.length > 0;
@@ -160,7 +166,7 @@ export default function SearchFriendScreen() {
   }, [searchInputText, add]);
 
   const onSelectFriend = useCallback(
-    (friend: FriendItem) => {
+    (friend: FriendSearchItem) => {
       add({
         id: String(Date.now()),
         keyword: friend.nickname || friend.userId,
@@ -171,6 +177,81 @@ export default function SearchFriendScreen() {
     },
     [add],
   );
+
+  const updateResultStatus = useCallback(
+    (targetId: number, nextStatus: FriendSearchItem["status"]) => {
+      setResults((prev) => {
+        if (!prev) return prev;
+
+        return prev.map((item) =>
+          item.id === targetId ? { ...item, status: nextStatus } : item,
+        );
+      });
+    },
+    [],
+  );
+
+  const handlePressAction = useCallback(
+    async (friend: FriendSearchItem) => {
+      if (actionLoadingId === friend.id) return;
+
+      try {
+        setActionLoadingId(friend.id);
+
+        switch (friend.status) {
+          case "none": {
+            await sendFollowRequest(friend.id);
+            updateResultStatus(friend.id, "request_sent");
+            return;
+          }
+
+          case "request_received": {
+            await acceptFollowRequest(friend.id);
+            updateResultStatus(friend.id, "friends");
+            return;
+          }
+
+          case "friends": {
+            await deleteFriend(friend.id);
+            updateResultStatus(friend.id, "none");
+
+            return;
+          }
+
+          case "request_sent": {
+            return;
+          }
+
+          case "blocked": {
+            return;
+          }
+
+          default: {
+            return;
+          }
+        }
+      } catch (err: any) {
+        console.warn(
+          "친구 액션 요청 에러:",
+          err?.response?.status,
+          err?.response?.data ?? err?.message,
+        );
+        Alert.alert("오류", "처리 중 문제가 발생했어요.");
+      } finally {
+        setActionLoadingId(null);
+      }
+    },
+    [actionLoadingId, updateResultStatus],
+  );
+
+  const mappedResults =
+    results?.map((item) => ({
+      ...item,
+      status:
+        actionLoadingId === item.id && item.status === "none"
+          ? "request_sent"
+          : item.status,
+    })) ?? null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -233,13 +314,11 @@ export default function SearchFriendScreen() {
           <Text style={TextStyles.Medium16}>검색 결과가 없어요.</Text>
         )}
 
-        {showResults && (
+        {showResults && mappedResults && (
           <FriendSearchResult
-            data={results}
+            data={mappedResults}
             onPressItem={(friend) => onSelectFriend(friend)}
-            onPressAction={(friend) => {
-              onSelectFriend(friend);
-            }}
+            onPressAction={handlePressAction}
           />
         )}
       </View>

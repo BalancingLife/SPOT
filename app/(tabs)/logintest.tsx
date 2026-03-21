@@ -92,15 +92,17 @@ export default function Login() {
               <Image
                 style={styles.signUpImage}
                 source={require("@/assets/images/login-3second.png")}
-              ></Image>
+              />
             </View>
+
             <Image
               style={styles.kakaoIcon}
               source={require("@/assets/images/kakao-icon.png")}
-            ></Image>
+            />
+
             <Text style={styles.kakaoLoginButtonText}>카카오로 계속하기</Text>
           </Pressable>
-          <Pressable style={styles.appleLoginButton}>
+          {/* <Pressable style={styles.appleLoginButton}>
             <Image
               style={styles.appleIcon}
               source={require("@/assets/images/apple-icon.png")}
@@ -113,7 +115,7 @@ export default function Login() {
               source={require("@/assets/images/google-icon.png")}
             ></Image>
             <Text style={styles.googleLoginButtonText}>Google로 계속하기</Text>
-          </Pressable>
+          </Pressable> */}
         </View>
         <View style={styles.termsNoticeTextContainer}>
           <Text style={styles.termsNoticeText}>
@@ -149,7 +151,12 @@ const styles = StyleSheet.create({
     width: 400,
     height: 339,
   },
-  loginButtonContainer: { alignItems: "center", gap: 12, bottom: 20 },
+  loginButtonContainer: {
+    alignItems: "center",
+    gap: 12,
+    bottom: 20,
+    marginTop: 20,
+  },
   kakaoLoginButton: {
     backgroundColor: "#FFE500",
     flexDirection: "row",

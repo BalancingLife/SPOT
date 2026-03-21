@@ -36,7 +36,7 @@ type PlaceTabSectionProps = {
 };
 
 const dummyCardFallbackImgs = [
-  require("@/assets/images/example.png"),
+  require("@/assets/images/default-place.png"),
   require("@/assets/images/react-logo.png"),
   require("@/assets/images/spot-icon-orange.png"),
 ];

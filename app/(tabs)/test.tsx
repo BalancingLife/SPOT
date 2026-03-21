@@ -28,7 +28,7 @@ export default function PlaceDetailScreen() {
   const [currentPage, setCurrentPage] = useState(1);
   const imageSources = [
     require("@/assets/images/example2.png"),
-    require("@/assets/images/example.png"),
+    require("@/assets/images/default-place.png"),
     require("@/assets/images/SPOT.png"),
   ];
   const flatListRef = useRef<FlatList>(null);
@@ -90,9 +90,9 @@ export default function PlaceDetailScreen() {
             category="업종"
             address="서울 주소구 주소동 주소 123-1"
             images={[
-              require("@/assets/images/example.png"),
-              require("@/assets/images/example.png"),
-              require("@/assets/images/example.png"),
+              require("@/assets/images/default-place.png"),
+              require("@/assets/images/default-place.png"),
+              require("@/assets/images/default-place.png"),
             ]}
             showBookmark={true}
             showDirectionButton={false}
@@ -117,7 +117,7 @@ export default function PlaceDetailScreen() {
           매장 위치
         </Text>
         <Image
-          source={require("@/assets/images/example.png")}
+          source={require("@/assets/images/default-place.png")}
           style={styles.mapImage}
         />
 
