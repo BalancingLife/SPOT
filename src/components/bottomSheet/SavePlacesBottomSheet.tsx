@@ -106,7 +106,7 @@ function SavePlacesBottomSheet({
 
   const renderFooter = useCallback(
     (props: BottomSheetFooterProps) => (
-      <BottomSheetFooter {...props} bottomInset={insets.bottom}>
+      <BottomSheetFooter {...props}>
         <View style={styles.footer}>
           <Pressable
             onPress={handleConfirm}
@@ -176,7 +176,7 @@ function SavePlacesBottomSheet({
                 source={
                   item.thumbUrl
                     ? { uri: item.thumbUrl }
-                    : require("@/assets/images/example.png")
+                    : require("@/assets/images/default-place.png")
                 }
                 style={styles.thumb}
               />
@@ -304,6 +304,7 @@ const styles = StyleSheet.create({
   },
   checkboxChecked: {
     backgroundColor: "#303030",
+    borderColor: "#303030",
   },
   checkboxTick: {
     color: "#fff",
