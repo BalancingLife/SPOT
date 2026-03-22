@@ -67,26 +67,30 @@ export default function UserRow({
   );
 }
 
-const AVATAR_SIZE = 32;
+const AVATAR_SIZE = 19;
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 17,
+    paddingHorizontal: 4,
   },
   avatarWrapper: {
     marginRight: 14,
+    borderWidth: 1,
+    borderColor: Colors.gray_100,
+    padding: 7,
+    borderRadius: 50,
+    backgroundColor: "#F5F5F5",
   },
   avatarImage: {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
   },
   avatarPlaceholder: {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
     backgroundColor: Colors.gray_100,
     alignItems: "center",
     justifyContent: "center",

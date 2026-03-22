@@ -271,6 +271,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     borderWidth: 1,
     borderColor: Colors.gray_100,
+    padding: 10,
   },
 
   // story는 살짝 작게

@@ -39,8 +39,8 @@ type Props = {
 };
 
 const friendsIcon = require("@/assets/images/friends-icon-black-filled.png");
-const fallbackProfile = require("@/assets/images/profile-example.png");
-const fallbackFriend = require("@/assets/images/profile-icon-gray.png");
+const fallbackProfile = require("@/assets/images/default-profile.png");
+const fallbackFriend = require("@/assets/images/default-profile.png");
 
 type FriendsItem = {
   key: "friends";
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   storyAvatar: {
     width: 65,
     height: 65,
-    borderRadius: 34,
+    borderRadius: 50,
     borderWidth: 1,
     borderColor: Colors.gray_100,
     backgroundColor: Colors.white,
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarImage: { width: "100%", height: "100%" },
+  avatarImage: { width: "80%", height: "80%" },
   friendsIcon40: { width: 40, height: 40 },
   storyLabel: { ...TextStyles.Regular12, textAlign: "center" },
 });

@@ -50,7 +50,7 @@ export default function FriendsScreen() {
             userId={u.userId}
             bio={u.comment ?? ""}
             avatarUri={u.avatarUrl ?? null}
-            actionLabel="친구"
+            actionLabel="팔로잉"
             actionDisabled
             onPressAction={() => {}}
             onPressRow={() => {
