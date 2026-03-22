@@ -15,6 +15,8 @@ type UserRowProps = {
   onPressRow?: () => void;
 };
 
+const DEFAULT_PROFILE_IMAGE = require("@/assets/images/default-profile.png");
+
 export default function UserRow({
   nickname,
   userId,
@@ -29,16 +31,10 @@ export default function UserRow({
     <Pressable onPress={onPressRow} style={styles.container}>
       {/* 아바타 */}
       <View style={styles.avatarWrapper}>
-        {avatarUri ? (
-          <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Image
-              style={{ width: 24, height: 24 }}
-              source={require("@/assets/images/profile-icon-gray.png")}
-            />
-          </View>
-        )}
+        <Image
+          source={avatarUri ? { uri: avatarUri } : DEFAULT_PROFILE_IMAGE}
+          style={styles.avatarImage}
+        />
       </View>
 
       {/* 텍스트 영역 */}

@@ -266,7 +266,6 @@ const styles = StyleSheet.create({
 
   // 이미지 공통
   profileImage: {
-    backgroundColor: "lightgray",
     width: 77,
     height: 77,
     borderRadius: 100,

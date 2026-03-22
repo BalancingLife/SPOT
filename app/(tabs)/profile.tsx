@@ -9,8 +9,8 @@ import SpotButton from "@/src/components/common/SpotButton";
 import { useMyProfileStore } from "@/src/stores/useMyProfileStore";
 
 export default function ProfileScreen() {
-  const defaultProfileImg = require("@/assets/images/profile-example.png");
-  const fallbackFriendImg = require("@/assets/images/profile-icon-gray.png");
+  const defaultProfileImg = require("@/assets/images/default-profile.png");
+  const fallbackFriendImg = require("@/assets/images/default-profile.png");
 
   const profile = useMyProfileStore((s) => s.profile);
   const friendCount = useMyProfileStore((s) => s.friendCount);
@@ -23,7 +23,6 @@ export default function ProfileScreen() {
       fetchMyProfile();
     }, [fetchMyProfile]),
   );
-
   const nickname = profile?.spotNickname ?? "닉네임 없음";
   const userid = profile?.spotId ?? "-";
   const bio = profile?.oneLine ?? "한 줄 소개를 추가해보세요";
