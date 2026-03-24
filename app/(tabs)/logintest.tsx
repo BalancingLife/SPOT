@@ -148,8 +148,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loginImage: {
-    width: 400,
-    height: 339,
+    width: 410,
+    height: 453,
   },
   loginButtonContainer: {
     alignItems: "center",

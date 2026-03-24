@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
-import { useAuthStore } from "@/src/stores/useAuthStore";
 
 const { SharedStore } = NativeModules;
 
@@ -27,10 +26,10 @@ export default function Login() {
     try {
       await WebBrowser.warmUpAsync();
 
-      //  앱으로 복귀할 URL을 환경에 맞게 자동 생성 (슬래시 개수 혼동 방지)
+      // ✅ 앱으로 복귀할 URL을 환경에 맞게 자동 생성 (슬래시 개수 혼동 방지)
       const returnUrl = Linking.createURL("/oauth/kakao");
-      console.log("[KAKAO] authUrl:", authUrl);
       console.log("[KAKAO] returnUrl:", returnUrl);
+      console.log("authrUrl", authUrl);
       // 예: spot://oauth/kakao  또는 spot:///oauth/kakao (환경에 따라)
 
       const result = await WebBrowser.openAuthSessionAsync(
@@ -38,22 +37,27 @@ export default function Login() {
         Linking.createURL("/oauth/kakao"),
       );
       console.log("[KAKAO][AuthSession] raw result:", result);
-      console.log("[KAKAO][AuthSession] type:", result.type);
 
       if (result.type === "success" && result.url) {
-        //  URL 파싱
+        // ✅ URL 파싱
         const parsed = new URL(result.url);
         const token = parsed.searchParams.get("token") ?? "";
         const email = parsed.searchParams.get("email") ?? "";
         const nickname = parsed.searchParams.get("nickname") ?? "";
 
-        await useAuthStore.getState().setAuth({ token, email, nickname });
-        SharedStore?.setAccessToken?.(token);
+        console.log("[DEBUG] NativeModules.SharedStore =", SharedStore);
 
+        // ✅ 이 두 줄이 핵심
+        SharedStore?.setAccessToken?.(token);
+        const check = await SharedStore?.getAccessToken?.();
+        console.log("🔥 AppGroup에 실제 저장된 값:", check);
+        console.log("✅ 토큰 AppGroup 저장 완료");
+
+        console.log("✅ 카카오 로그인 성공");
         console.log("🔗 복귀 URL:", result.url);
         console.log("🛠 token:", token, "email:", email, "nickname:", nickname);
 
-        //  콜백 라우트로 직접 이동 (슬래시 1개여도 OK)
+        // ✅ 콜백 라우트로 직접 이동 (슬래시 1개여도 OK)
         router.replace({
           pathname: "/oauth/kakao",
           params: { token, email, nickname },
@@ -88,15 +92,17 @@ export default function Login() {
               <Image
                 style={styles.signUpImage}
                 source={require("@/assets/images/login-3second.png")}
-              ></Image>
+              />
             </View>
+
             <Image
               style={styles.kakaoIcon}
               source={require("@/assets/images/kakao-icon.png")}
-            ></Image>
+            />
+
             <Text style={styles.kakaoLoginButtonText}>카카오로 계속하기</Text>
           </Pressable>
-          <Pressable style={styles.appleLoginButton}>
+          {/* <Pressable style={styles.appleLoginButton}>
             <Image
               style={styles.appleIcon}
               source={require("@/assets/images/apple-icon.png")}
@@ -109,7 +115,7 @@ export default function Login() {
               source={require("@/assets/images/google-icon.png")}
             ></Image>
             <Text style={styles.googleLoginButtonText}>Google로 계속하기</Text>
-          </Pressable>
+          </Pressable> */}
         </View>
         <View style={styles.termsNoticeTextContainer}>
           <Text style={styles.termsNoticeText}>
@@ -142,10 +148,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loginImage: {
-    width: 400,
-    height: 339,
+    width: 410,
+    height: 453,
   },
-  loginButtonContainer: { alignItems: "center", gap: 12, bottom: 20 },
+  loginButtonContainer: {
+    alignItems: "center",
+    gap: 12,
+    bottom: 20,
+    marginTop: 20,
+  },
   kakaoLoginButton: {
     backgroundColor: "#FFE500",
     flexDirection: "row",
