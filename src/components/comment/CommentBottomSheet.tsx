@@ -16,6 +16,7 @@ import {
   Dimensions,
   ActivityIndicator,
 } from "react-native";
+import { useRouter } from "expo-router";
 import BottomSheet, {
   BottomSheetScrollView,
   BottomSheetBackdrop,
@@ -144,6 +145,18 @@ const CommentBottomSheet = forwardRef<CommentBottomSheetHandle, Props>(
 
     const heroPhoto = safeUri(place?.photo);
 
+    const router = useRouter();
+
+    const handlePressPlace = () => {
+      if (!place) return;
+
+      router.push({
+        pathname: "/place/[placeId]",
+        params: {
+          placeId: String(place.placeId),
+        },
+      });
+    };
     return (
       <BottomSheet
         ref={bottomSheetRef}
@@ -207,7 +220,7 @@ const CommentBottomSheet = forwardRef<CommentBottomSheetHandle, Props>(
           {placeId && !loading && !error && place ? (
             <>
               {/* 히어로 카드 */}
-              <View style={styles.heroCard}>
+              <Pressable style={styles.heroCard} onPress={handlePressPlace}>
                 {heroPhoto ? (
                   <Image source={{ uri: heroPhoto }} style={styles.heroImage} />
                 ) : (
@@ -257,7 +270,7 @@ const CommentBottomSheet = forwardRef<CommentBottomSheetHandle, Props>(
                     <Text style={styles.placeAddress}>{place.address}</Text>
                   </View>
                 </View>
-              </View>
+              </Pressable>
 
               {/* 댓글 리스트 */}
               {comments.length === 0 ? (
