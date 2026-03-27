@@ -35,11 +35,11 @@ export type ApiFriendSearchItem = {
   highlighted_spot_id: string;
   highlighted_spot_nickname: string;
   id: number;
-  one_line: string;
+  one_line: string | null;
   profile_photo: string | null;
   spot_id: string;
   spot_nickname: string;
-  status: FriendStatus;
+  follow_status: FriendStatus;
 };
 
 export async function fetchFriendsList(): Promise<Friend[]> {
@@ -69,37 +69,56 @@ export type FriendSearchItem = {
   nickname: string;
   userId: string;
   profileImageUrl: string | null;
-  oneLine: string;
+  oneLine: string | null;
   highlightedNickname?: string;
   highlightedUserId?: string;
   status: FriendStatus;
+};
+
+const normalizeProfilePhoto = (profilePhoto: string | null) => {
+  if (!profilePhoto) return null;
+  if (
+    profilePhoto.startsWith("http://") ||
+    profilePhoto.startsWith("https://")
+  ) {
+    return profilePhoto;
+  }
+
+  const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL_8000 ?? "";
+  return `${baseUrl}${profilePhoto}`;
 };
 
 export async function searchFriends(
   keyword: string,
   signal?: AbortSignal,
 ): Promise<FriendSearchItem[]> {
-  try {
-    const res = await api8000.get<ApiFriendSearchResponse>("/friends/search", {
-      params: { keyword },
-      signal,
-    });
+  const res = await api8000.get<
+    ApiFriendSearchResponse | ApiFriendSearchItem[]
+  >("/friends/search", {
+    params: { keyword },
+    signal,
+  });
 
-    const raw = Array.isArray(res.data?.results) ? res.data.results : [];
-    console.log(raw);
-    return raw.map((item) => ({
-      id: item.id,
-      nickname: item.spot_nickname,
-      userId: item.spot_id,
-      profileImageUrl: item.profile_photo,
-      oneLine: item.one_line,
-      highlightedNickname: item.highlighted_spot_nickname,
-      highlightedUserId: item.highlighted_spot_id,
-      status: item.status,
-    }));
-  } catch (error) {
-    throw error;
-  }
+  console.log("searchFriends raw res.data:", res.data);
+
+  const raw = Array.isArray(res.data)
+    ? res.data
+    : Array.isArray(res.data?.results)
+      ? res.data.results
+      : [];
+
+  console.log("searchFriends normalized raw:", raw);
+
+  return raw.map((item) => ({
+    id: item.id,
+    nickname: item.spot_nickname,
+    userId: item.spot_id,
+    profileImageUrl: normalizeProfilePhoto(item.profile_photo),
+    oneLine: item.one_line,
+    highlightedNickname: item.highlighted_spot_nickname,
+    highlightedUserId: item.highlighted_spot_id,
+    status: item.follow_status,
+  }));
 }
 
 // 팔로우 신청
@@ -115,6 +134,7 @@ export const sendFollowRequest = async (friend_id: number): Promise<void> => {
       },
     },
   );
+
   if (!res.ok) {
     throw new Error("네트워크 응답이 ok가 아님");
   }
@@ -133,6 +153,7 @@ export const acceptFollowRequest = async (friend_id: number): Promise<void> => {
       },
     },
   );
+
   if (!res.ok) {
     throw new Error("네트워크 응답이 ok가 아님");
   }
@@ -153,6 +174,7 @@ export const declineFollowRequest = async (
       },
     },
   );
+
   if (!res.ok) {
     throw new Error("네트워크 응답이 ok가 아님");
   }
@@ -171,6 +193,7 @@ export const deleteFriend = async (friend_id: number): Promise<void> => {
       },
     },
   );
+
   if (!res.ok) {
     throw new Error("네트워크 응답이 ok가 아님");
   }

@@ -102,7 +102,7 @@ export async function fetchHomePlacesUser(params: {
   lng: number;
 }) {
   const { userId, ...rest } = params;
-  const res = await api8080.get<HomePlaceItem[]>(`/main/place/${userId}`, {
+  const res = await api8080.get<HomePlaceItem[]>(`/main/places/${userId}`, {
     params: rest,
   });
   return res.data;

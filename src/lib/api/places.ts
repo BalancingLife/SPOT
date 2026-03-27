@@ -95,7 +95,8 @@ export async function fetchPlaceMore(params: {
     const res = await api8080.get<ApiPlaceMoreResponse>("/more", {
       params: { lat, lng, placeId },
     });
-    console.log(res.data);
+    console.log("/more API 응답결과", res.data);
+    console.log("savers:", JSON.stringify(res.data.places.savers));
     return res.data;
   } catch (err: any) {
     console.error("[/more] ERROR", {
