@@ -1,21 +1,6 @@
 // src/lib/api/profile.ts
 import { api8000, api8001 } from "@/src/lib/api/client";
 
-const API_BASE_URL = api8000.defaults.baseURL ?? "";
-
-function toAbsoluteImageUrl(path: string | null | undefined) {
-  if (!path) return null;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-
-  const base = API_BASE_URL.endsWith("/")
-    ? API_BASE_URL.slice(0, -1)
-    : API_BASE_URL;
-
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-
-  return `${base}${normalizedPath}`;
-}
-
 export type ApiEnvelope<T> = {
   success: boolean;
   data: T;
@@ -61,12 +46,6 @@ export async function getMyProfile(): Promise<MyProfileBundle | null> {
     const p = data?.profile;
     if (!p) return null;
 
-    const absolutePhoto = toAbsoluteImageUrl(p.photo);
-
-    console.log("원본 photo:", p.photo);
-    console.log("변환된 photo:", absolutePhoto);
-    console.log("baseURL:", api8000.defaults.baseURL);
-
     return {
       profile: {
         id: p.id,
@@ -75,7 +54,7 @@ export async function getMyProfile(): Promise<MyProfileBundle | null> {
         spotId: p.spot_id,
         spotNickname: p.spot_nickname,
         oneLine: p.one_line ?? null,
-        photo: absolutePhoto,
+        photo: p.photo,
       },
       friendCount: Number(data.friend_count ?? 0),
       recentFriendPhotos: Array.isArray(data.recent_friend_photos)
@@ -193,6 +172,8 @@ export async function updateMyProfile(
       headers: { "Content-Type": "multipart/form-data" },
     });
 
+    console.log("payload 전체:", payload);
+    console.log(res.data);
     return res.data?.data ?? null;
   } catch {
     return null;

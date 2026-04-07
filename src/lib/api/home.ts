@@ -132,7 +132,7 @@ export async function fetchHomeCommentsMe(params: {
   page?: number;
   size?: number;
 }) {
-  const res = await api8080.get<HomeCommentItem[]>("/main/me/comment", {
+  const res = await api8080.get<HomeCommentItem[]>("/main/me/comments", {
     params,
   });
   return res.data;

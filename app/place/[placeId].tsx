@@ -311,7 +311,7 @@ export default function PlaceDetailScreen() {
       </ScrollView>
 
       <CommentWriteButton onPress={handleOpenCommentSheet} />
-      <CommentWriteModal ref={commentModalRef} />
+      <CommentWriteModal ref={commentModalRef} placeId={Number(placeId)} />
     </View>
   );
 }

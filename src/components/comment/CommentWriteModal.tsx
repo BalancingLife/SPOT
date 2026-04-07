@@ -35,7 +35,14 @@ export type CommentWriteModalRef = {
   close: () => void;
 };
 
-const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
+type CommentWrtieModalProps = {
+  placeId: number;
+};
+
+const CommentWriteModal = forwardRef<
+  CommentWriteModalRef,
+  CommentWrtieModalProps
+>(({ placeId }, ref) => {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const inputRef = useRef<React.ElementRef<typeof BottomSheetTextInput>>(null);
   const textRef = useRef("");
@@ -85,10 +92,10 @@ const CommentWriteModal = forwardRef<CommentWriteModalRef>((props, ref) => {
     if (!trimmed) return;
     if (isSubmitting) return;
 
+    if (!Number.isFinite(placeId)) return;
+
     try {
       setIsSubmitting(true);
-
-      const placeId = 1; // TODO: 실제 place_id로 교체
 
       const payload = {
         place_id: placeId,

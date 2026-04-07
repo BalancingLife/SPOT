@@ -8,8 +8,8 @@ final class ShareViewController: UIViewController {
   private let tokenKey = "accessToken"
   private let latestResultKey = "latestAnalyzeResult"
 
-  // ✅ analyze는 8001
-  private let baseURL = "http://13.125.197.83:8001"
+
+  private let baseURL = "http://3.35.216.248:8001"
   private let analyzePath = "/analyze"
 
   // 디버그 모드
@@ -277,7 +277,7 @@ final class ShareViewController: UIViewController {
         acc[kv.key] = v.count > 45 ? String(v.prefix(45)) + "…" : v
       } else {
         acc[kv.key] = kv.value
-      }
+        }
     }
 
     NSLog("""
