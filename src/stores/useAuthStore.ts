@@ -28,7 +28,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setAuth: async ({ token, email, nickname }) => {
     await AsyncStorage.setItem(
       "auth",
-      JSON.stringify({ token, email, nickname })
+      JSON.stringify({ token, email, nickname }),
     );
     set({ token, email: email ?? null, nickname: nickname ?? null });
   },

@@ -8,6 +8,9 @@ import { AppState, NativeModules, Linking } from "react-native";
 import { useAuthStore } from "@/src/stores/useAuthStore";
 
 export default function RootLayout() {
+  const token = useAuthStore((s) => s.token);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
+
   const hydrate = useAuthStore((s) => s.hydrate);
   const router = useRouter();
 
@@ -40,16 +43,20 @@ export default function RootLayout() {
     }
   };
 
-  // ✅ analyze-result 트리거: AppGroup에서 결과 꺼내고 map으로 이동 (매핑/시트오픈은 다음 스텝)
   const handleAnalyzeTrigger = async () => {
-    const { SharedStore } = NativeModules;
+    if (!hasHydrated) return;
 
-    const json = await SharedStore?.getLatestAnalyzeResult?.();
-    if (!json) return;
+    if (!token) {
+      router.replace({
+        pathname: "/login",
+        params: {
+          returnTo: "/map",
+          intent: "analyze-result",
+        },
+      });
+      return;
+    }
 
-    await SharedStore?.clearLatestAnalyzeResult?.();
-
-    // 일단 map으로 이동만 (다음 스텝에서 json 파싱 + openWithPlaces 붙일거임)
     router.replace("/(tabs)/map");
   };
 

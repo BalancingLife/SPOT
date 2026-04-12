@@ -1,8 +1,9 @@
-import { Tabs } from "expo-router";
+import { Tabs, Redirect, usePathname } from "expo-router";
 import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 import { Pressable, Image, Text } from "react-native";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
+import { useAuthStore } from "@/src/stores/useAuthStore";
 
 const CustomTabBarButton = ({
   children,
@@ -30,6 +31,10 @@ const CustomTabBarButton = ({
 };
 
 export default function TabLayout() {
+  const token = useAuthStore((state) => state.token);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+  const pathname = usePathname();
+
   const createTabBarIcon = (
     focused: boolean,
     iconSource: any,
@@ -45,7 +50,7 @@ export default function TabLayout() {
         />
         <Text
           style={[
-            TextStyles.Regular12, // 기존 텍스트 스타일
+            TextStyles.Regular12,
             {
               color: focused ? Colors.gray_900 : Colors.gray_300,
             },
@@ -57,6 +62,24 @@ export default function TabLayout() {
     );
   };
 
+  // hydrate 끝나기 전에는 아무것도 렌더하지 않음
+  if (!hasHydrated) return null;
+
+  // 로그인 안 되어 있으면 login으로 보냄
+  // returnTo에 현재 목적 경로를 실어 보냄
+  if (!token) {
+    return (
+      <Redirect
+        href={{
+          pathname: "/login",
+          params: {
+            returnTo: pathname || "/",
+          },
+        }}
+      />
+    );
+  }
+
   return (
     <Tabs
       backBehavior="history"
@@ -64,9 +87,8 @@ export default function TabLayout() {
         tabBarStyle: {
           paddingBottom: 8,
           paddingTop: 11,
-          height: 86, // 기본 높이보다 높게 조절 가능
+          height: 86,
         },
-
         headerShown: false,
         tabBarButton: (props) => <CustomTabBarButton {...props} />,
       }}
@@ -75,7 +97,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "홈",
-          tabBarLabel: () => null, // 기본 라벨 숨김
+          tabBarLabel: () => null,
           tabBarIcon: ({ focused }) =>
             createTabBarIcon(
               focused,
@@ -86,11 +108,12 @@ export default function TabLayout() {
             ),
         }}
       />
+
       <Tabs.Screen
         name="map"
         options={{
           title: "지도",
-          tabBarLabel: () => null, // 기본 라벨 숨김
+          tabBarLabel: () => null,
           tabBarIcon: ({ focused }) =>
             createTabBarIcon(
               focused,
@@ -106,7 +129,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "프로필",
-          tabBarLabel: () => null, // 기본 라벨 숨김
+          tabBarLabel: () => null,
           tabBarIcon: ({ focused }) =>
             createTabBarIcon(
               focused,

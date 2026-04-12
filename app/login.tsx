@@ -1,6 +1,6 @@
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import {
   Image,
   StyleSheet,
@@ -22,45 +22,43 @@ const authUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&clie
 )}`;
 
 export default function Login() {
+  const { returnTo, intent } = useLocalSearchParams<{
+    returnTo?: string | string[];
+    intent?: string | string[];
+  }>();
+
+  const nextReturnTo = Array.isArray(returnTo)
+    ? returnTo[0]
+    : (returnTo ?? "/");
+  const nextIntent = Array.isArray(intent) ? intent[0] : (intent ?? "");
+
   const handleKakaoLogin = async () => {
     try {
       await WebBrowser.warmUpAsync();
-
-      // ✅ 앱으로 복귀할 URL을 환경에 맞게 자동 생성 (슬래시 개수 혼동 방지)
-      const returnUrl = Linking.createURL("/oauth/kakao");
-      console.log("[KAKAO] returnUrl:", returnUrl);
-      console.log("authrUrl", authUrl);
-      // 예: spot://oauth/kakao  또는 spot:///oauth/kakao (환경에 따라)
 
       const result = await WebBrowser.openAuthSessionAsync(
         authUrl,
         Linking.createURL("/oauth/kakao"),
       );
-      console.log("[KAKAO][AuthSession] raw result:", result);
 
       if (result.type === "success" && result.url) {
-        // ✅ URL 파싱
         const parsed = new URL(result.url);
         const token = parsed.searchParams.get("token") ?? "";
         const email = parsed.searchParams.get("email") ?? "";
         const nickname = parsed.searchParams.get("nickname") ?? "";
 
-        console.log("[DEBUG] NativeModules.SharedStore =", SharedStore);
-
-        // ✅ 이 두 줄이 핵심
         SharedStore?.setAccessToken?.(token);
-        const check = await SharedStore?.getAccessToken?.();
-        console.log("🔥 AppGroup에 실제 저장된 값:", check);
-        console.log("✅ 토큰 AppGroup 저장 완료");
-
-        console.log("✅ 카카오 로그인 성공");
-        console.log("🔗 복귀 URL:", result.url);
-        console.log("🛠 token:", token, "email:", email, "nickname:", nickname);
 
         // ✅ 콜백 라우트로 직접 이동 (슬래시 1개여도 OK)
         router.replace({
           pathname: "/oauth/kakao",
-          params: { token, email, nickname },
+          params: {
+            token,
+            email,
+            nickname,
+            returnTo: nextReturnTo,
+            intent: nextIntent,
+          },
         });
       } else if (result.type === "cancel") {
         console.log("⚠️ 사용자가 로그인 취소");

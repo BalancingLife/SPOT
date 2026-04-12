@@ -5,8 +5,11 @@ import ProfileHeader from "@/src/components/profile/Header";
 import { TextStyles } from "@/src/styles/TextStyles";
 import { Colors } from "@/src/styles/Colors";
 import ConfirmModal from "@/src/components/common/ConfirmModal";
+import { logout } from "@/src/lib/api/settings";
+import { useRouter } from "expo-router";
 
 export default function AccountSettingScreen() {
+  const router = useRouter();
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [withdrawVisible, setWithdrawVisible] = useState(false);
 
@@ -19,7 +22,8 @@ export default function AccountSettingScreen() {
         onCancel={() => setLogoutVisible(false)}
         onConfirm={() => {
           setLogoutVisible(false);
-          // TODO: 로그아웃 API
+          logout();
+          router.replace("/login");
         }}
       />
 
