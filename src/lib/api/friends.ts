@@ -122,89 +122,34 @@ export async function searchFriends(
 }
 
 // 팔로우 신청
-export const sendFollowRequest = async (friend_id: number): Promise<void> => {
-  const token = useAuthStore.getState().token;
-
-  const res = await fetch(
-    `${process.env.EXPO_PUBLIC_API_BASE_URL_8080}/friends/follow/${friend_id}`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  );
-
-  if (!res.ok) {
-    throw new Error("네트워크 응답이 ok가 아님");
-  }
-};
+export async function sendFollowRequest(friend_id: number) {
+  const res = await api8001.post(`/friends/follow/${friend_id}`);
+  return res.data;
+}
 
 // 팔로우 수락
-export const acceptFollowRequest = async (friend_id: number): Promise<void> => {
-  const token = useAuthStore.getState().token;
-
-  const res = await fetch(
-    `${process.env.EXPO_PUBLIC_API_BASE_URL_8001}/friends/access_follow/${friend_id}`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  );
-
-  if (!res.ok) {
-    throw new Error("네트워크 응답이 ok가 아님");
-  }
-};
+export async function acceptFollowRequest(friend_id: number) {
+  const res = await api8001.post(`/friends/access_follow/${friend_id}`);
+  return res.data;
+}
 
 // 팔로우 거절
-export const declineFollowRequest = async (
-  friend_id: number,
-): Promise<void> => {
-  const token = useAuthStore.getState().token;
+export async function declineFollowRequest(friend_id: number) {
+  const res = await api8001.post(`/friends/decline_follow/${friend_id}`);
+  return res.data;
+}
 
-  const res = await fetch(
-    `${process.env.EXPO_PUBLIC_API_BASE_URL_8001}/friends/decline_follow/${friend_id}`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  );
+export async function deleteFriend(friend_id: number) {
+  const res = await api8001.delete(`/friends/${friend_id}`);
+  return res.data;
+}
 
-  if (!res.ok) {
-    throw new Error("네트워크 응답이 ok가 아님");
-  }
-};
+export async function blockFriend(friend_id: number) {
+  const res = await api8001.post(`/friends/block/${friend_id}`);
+  return res.data;
+}
 
-// 친구 삭제
-export const deleteFriend = async (friend_id: number): Promise<void> => {
-  const token = useAuthStore.getState().token;
-
-  const res = await fetch(
-    `${process.env.EXPO_PUBLIC_API_BASE_URL_8001}/friends/${friend_id}`,
-    {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  );
-
-  if (!res.ok) {
-    throw new Error("네트워크 응답이 ok가 아님");
-  }
-};
-
-// 친구 차단
-export const blockFriend = async (friend_id: number): Promise<void> => {
-  await api8001.post(`/friends/block/${friend_id}`);
-};
-
-// 친구 차단 해제
-export const unblockFriend = async (friend_id: number): Promise<void> => {
-  await api8001.post(`/friends/unblock/${friend_id}`);
-};
+export async function unblockFriend(friend_id: number) {
+  const res = await api8001.post(`/friends/unblock/${friend_id}`);
+  return res.data;
+}
