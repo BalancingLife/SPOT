@@ -33,7 +33,7 @@ export default function TabLayout() {
   const createTabBarIcon = (
     focused: boolean,
     iconSource: any,
-    label: string
+    label: string,
   ) => {
     const marginTop = label === "프로필" ? 11 : 0;
 
@@ -82,7 +82,7 @@ export default function TabLayout() {
               focused
                 ? require("@/assets/images/spot-icon-black.png")
                 : require("@/assets/images/spot-icon-gray.png"),
-              "홈"
+              "홈",
             ),
         }}
       />
@@ -97,7 +97,7 @@ export default function TabLayout() {
               focused
                 ? require("@/assets/images/marker-gray.png")
                 : require("@/assets/images/marker-gray.png"),
-              "지도"
+              "지도",
             ),
         }}
       />
@@ -112,8 +112,8 @@ export default function TabLayout() {
               focused,
               focused
                 ? require("@/assets/images/profile-icon-orange.png")
-                : require("@/assets/images/profile-icon-gray.png"),
-              "프로필"
+                : require("@/assets/images/default-profile.png"),
+              "프로필",
             ),
         }}
       />
