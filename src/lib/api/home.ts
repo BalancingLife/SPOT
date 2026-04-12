@@ -1,5 +1,5 @@
 // src/lib/api/home.ts
-import { api8080 } from "@/src/lib/api/client";
+import { api8080, api8001 } from "@/src/lib/api/client";
 import {
   type HomePlaceItem,
   type HomeCommentItem,
@@ -85,13 +85,15 @@ export async function fetchHomePlacesMain(params: {
   lat: number;
   lng: number;
 }) {
-  const res = await api8080.get<HomePlaceItem[]>("/main/place", { params });
+  const res = await api8001.get<HomePlaceItem[]>("/main/home/places", {
+    params,
+  });
   return res.data;
 }
 
 // /main/me/places  (여기만 s)
 export async function fetchHomePlacesMe(params: { lat: number; lng: number }) {
-  const res = await api8080.get<HomePlaceItem[]>("/main/me/places", { params });
+  const res = await api8001.get<HomePlaceItem[]>("/main/me/places", { params });
   return res.data;
 }
 
