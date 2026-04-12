@@ -135,46 +135,6 @@ export default function Home() {
     }, [hasHydrated, token, loadFriends, fetchMyProfile]),
   );
 
-  const makeDummyMarkers = (baseLat: number, baseLng: number, s: HomeScope) => {
-    const tag =
-      s.type === "friends"
-        ? "friends"
-        : s.type === "me"
-          ? "me"
-          : `friend-${s.userId}`;
-
-    const offset =
-      s.type === "friends" ? 0.0012 : s.type === "me" ? 0.0022 : 0.0032;
-
-    const basePlaceId =
-      s.type === "friends" ? 10000 : s.type === "me" ? 20000 : 30000;
-
-    return [
-      {
-        key: `dummy-${tag}-1`,
-        lat: baseLat + offset,
-        lng: baseLng + offset,
-        raw: {
-          placeId: basePlaceId + 1,
-          dummy: true,
-          tag,
-          idx: 1,
-        },
-      },
-      {
-        key: `dummy-${tag}-2`,
-        lat: baseLat - offset,
-        lng: baseLng - offset,
-        raw: {
-          placeId: basePlaceId + 2,
-          dummy: true,
-          tag,
-          idx: 2,
-        },
-      },
-    ] as HomeMarker[];
-  };
-
   useEffect(() => {
     if (activeTab !== "map") return;
     if (lat == null || lng == null) return;
@@ -204,9 +164,7 @@ export default function Home() {
             raw: p,
           }));
 
-          setMarkers(
-            next.length === 0 ? makeDummyMarkers(lat, lng, scope) : next,
-          );
+          setMarkers(next);
           return;
         }
 
@@ -222,9 +180,7 @@ export default function Home() {
             raw: p,
           }));
 
-          setMarkers(
-            next.length === 0 ? makeDummyMarkers(lat, lng, scope) : next,
-          );
+          setMarkers(next);
           return;
         }
 
@@ -245,9 +201,7 @@ export default function Home() {
           raw: p,
         }));
 
-        setMarkers(
-          next.length === 0 ? makeDummyMarkers(lat, lng, scope) : next,
-        );
+        setMarkers(next);
       } catch (e: any) {
         console.log("홈 화면 지도 탭 데이터 fetch 오류:", {
           message: e?.message,
@@ -403,7 +357,6 @@ export default function Home() {
     <SafeAreaView style={styles.safeArea}>
       <TopBar />
 
-      {/* 오토하이드 대상: StoryList만 */}
       {!isHeaderReady ? (
         <View onLayout={handleHeaderLayout}>
           <HomeHeader
@@ -426,7 +379,6 @@ export default function Home() {
         </Animated.View>
       )}
 
-      {/* 고정 영역: UserCard만 */}
       {selectedUser ? (
         <View style={styles.userCardSection}>
           <HomeHeader
