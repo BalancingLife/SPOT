@@ -25,7 +25,7 @@ export const HomeHeader = ({
   showStoryList = true,
   showUserCard = true,
 }: HomeHeaderProps) => {
-  const DEFAULT_MY_IMAGE = require("@/assets/images/dog.png");
+  const DEFAULT_MY_IMAGE = require("@/assets/images/default-profile.png");
 
   const profile = useMyProfileStore((s) => s.profile);
   const friendCount = useMyProfileStore((s) => s.friendCount);

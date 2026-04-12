@@ -361,7 +361,7 @@ export default function EditScreen() {
                     ) : (
                       <Image
                         style={{ width: 60, height: 60 }}
-                        source={require("@/assets/images/profile-icon-gray.png")}
+                        source={require("@/assets/images/default-profile.png")}
                       />
                     )}
                   </View>
