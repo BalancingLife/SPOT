@@ -2,8 +2,14 @@ import "react-native-reanimated";
 import { useFonts } from "expo-font";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { Stack, SplashScreen, useRouter } from "expo-router";
-import { useEffect } from "react";
+import {
+  Stack,
+  SplashScreen,
+  usePathname,
+  useRouter,
+  useSegments,
+} from "expo-router";
+import { useCallback, useEffect, useRef } from "react";
 import { AppState, NativeModules, Linking } from "react-native";
 import { useAuthStore } from "@/src/stores/useAuthStore";
 
@@ -13,6 +19,10 @@ export default function RootLayout() {
 
   const hydrate = useAuthStore((s) => s.hydrate);
   const router = useRouter();
+  const pathname = usePathname();
+  const segments = useSegments();
+  const pendingAnalyzeTriggerRef = useRef(false);
+  const didCheckInitialUrlRef = useRef(false);
 
   useEffect(() => {
     hydrate();
@@ -28,8 +38,29 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded]);
+    if (fontsLoaded && hasHydrated) SplashScreen.hideAsync();
+  }, [fontsLoaded, hasHydrated]);
+
+  useEffect(() => {
+    if (!fontsLoaded || !hasHydrated) return;
+
+    const rootSegment = segments[0];
+    const isAuthRoute = rootSegment === "login" || rootSegment === "oauth";
+
+    if (!token && !isAuthRoute) {
+      router.replace({
+        pathname: "/login",
+        params: {
+          returnTo: pathname || "/",
+        },
+      });
+      return;
+    }
+
+    if (token && rootSegment === "login") {
+      router.replace("/(tabs)");
+    }
+  }, [fontsLoaded, hasHydrated, pathname, router, segments, token]);
 
   // ✅ spot://analyze-result 같은 딥링크에서 "route"만 뽑아내기
   const getRouteFromUrl = (url: string) => {
@@ -43,8 +74,8 @@ export default function RootLayout() {
     }
   };
 
-  const handleAnalyzeTrigger = async () => {
-    if (!hasHydrated) return;
+  const handleAnalyzeTrigger = useCallback(async () => {
+    if (!hasHydrated) return false;
 
     if (!token) {
       router.replace({
@@ -54,11 +85,19 @@ export default function RootLayout() {
           intent: "analyze-result",
         },
       });
-      return;
+      return true;
     }
 
     router.replace("/(tabs)/map");
-  };
+    return true;
+  }, [hasHydrated, router, token]);
+
+  useEffect(() => {
+    if (!hasHydrated || !pendingAnalyzeTriggerRef.current) return;
+
+    pendingAnalyzeTriggerRef.current = false;
+    void handleAnalyzeTrigger();
+  }, [handleAnalyzeTrigger, hasHydrated]);
 
   // ✅ 딥링크 수신: 콜드 스타트 + 런타임 둘 다 처리
   useEffect(() => {
@@ -69,26 +108,31 @@ export default function RootLayout() {
       const route = getRouteFromUrl(url);
       if (route !== "analyze-result") return;
 
-      await handleAnalyzeTrigger();
+      const handled = await handleAnalyzeTrigger();
+      if (!handled) pendingAnalyzeTriggerRef.current = true;
     };
 
     const sub = Linking.addEventListener("url", onUrl);
 
     (async () => {
+      if (didCheckInitialUrlRef.current) return;
+      didCheckInitialUrlRef.current = true;
+
       const initialUrl = await Linking.getInitialURL();
       if (!alive || !initialUrl) return;
 
       const route = getRouteFromUrl(initialUrl);
       if (route !== "analyze-result") return;
 
-      await handleAnalyzeTrigger();
+      const handled = await handleAnalyzeTrigger();
+      if (!handled) pendingAnalyzeTriggerRef.current = true;
     })();
 
     return () => {
       alive = false;
       sub.remove();
     };
-  }, []);
+  }, [handleAnalyzeTrigger]);
 
   // ✅ fallback: 앱이 active 될 때도 한번 체크 (딥링크 이벤트 씹히는 케이스 대비)
   useEffect(() => {
@@ -102,19 +146,22 @@ export default function RootLayout() {
 
       await SharedStore?.clearLatestAnalyzeResult?.();
 
-      router.replace("/(tabs)/map");
+      const handled = await handleAnalyzeTrigger();
+      if (!handled) pendingAnalyzeTriggerRef.current = true;
     });
 
     return () => sub.remove();
-  }, []);
+  }, [handleAnalyzeTrigger]);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded || !hasHydrated) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="oauth/kakao" options={{ headerShown: false }} />
 
           <Stack.Screen
             name="search"

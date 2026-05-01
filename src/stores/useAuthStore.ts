@@ -1,6 +1,7 @@
 // src/stores/useAuthStore.ts
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { NativeModules } from "react-native";
 
 type AuthState = {
   token: string | null;
@@ -30,12 +31,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       "auth",
       JSON.stringify({ token, email, nickname }),
     );
+    NativeModules.SharedStore?.setAccessToken?.(token);
     set({ token, email: email ?? null, nickname: nickname ?? null });
   },
 
   clearAuth: async () => {
     await AsyncStorage.removeItem("auth");
-    set({ token: null, email: null, nickname: null });
+    NativeModules.SharedStore?.clearAccessToken?.();
+    set({ token: null, email: null, nickname: null, hasHydrated: true });
   },
 
   hydrate: async () => {

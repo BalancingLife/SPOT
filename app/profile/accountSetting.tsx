@@ -7,9 +7,11 @@ import { Colors } from "@/src/styles/Colors";
 import ConfirmModal from "@/src/components/common/ConfirmModal";
 import { logout } from "@/src/lib/api/settings";
 import { useRouter } from "expo-router";
+import { useAuthStore } from "@/src/stores/useAuthStore";
 
 export default function AccountSettingScreen() {
   const router = useRouter();
+  const clearAuth = useAuthStore((state) => state.clearAuth);
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [withdrawVisible, setWithdrawVisible] = useState(false);
 
@@ -22,8 +24,11 @@ export default function AccountSettingScreen() {
         onCancel={() => setLogoutVisible(false)}
         onConfirm={() => {
           setLogoutVisible(false);
-          logout();
-          router.replace("/login");
+          void (async () => {
+            await logout();
+            await clearAuth();
+            router.replace("/login");
+          })();
         }}
       />
 

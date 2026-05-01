@@ -1,6 +1,9 @@
 // src/lib/api/client.ts
 import axios, { type AxiosInstance } from "axios";
+import { router } from "expo-router";
 import { useAuthStore } from "@/src/stores/useAuthStore";
+
+let isHandlingUnauthorized = false;
 
 function attachInterceptors(client: AxiosInstance): AxiosInstance {
   client.interceptors.request.use((config) => {
@@ -29,11 +32,24 @@ function attachInterceptors(client: AxiosInstance): AxiosInstance {
       const method = (err.config?.method ?? "GET").toUpperCase();
       const message =
         err.response?.data?.message ?? err.message ?? "Unknown error";
+      const status = err.response?.status;
 
       console.error(
-        `❌ [${method}] ${err.config?.url ?? "unknown url"} ${err.response?.status}`,
+        `❌ [${method}] ${err.config?.url ?? "unknown url"} ${status}`,
       );
       console.error(`❌ ${message}`);
+
+      if (status === 401 && !isHandlingUnauthorized) {
+        isHandlingUnauthorized = true;
+
+        void useAuthStore
+          .getState()
+          .clearAuth()
+          .finally(() => {
+            router.replace("/login");
+            isHandlingUnauthorized = false;
+          });
+      }
 
       return Promise.reject(err);
     },

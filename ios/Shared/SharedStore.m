@@ -7,6 +7,8 @@ RCT_EXTERN_METHOD(setAccessToken:(NSString *)token)
 RCT_EXTERN_METHOD(getAccessToken:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(clearAccessToken)
+
 RCT_EXTERN_METHOD(setLatestAnalyzeResult:(NSString *)json)
 
 RCT_EXTERN_METHOD(getLatestAnalyzeResult:(RCTPromiseResolveBlock)resolve

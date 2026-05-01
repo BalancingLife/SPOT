@@ -22,6 +22,12 @@ class SharedStore: NSObject {
     resolve(t)
   }
 
+  @objc func clearAccessToken() {
+    defaults()?.removeObject(forKey: "accessToken")
+    defaults()?.synchronize()
+    NSLog("[SharedStore] ✅ clearAccessToken")
+  }
+
   @objc func setLatestAnalyzeResult(_ json: String) {
     defaults()?.set(json, forKey: "latestAnalyzeResult")
     defaults()?.synchronize()
