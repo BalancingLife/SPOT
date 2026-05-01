@@ -72,9 +72,30 @@ export default function Login() {
     }
   };
 
+  const renderKakaoLoginButton = (label = "카카오로 계속하기") => (
+    <Pressable style={styles.kakaoLoginButton} onPress={handleKakaoLogin}>
+      <View pointerEvents="none">
+        <Image
+          style={styles.signUpImage}
+          source={require("@/assets/images/login-3second.png")}
+        />
+      </View>
+
+      <Image
+        style={styles.kakaoIcon}
+        source={require("@/assets/images/kakao-icon.png")}
+      />
+
+      <Text style={styles.kakaoLoginButtonText}>{label}</Text>
+    </Pressable>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
+        <View style={styles.temporaryLoginButtonContainer}>
+          {renderKakaoLoginButton("임시 로그인 버튼")}
+        </View>
         <Text style={styles.headerText}>
           더 똑똑하게{"\n"}친구들과 장소를 공유해봐요.
         </Text>
@@ -85,21 +106,7 @@ export default function Login() {
           />
         </View>
         <View style={styles.loginButtonContainer}>
-          <Pressable style={styles.kakaoLoginButton} onPress={handleKakaoLogin}>
-            <View pointerEvents="none">
-              <Image
-                style={styles.signUpImage}
-                source={require("@/assets/images/login-3second.png")}
-              />
-            </View>
-
-            <Image
-              style={styles.kakaoIcon}
-              source={require("@/assets/images/kakao-icon.png")}
-            />
-
-            <Text style={styles.kakaoLoginButtonText}>카카오로 계속하기</Text>
-          </Pressable>
+          {renderKakaoLoginButton()}
           {/* <Pressable style={styles.appleLoginButton}>
             <Image
               style={styles.appleIcon}
@@ -137,6 +144,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   headerContainer: {},
+  temporaryLoginButtonContainer: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
   headerText: {
     ...TextStyles.Bold24,
     color: Colors.gray_900,
