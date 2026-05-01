@@ -46,6 +46,10 @@ export type ApiBlockItem = {
   friend_id: number;
   status: string;
   updated_at: string; // ISO
+  spot_id: string;
+  spot_nickname: string;
+  one_line: string | null;
+  photo: string | null;
 };
 
 export type BlockListResponse = ApiEnvelope<{
@@ -59,29 +63,41 @@ export type BlockItem = {
   friendId: number;
   status: string;
   updatedAt: string;
+  userId: string;
+  nickname: string;
+  oneLine: string | null;
+  photo: string | null;
+};
+
+const normalizeProfilePhoto = (photo: string | null) => {
+  if (!photo) return null;
+  if (photo.startsWith("http://") || photo.startsWith("https://")) {
+    return photo;
+  }
+
+  const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL_8000 ?? "";
+  return `${baseUrl}${photo}`;
 };
 
 export async function fetchBlockList(): Promise<{
   total: number;
   blocks: BlockItem[];
 }> {
-  try {
-    const res = await api8000.get<BlockListResponse>("/settings/blocklist");
-    const raw = Array.isArray(res.data?.data?.blocks)
-      ? res.data.data.blocks
-      : [];
+  const res = await api8000.get<BlockListResponse>("/settings/blocklist");
+  const raw = Array.isArray(res.data?.data?.blocks) ? res.data.data.blocks : [];
 
-    return {
-      total: Number(res.data?.data?.total ?? raw.length),
-      blocks: raw.map((b) => ({
-        id: b.id,
-        memberId: b.member_id,
-        friendId: b.friend_id,
-        status: b.status,
-        updatedAt: b.updated_at,
-      })),
-    };
-  } catch {
-    return { total: 0, blocks: [] };
-  }
+  return {
+    total: Number(res.data?.data?.total ?? raw.length),
+    blocks: raw.map((b) => ({
+      id: b.id,
+      memberId: b.member_id,
+      friendId: b.friend_id,
+      status: b.status,
+      updatedAt: b.updated_at,
+      userId: b.spot_id,
+      nickname: b.spot_nickname,
+      oneLine: b.one_line,
+      photo: normalizeProfilePhoto(b.photo),
+    })),
+  };
 }
