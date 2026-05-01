@@ -37,23 +37,24 @@ export type HomeUserResponse = {
   places: HomeUserPlace[];
 };
 
-// /main
+// /main/home
 export async function fetchHomeMain(params: {
   lat: number;
   lng: number;
   distance: number;
 }) {
-  const res = await api8080.get<HomeMainResponse>("/main", { params });
+  const res = await api8001.get<HomeMainResponse>("/main/home", { params });
+  console.log(res.data);
   return res.data;
 }
 
-// /main/me
+// /main/me/home
 export async function fetchHomeMe(params: {
   lat: number;
   lng: number;
   distance: number;
 }) {
-  const res = await api8080.get<HomeUserResponse>("/main/me", { params });
+  const res = await api8001.get<HomeUserResponse>("/main/me/home", { params });
   return res.data;
 }
 
@@ -63,10 +64,9 @@ export async function fetchHomeUser(params: {
   lat: number;
   lng: number;
   distance: number;
-  includeMarkerBadgeLayout: boolean;
 }) {
   const { userId, ...rest } = params;
-  const res = await api8080.get<HomeUserResponse>(`/main/${userId}`, {
+  const res = await api8001.get<HomeUserResponse>(`/main/home/${userId}`, {
     params: rest,
   });
   return res.data;
