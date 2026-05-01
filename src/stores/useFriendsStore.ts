@@ -8,6 +8,8 @@ type FriendsState = {
   lastFetchedAt: number | null;
 
   loadFriends: (opts?: { force?: boolean }) => Promise<void>;
+  upsertFriend: (friend: Friend) => void;
+  removeFriend: (friendId: number) => void;
   clearFriends: () => void;
 };
 
@@ -36,6 +38,26 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       set({ loading: false });
     }
   },
+
+  upsertFriend: (friend) =>
+    set((state) => {
+      const exists = state.friends.some((item) => item.id === friend.id);
+
+      return {
+        friends: exists
+          ? state.friends.map((item) =>
+              item.id === friend.id ? { ...item, ...friend } : item,
+            )
+          : [friend, ...state.friends],
+        lastFetchedAt: Date.now(),
+      };
+    }),
+
+  removeFriend: (friendId) =>
+    set((state) => ({
+      friends: state.friends.filter((friend) => friend.id !== friendId),
+      lastFetchedAt: Date.now(),
+    })),
 
   clearFriends: () =>
     set({ friends: [], loading: false, error: null, lastFetchedAt: null }),

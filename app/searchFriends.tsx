@@ -21,6 +21,7 @@ import {
   deleteFriend,
   type FriendSearchItem,
 } from "@/src/lib/api/friends";
+import { useFriendsStore } from "@/src/stores/useFriendsStore";
 
 export type RecentFriendItem = {
   id: string;
@@ -64,6 +65,9 @@ export default function SearchFriendScreen() {
   const [searchInputText, setSearchInputText] = useState("");
   const [results, setResults] = useState<FriendSearchItem[] | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+  const upsertFriend = useFriendsStore((s) => s.upsertFriend);
+  const removeFriend = useFriendsStore((s) => s.removeFriend);
+  const loadFriends = useFriendsStore((s) => s.loadFriends);
 
   const showRecent = !searchInputText || results === null;
   const showResults = Array.isArray(results) && results.length > 0;
@@ -207,13 +211,24 @@ export default function SearchFriendScreen() {
 
           case "request_received": {
             await acceptFollowRequest(friend.id);
+            upsertFriend({
+              id: friend.id,
+              nickname: friend.nickname,
+              userId: friend.userId,
+              avatarUrl: friend.profileImageUrl,
+              comment: friend.oneLine,
+              status: "friends",
+            });
             updateResultStatus(friend.id, "friends");
+            void loadFriends({ force: true });
             return;
           }
 
           case "friends": {
             await deleteFriend(friend.id);
+            removeFriend(friend.id);
             updateResultStatus(friend.id, "none");
+            void loadFriends({ force: true });
 
             return;
           }
@@ -241,7 +256,13 @@ export default function SearchFriendScreen() {
         setActionLoadingId(null);
       }
     },
-    [actionLoadingId, updateResultStatus],
+    [
+      actionLoadingId,
+      loadFriends,
+      removeFriend,
+      updateResultStatus,
+      upsertFriend,
+    ],
   );
 
   const mappedResults =
